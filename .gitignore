@@ -1,0 +1,27 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs / temp
+*.log
+npm-debug.log*
+.cache/
+tmp/
+.tmp/
+
+# Node tooling (not required to run the game)
+node_modules/
+dist/
+build/
+
+# Python (used only for the local static server)
+__pycache__/
+*.py[cod]
+.venv/
+venv/

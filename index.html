@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-tmly-media-guard="1">(function(){"use strict";
+var T=window.__tmly||(window.__tmly=(function(){
+var o={},n=String(window.name||"");
+if(n.slice(0,5)==="tmly:"){n.slice(5).split("&").forEach(function(kv){
+var i=kv.indexOf("=");if(i>0){o[kv.slice(0,i)]=kv.slice(i+1)}})}
+return o})());
+if(T.presentation!=="preview"){return}
+var K="tmly:media-muted:"+String(location.pathname).replace(/[^/]*$/,"");
+var muted=false;try{muted=localStorage.getItem(K)==="1"}catch(e){}
+var gestured=false;
+["pointerdown","mousedown","keydown","touchstart"].forEach(function(t){
+document.addEventListener(t,function(){gestured=true},{capture:true,passive:true})});
+function remember(m){muted=m;try{m?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}}
+function announcePaused(el){try{el.dispatchEvent(new Event("pause"))}catch(e){}}
+function harden(el){
+el.autoplay=false;el.removeAttribute("autoplay");
+if(el.getAttribute("preload")==="auto"){el.setAttribute("preload","none")}
+if(muted){el.muted=true}
+if(!gestured&&!el.paused){try{el.pause()}catch(e){}}}
+var play=HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play=function(){
+if(!gestured){announcePaused(this);
+return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
+if(muted){remember(false);this.muted=false}
+return play.apply(this,arguments)};
+var acProtos=[];
+function guardAC(n){
+var N=window[n];if(!N||!N.prototype){return}
+if(acProtos.indexOf(N.prototype)<0){acProtos.push(N.prototype);
+var res=N.prototype.resume;
+if(typeof res==="function"){N.prototype.resume=function(){
+if(!gestured){return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
+if(muted){remember(false)}
+return res.apply(this,arguments)}}}
+var W=function(o){var c=arguments.length?new N(o):new N();
+if(!gestured){try{c.suspend()}catch(e){}}return c};
+W.prototype=N.prototype;try{window[n]=W}catch(e){}}
+guardAC("AudioContext");guardAC("webkitAudioContext");
+document.addEventListener("play",function(e){
+var el=e.target;if(el instanceof HTMLMediaElement&&!gestured){try{el.pause()}catch(err){}}},true);
+document.addEventListener("pause",function(e){
+if(e.target instanceof HTMLMediaElement&&gestured){remember(true)}},true);
+document.addEventListener("volumechange",function(e){
+var el=e.target;if(el instanceof HTMLMediaElement&&gestured){remember(el.muted||el.volume===0)}},true);
+function sweep(n){if(n&&n.querySelectorAll){var l=n.querySelectorAll("audio,video");
+for(var i=0;i<l.length;i++){harden(l[i])}}}
+new MutationObserver(function(rs){for(var i=0;i<rs.length;i++){var a=rs[i].addedNodes;
+for(var j=0;j<a.length;j++){var n=a[j];
+if(n instanceof HTMLMediaElement){harden(n)}else{sweep(n)}}}})
+.observe(document.documentElement,{childList:true,subtree:true});
+document.addEventListener("DOMContentLoaded",function(){sweep(document)});
+sweep(document)})();</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f2a" />
+  <meta name="description" content="Crystal Quest: Gem Legends — an original mobile-first match-3 puzzle adventure with 20 handcrafted levels, cascades, special gems and synthesized audio." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Crystal Quest: Gem Legends</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ============ HOME ============ -->
+    <section id="screen-home" class="screen is-active" aria-label="Main menu">
+      <div class="bg-layer bg-home" aria-hidden="true"></div>
+      <div class="home-inner">
+        <div class="logo">
+          <svg class="logo-gem" viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#7ff5ea"/><stop offset="0.5" stop-color="#35e0d0"/><stop offset="1" stop-color="#1a8fa8"/>
+              </linearGradient>
+              <linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ff8fc4"/><stop offset="1" stop-color="#ff4d9d"/>
+              </linearGradient>
+            </defs>
+            <polygon points="60,6 108,40 90,104 30,104 12,40" fill="url(#lgA)" stroke="#0b0f2a" stroke-width="4" stroke-linejoin="round"/>
+            <polygon points="60,6 108,40 60,52 12,40" fill="#ffffff" opacity="0.28"/>
+            <polygon points="60,52 90,104 30,104" fill="url(#lgB)" opacity="0.85"/>
+            <polygon points="60,52 60,6 12,40" fill="#ffffff" opacity="0.14"/>
+          </svg>
+          <h1 class="logo-title">CRYSTAL<span>QUEST</span></h1>
+          <p class="logo-sub">GEM LEGENDS</p>
+        </div>
+
+        <div class="home-actions">
+          <button id="btn-play" class="btn btn-primary btn-lg" type="button">Play</button>
+          <button id="btn-continue" class="btn btn-ghost btn-lg" type="button" hidden>Continue</button>
+          <div class="home-row">
+            <button id="btn-help" class="btn btn-ghost" type="button">How to Play</button>
+            <button id="btn-settings" class="btn btn-ghost" type="button">Settings</button>
+          </div>
+        </div>
+
+        <p class="home-foot">Original game &middot; v1.0 &middot; Progress saved on this device</p>
+      </div>
+    </section>
+
+    <!-- ============ LEVEL MAP ============ -->
+    <section id="screen-map" class="screen" aria-label="Level select">
+      <div class="bg-layer bg-map" aria-hidden="true"></div>
+      <header class="topbar">
+        <button id="btn-map-back" class="icon-btn" type="button" aria-label="Back to main menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h2 class="topbar-title">Crystal Path</h2>
+        <div class="star-pill" title="Total stars earned">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z" fill="currentColor"/></svg>
+          <span id="map-stars">0</span>
+        </div>
+      </header>
+      <div id="level-scroll" class="level-scroll">
+        <div id="level-grid" class="level-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ GAME ============ -->
+    <section id="screen-game" class="screen" aria-label="Game board">
+      <div class="bg-layer bg-game" aria-hidden="true"></div>
+
+      <header class="hud">
+        <div class="hud-left">
+          <div class="hud-level">Level <span id="hud-level">1</span></div>
+          <div class="hud-level-name" id="hud-level-name">Crystal Gate</div>
+        </div>
+        <div class="hud-moves" id="hud-moves-wrap">
+          <span class="hud-moves-num" id="hud-moves">20</span>
+          <span class="hud-moves-label">moves</span>
+        </div>
+        <div class="hud-right">
+          <div class="hud-score-label">Score</div>
+          <div class="hud-score" id="hud-score">0</div>
+        </div>
+      </header>
+
+      <div class="objective-bar" id="objectives" aria-label="Level objectives"></div>
+
+      <div class="board-area">
+        <div class="board-wrap" id="board-wrap">
+          <canvas id="board-canvas" tabindex="0" role="application"
+                  aria-label="Match-3 board. Use arrow keys to move the cursor, Space to pick up or drop a gem."></canvas>
+          <div class="combo-banner" id="combo-banner" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="game-controls">
+        <button id="btn-pause" class="ctrl-btn" type="button" aria-label="Pause game">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
+          <span>Pause</span>
+        </button>
+        <button id="btn-hint" class="ctrl-btn" type="button" aria-label="Show a hint">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 00-3.5 10.9V16a1.5 1.5 0 001.5 1.5h4A1.5 1.5 0 0015.5 16v-2.1A6 6 0 0012 3z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M10 20.5h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <span>Hint</span>
+        </button>
+        <button id="btn-shuffle" class="ctrl-btn" type="button" aria-label="Shuffle the board, costs one move">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l3 4M4 17h4l8-10h4M20 7l-2.5-2.5M20 7l-2.5 2.5M20 17l-2.5-2.5M20 17l-2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Shuffle</span>
+        </button>
+      </div>
+
+      <p id="live-region" class="sr-only" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- ============ MODALS ============ -->
+    <div id="modal-pause" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+        <h3 id="pause-title" class="modal-title">Paused</h3>
+        <div class="modal-actions">
+          <button id="btn-resume" class="btn btn-primary" type="button">Resume</button>
+          <button id="btn-restart" class="btn btn-ghost" type="button">Restart Level</button>
+          <button id="btn-pause-settings" class="btn btn-ghost" type="button">Settings</button>
+          <button id="btn-quit" class="btn btn-ghost" type="button">Quit to Map</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-win" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="win-title">
+        <h3 id="win-title" class="modal-title">Level Cleared!</h3>
+        <div class="stars-row" id="win-stars" aria-label="Stars earned"></div>
+        <div class="result-rows">
+          <div class="result-row"><span>Score</span><strong id="win-score">0</strong></div>
+          <div class="result-row"><span>Best</span><strong id="win-best">0</strong></div>
+          <div class="result-row"><span>Moves left</span><strong id="win-moves">0</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-next" class="btn btn-primary" type="button">Next Level</button>
+          <button id="btn-replay" class="btn btn-ghost" type="button">Replay</button>
+          <button id="btn-win-map" class="btn btn-ghost" type="button">Level Map</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-lose" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lose-title">
+        <h3 id="lose-title" class="modal-title">Out of Moves</h3>
+        <p class="modal-text" id="lose-text">The crystals slipped away this time.</p>
+        <div class="result-rows">
+          <div class="result-row"><span>Score</span><strong id="lose-score">0</strong></div>
+          <div class="result-row"><span>Best</span><strong id="lose-best">0</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-retry" class="btn btn-primary" type="button">Try Again</button>
+          <button id="btn-lose-map" class="btn btn-ghost" type="button">Level Map</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-settings" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <h3 id="settings-title" class="modal-title">Settings</h3>
+        <div class="setting-list">
+          <label class="setting-row">
+            <span>Sound effects</span>
+            <input type="checkbox" id="set-sfx" class="switch" />
+          </label>
+          <label class="setting-row">
+            <span>Music</span>
+            <input type="checkbox" id="set-music" class="switch" />
+          </label>
+          <label class="setting-row">
+            <span>Reduced motion</span>
+            <input type="checkbox" id="set-motion" class="switch" />
+          </label>
+          <label class="setting-row">
+            <span>Colorblind symbols</span>
+            <input type="checkbox" id="set-symbols" class="switch" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-settings-close" class="btn btn-primary" type="button">Done</button>
+          <button id="btn-reset" class="btn btn-danger" type="button">Reset Progress</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-help" class="modal" hidden>
+      <div class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <h3 id="help-title" class="modal-title">How to Play</h3>
+        <div class="help-body">
+          <p><strong>Swap</strong> two neighbouring gems to line up <strong>3 or more</strong> of the same kind. Drag a gem, or tap one gem then tap its neighbour.</p>
+          <p><strong>Match 4</strong> in a line to forge a <strong>Line Blaster</strong> — it clears a whole row or column.</p>
+          <p><strong>Match 5</strong> in a line to forge a <strong>Prism Core</strong> — it clears every gem of one colour.</p>
+          <p><strong>Match in an L or T</strong> to forge a <strong>Star Bomb</strong> — it blasts a 3&times;3 area.</p>
+          <p>Swap two special gems together for a much bigger blast. Cascades raise your combo multiplier.</p>
+          <p><strong>Stone blocks</strong> cannot be swapped — clear them by matching gems next to them.</p>
+          <p>Finish the objectives before you run out of moves. Fewer moves used means more stars.</p>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-help-close" class="btn btn-primary" type="button">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <div id="loading" class="loading">
+      <div class="loading-gem"></div>
+      <p>Polishing crystals…</p>
+    </div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
