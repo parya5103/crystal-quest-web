@@ -40,7 +40,9 @@ Then open <http://localhost:8000> in your browser.
 │   ├── ui.js           # Screens, HUD, level map, dialogs, save
 │   └── main.js         # Bootstrap / wiring / built-in self-test (CQTest)
 ├── dev/
-│   └── harness.js      # Headless test harness (dev only, not loaded by the game)
+│   ├── harness.js      # Headless test harness (dev only, not loaded by the game)
+│   ├── bot.js          # Seeded playtest bot for win-rate measurement (dev only)
+│   └── debug.js        # Local debug panel, loaded only with ?debug=1 (dev only)
 ├── tests/
 │   └── game.test.js    # Node regression suite
 └── images/
@@ -71,6 +73,13 @@ node tests/game.test.js
 The game also ships an in-browser self-test (`CQTest`, defined in
 `js/main.js`) and a dev-only headless harness (`dev/harness.js`) for running
 the engine suite without a browser.
+
+### Debug panel (dev only)
+
+Open the game with `?debug=1` in the URL (e.g. `index.html?debug=1`) to load
+a local playtest panel that runs the seeded bot against any level and shows
+attempts, wins, win rate, average moves and average score. Nothing is loaded
+without the flag; the panel makes no network requests and stores nothing.
 
 ## License
 

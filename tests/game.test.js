@@ -32,7 +32,7 @@ const context = {
 };
 context.window = context;
 vm.createContext(context);
-for (const file of ['js/audio.js', 'js/levels.js', 'js/engine.js', 'js/ui.js', 'js/main.js']) {
+for (const file of ['js/audio.js', 'js/levels.js', 'js/engine.js', 'js/ui.js', 'js/main.js', 'dev/bot.js', 'dev/debug.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 }
 
@@ -219,6 +219,59 @@ test('save/load works and storage exceptions do not escape into gameplay', () =>
   context.localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); }, removeItem() { throw new Error('blocked'); } };
   assert.equal(Save.load().unlocked, 1);
   assert.equal(Save.persist(), false);
+});
+
+test('idle auto-hint: arms after 6s idle, shows a hint, re-arms, and is cleared on pause and win', () => {
+  const board = E.createBoard(LV.get(1), 4242);
+  Game.level = LV.get(1); Game.grid = board.grid; Game.ctx = E.makeCtx(Game.level);
+  Game.rng = board.rng; Game.movesLeft = 20; Game.state = 'playing';
+  Game.selected = null; Game.drag = null; Game.hintTimer = null; Game.idleTimer = null;
+  Game.IDLE_HINT_MS = 6000;
+  const prevAnyModal = context.CQUI.anyModalOpen;
+  context.CQUI.anyModalOpen = () => false;
+  render.hint = null;
+  scheduled.length = 0;
+  Game.armIdle();
+  assert.equal(scheduled.length, 1, 'idle timer armed');
+  assert.equal(scheduled[0].ms, 6000, '6 second idle delay');
+  scheduled.pop().fn();
+  assert.ok(render.hint, 'hint highlight shown after idle');
+  assert.equal(Game.idleTimer, null, 'idle timer consumed when it fired');
+  assert.equal(scheduled.length, 1, 'hint auto-hide scheduled');
+  scheduled.pop().fn();
+  assert.equal(render.hint, null, 'hint hidden after its display window');
+  assert.ok(Game.idleTimer, 'idle timer re-armed after hint expiry');
+  scheduled.length = 0;
+  Game.pause();
+  assert.equal(Game.state, 'paused');
+  assert.equal(Game.idleTimer, null, 'pause clears the idle timer');
+  Game.resume();
+  assert.equal(Game.state, 'playing');
+  assert.equal(scheduled.length, 1, 'resume re-arms the idle timer');
+  Game.state = 'resolving'; Game.outcomeResolved = false;
+  Game.ctx.score = 999999;
+  Game.afterTurn();
+  assert.equal(Game.state, 'won');
+  assert.equal(Game.idleTimer, null, 'win path clears the idle timer');
+  context.CQUI.anyModalOpen = prevAnyModal;
+});
+
+test('debug runner is deterministic and reports attempts/wins/averages per level', () => {
+  const D = context.CQDev.debug;
+  assert.ok(D, 'CQDev.debug present');
+  const a = D.run(1, 10, 'greedy', 0);
+  const b = D.run(1, 10, 'greedy', 0);
+  assert.deepEqual(a, b, 'identical inputs give identical stats');
+  assert.equal(a.attempts, 10);
+  assert.ok(a.wins >= 0 && a.wins <= 10);
+  assert.equal(typeof a.winRate, 'number');
+  assert.equal(D.run(999, 5, 'greedy', 0), null, 'unknown level returns null');
+  const row = D.resultText(a);
+  assert.ok(row.includes('L1') && row.includes('10 plays') && row.includes(String(a.wins) + ' wins'), 'text row shows level, attempts and wins');
+  const res = D.run(21, 3, 'greedy', 0);
+  assert.equal(res.attempts, 3);
+  assert.ok(res.wins >= 1, 'resonance tutorial level stays winnable');
+  assert.equal(D.enabled && typeof D.enabled, 'function', 'flag check is a callable');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);

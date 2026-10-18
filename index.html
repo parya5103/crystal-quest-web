@@ -220,5 +220,20 @@
   <script src="js/render.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
+  <script>
+    /* Dev-only local debug tool: ?debug=1 loads the seeded bot + stats panel.
+       No network beyond these same-site files; nothing loads without the flag. */
+    if (/[?&]debug=1\b/.test(window.location.search)) {
+      (function () {
+        function load(src, next) {
+          var s = document.createElement("script");
+          s.src = src;
+          s.onload = next;
+          document.body.appendChild(s);
+        }
+        load("dev/bot.js", function () { load("dev/debug.js", function () { CQDev.debug.init(); }); });
+      })();
+    }
+  </script>
 </body>
 </html>
