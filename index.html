@@ -1,65 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><script data-tmly-media-guard="1">(function(){"use strict";
-var T=window.__tmly||(window.__tmly=(function(){
-var o={},n=String(window.name||"");
-if(n.slice(0,5)==="tmly:"){n.slice(5).split("&").forEach(function(kv){
-var i=kv.indexOf("=");if(i>0){o[kv.slice(0,i)]=kv.slice(i+1)}})}
-return o})());
-if(T.presentation!=="preview"){return}
-var K="tmly:media-muted:"+String(location.pathname).replace(/[^/]*$/,"");
-var muted=false;try{muted=localStorage.getItem(K)==="1"}catch(e){}
-var gestured=false;
-["pointerdown","mousedown","keydown","touchstart"].forEach(function(t){
-document.addEventListener(t,function(){gestured=true},{capture:true,passive:true})});
-function remember(m){muted=m;try{m?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}}
-function announcePaused(el){try{el.dispatchEvent(new Event("pause"))}catch(e){}}
-function harden(el){
-el.autoplay=false;el.removeAttribute("autoplay");
-if(el.getAttribute("preload")==="auto"){el.setAttribute("preload","none")}
-if(muted){el.muted=true}
-if(!gestured&&!el.paused){try{el.pause()}catch(e){}}}
-var play=HTMLMediaElement.prototype.play;
-HTMLMediaElement.prototype.play=function(){
-if(!gestured){announcePaused(this);
-return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
-if(muted){remember(false);this.muted=false}
-return play.apply(this,arguments)};
-var acProtos=[];
-function guardAC(n){
-var N=window[n];if(!N||!N.prototype){return}
-if(acProtos.indexOf(N.prototype)<0){acProtos.push(N.prototype);
-var res=N.prototype.resume;
-if(typeof res==="function"){N.prototype.resume=function(){
-if(!gestured){return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
-if(muted){remember(false)}
-return res.apply(this,arguments)}}}
-var W=function(o){var c=arguments.length?new N(o):new N();
-if(!gestured){try{c.suspend()}catch(e){}}return c};
-W.prototype=N.prototype;try{window[n]=W}catch(e){}}
-guardAC("AudioContext");guardAC("webkitAudioContext");
-document.addEventListener("play",function(e){
-var el=e.target;if(el instanceof HTMLMediaElement&&!gestured){try{el.pause()}catch(err){}}},true);
-document.addEventListener("pause",function(e){
-if(e.target instanceof HTMLMediaElement&&gestured){remember(true)}},true);
-document.addEventListener("volumechange",function(e){
-var el=e.target;if(el instanceof HTMLMediaElement&&gestured){remember(el.muted||el.volume===0)}},true);
-function sweep(n){if(n&&n.querySelectorAll){var l=n.querySelectorAll("audio,video");
-for(var i=0;i<l.length;i++){harden(l[i])}}}
-new MutationObserver(function(rs){for(var i=0;i<rs.length;i++){var a=rs[i].addedNodes;
-for(var j=0;j<a.length;j++){var n=a[j];
-if(n instanceof HTMLMediaElement){harden(n)}else{sweep(n)}}}})
-.observe(document.documentElement,{childList:true,subtree:true});
-document.addEventListener("DOMContentLoaded",function(){sweep(document)});
-sweep(document)})();</script>
+<head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f2a" />
-  <meta name="description" content="Crystal Quest: Gem Legends — an original mobile-first match-3 puzzle adventure with 20 handcrafted levels, cascades, special gems and synthesized audio." />
+  <meta name="description" content="Crystal Quest: Gem Legends — an original mobile-first match-3 puzzle adventure with 27 handcrafted levels, cascades, special gems, Crystal Resonance veins, a daily challenge and synthesized audio." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <title>Crystal Quest: Gem Legends</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json" />
 </head>
 <body>
   <div id="app">
@@ -90,6 +40,10 @@ sweep(document)})();</script>
         <div class="home-actions">
           <button id="btn-play" class="btn btn-primary btn-lg" type="button">Play</button>
           <button id="btn-continue" class="btn btn-ghost btn-lg" type="button" hidden>Continue</button>
+          <button id="btn-world" class="btn btn-ghost btn-lg" type="button">Crystal Forest</button>
+          <button id="btn-daily" class="btn btn-ghost btn-lg" type="button">Daily Challenge</button>
+          <button id="btn-install" class="btn btn-ghost btn-lg" type="button" hidden>Install App</button>
+          <button id="btn-relics" class="btn btn-ghost btn-lg" type="button">Relics</button>
           <div class="home-row">
             <button id="btn-help" class="btn btn-ghost" type="button">How to Play</button>
             <button id="btn-settings" class="btn btn-ghost" type="button">Settings</button>
@@ -115,6 +69,102 @@ sweep(document)})();</script>
       </header>
       <div id="level-scroll" class="level-scroll">
         <div id="level-grid" class="level-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ WORLD: CRYSTAL FOREST ============ -->
+    <section id="screen-world" class="screen" aria-label="Crystal Forest restoration">
+      <div class="bg-layer bg-game" aria-hidden="true"></div>
+      <header class="topbar">
+        <button id="btn-world-back" class="icon-btn" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h2 class="topbar-title">Crystal Forest</h2>
+        <div class="star-pill" title="Forest star crystals">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h5l-2 8 9-13h-5l1-7z" fill="currentColor"/></svg>
+          <span id="world-star-count">0</span>
+        </div>
+      </header>
+      <div id="world-scroll" class="world-scroll">
+        <div class="world-scene">
+          <svg viewBox="0 0 360 200" class="world-svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="wfSky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0d1630"/><stop offset="1" stop-color="#0a2a2e"/>
+              </linearGradient>
+              <linearGradient id="wfHeart" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#7ff5ea"/><stop offset="0.5" stop-color="#35e0d0"/><stop offset="1" stop-color="#1a8fa8"/>
+              </linearGradient>
+            </defs>
+            <rect width="360" height="200" fill="url(#wfSky)"/>
+            <circle cx="38" cy="28" r="1.6" fill="#dfe6ff" opacity=".8"/>
+            <circle cx="120" cy="18" r="1.2" fill="#dfe6ff" opacity=".6"/>
+            <circle cx="200" cy="34" r="1.4" fill="#dfe6ff" opacity=".7"/>
+            <circle cx="258" cy="14" r="1.2" fill="#dfe6ff" opacity=".5"/>
+            <circle cx="316" cy="30" r="14" fill="#dfe6ff" opacity=".85"/>
+            <path d="M0 150 Q90 128 180 142 T360 138 V200 H0 Z" fill="#0c2431"/>
+            <path d="M0 170 Q120 152 240 164 T360 160 V200 H0 Z" fill="#091b26"/>
+            <path d="M52 150 l6 -60 -3 -6 9 0 -2 8 8 58 Z" fill="#14303f"/>
+            <path d="M296 150 l8 -70 -4 -6 10 0 -3 7 6 69 Z" fill="#14303f"/>
+            <path d="M180 148 l6 -76 -3 -5 8 0 -2 6 5 75 Z" fill="#122a37"/>
+            <g id="wf-spark" class="wf-layer">
+              <circle cx="70" cy="92" r="2.6" fill="#ffe98a"/>
+              <circle cx="92" cy="118" r="2" fill="#9ff5ff"/>
+              <circle cx="130" cy="96" r="2.3" fill="#ffe98a"/>
+              <circle cx="250" cy="104" r="2" fill="#9ff5ff"/>
+              <circle cx="212" cy="70" r="2.6" fill="#ffe98a"/>
+              <circle cx="40" cy="122" r="2" fill="#9ff5ff"/>
+              <polygon points="316,120 324,140 308,140" fill="#ffe98a" opacity=".9"/>
+            </g>
+            <g id="wf-saplings" class="wf-layer">
+              <circle cx="58" cy="84" r="16" fill="#1d7a5f"/>
+              <circle cx="74" cy="94" r="12" fill="#26a374"/>
+              <circle cx="300" cy="72" r="18" fill="#1d7a5f"/>
+              <circle cx="286" cy="86" r="12" fill="#26a374"/>
+              <circle cx="122" cy="72" r="10" fill="#26a374"/>
+            </g>
+            <g id="wf-stream" class="wf-layer">
+              <path d="M0 192 Q80 180 150 188 T360 182" stroke="#5ad7f0" stroke-width="9" fill="none" stroke-linecap="round" opacity=".9"/>
+              <path d="M10 191 Q70 183 140 189" stroke="#bdf3ff" stroke-width="2" fill="none" opacity=".8"/>
+            </g>
+            <g id="wf-bloom" class="wf-layer">
+              <circle cx="84" cy="152" r="3.4" fill="#ff8fc4"/>
+              <circle cx="132" cy="160" r="3" fill="#ff8fc4"/>
+              <circle cx="230" cy="154" r="3.4" fill="#c58cff"/>
+              <circle cx="272" cy="162" r="3" fill="#ff8fc4"/>
+              <circle cx="192" cy="166" r="3" fill="#ffd98a"/>
+            </g>
+            <g id="wf-heart" class="wf-layer">
+              <polygon points="180,54 208,94 180,146 152,94" fill="url(#wfHeart)" stroke="#eafffb" stroke-width="2"/>
+              <polygon points="180,54 208,94 152,94" fill="#ffffff" opacity=".22"/>
+            </g>
+          </svg>
+        </div>
+        <div class="world-progress">
+          <div class="world-progress-bar"><div id="world-progress-fill"></div></div>
+          <p id="world-progress-text" class="world-progress-text">0 / 30 star crystals restored</p>
+        </div>
+        <p class="world-note">Star crystals earned in levels 1–10 restore the forest. Every milestone awakens another part of it.</p>
+        <div id="world-stories" class="world-stories"></div>
+      </div>
+    </section>
+
+    <!-- ============ RELICS ============ -->
+    <section id="screen-relics" class="screen" aria-label="Relic collection">
+      <div class="bg-layer bg-game" aria-hidden="true"></div>
+      <header class="topbar">
+        <button id="btn-relics-back" class="icon-btn" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h2 class="topbar-title">Relic Vault</h2>
+        <div class="star-pill" title="Relics recovered">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5.2-3.4 8.6-8 10-4.6-1.4-8-4.8-8-10V6z" fill="currentColor"/></svg>
+          <span id="relic-count">0</span>
+        </div>
+      </header>
+      <div id="relic-scroll" class="world-scroll">
+        <div id="relic-list" class="relic-list"></div>
+        <p class="world-note">Relics recover themselves as your legend grows. Each one remembers a piece of the forest's oldest mystery.</p>
       </div>
     </section>
 
@@ -204,6 +254,7 @@ sweep(document)})();</script>
           <div class="result-row"><span>Best</span><strong id="lose-best">0</strong></div>
         </div>
         <div class="modal-actions">
+          <button id="btn-ad-revive" class="btn btn-ghost" type="button" hidden>Watch ad for +5 moves</button>
           <button id="btn-retry" class="btn btn-primary" type="button">Try Again</button>
           <button id="btn-lose-map" class="btn btn-ghost" type="button">Level Map</button>
         </div>
@@ -231,6 +282,13 @@ sweep(document)})();</script>
             <input type="checkbox" id="set-symbols" class="switch" />
           </label>
         </div>
+        <div class="save-io">
+          <div class="save-io-btns">
+            <button id="btn-save-export" class="btn btn-ghost" type="button">Export save code</button>
+            <button id="btn-save-import" class="btn btn-ghost" type="button">Import save code</button>
+          </div>
+          <textarea id="save-code" class="save-code" rows="3" spellcheck="false" placeholder="Your save code appears here — copy it to back up progress. To restore, paste a code and press Import." aria-label="Save code"></textarea>
+        </div>
         <div class="modal-actions">
           <button id="btn-settings-close" class="btn btn-primary" type="button">Done</button>
           <button id="btn-reset" class="btn btn-danger" type="button">Reset Progress</button>
@@ -248,6 +306,7 @@ sweep(document)})();</script>
           <p><strong>Match in an L or T</strong> to forge a <strong>Star Bomb</strong> — it blasts a 3&times;3 area.</p>
           <p>Swap two special gems together for a much bigger blast. Cascades raise your combo multiplier.</p>
           <p><strong>Stone blocks</strong> cannot be swapped — clear them by matching gems next to them.</p>
+          <p><strong>Resonance:</strong> some levels have glowing <strong>energy veins</strong>. Match a crystal on a vein and energy travels along it, shattering every crystal it reaches. Stone blocks absorb the energy and stop it.</p>
           <p>Finish the objectives before you run out of moves. Fewer moves used means more stars.</p>
         </div>
         <div class="modal-actions">
@@ -268,7 +327,33 @@ sweep(document)})();</script>
   <script src="js/levels.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/ads.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
+  <script>
+    /* Dev-only local debug tool: ?debug=1 loads the seeded bot + stats panel.
+       No network beyond these same-site files; nothing loads without the flag. */
+    if (/[?&]debug=1\b/.test(window.location.search)) {
+      (function () {
+        function load(src, next) {
+          var s = document.createElement("script");
+          s.src = src;
+          s.onload = next;
+          document.body.appendChild(s);
+        }
+        load("dev/bot.js", function () { load("dev/debug.js", function () { CQDev.debug.init(); }); });
+      })();
+    }
+  </script>
+  <script>
+    /* PWA: register the offline service worker on secure contexts only. */
+    try {
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function () { /* offline cache unavailable - the game still runs */ });
+        });
+      }
+    } catch (e) { /* older browsers: game runs without offline support */ }
+  </script>
 </body>
 </html>

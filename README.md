@@ -5,8 +5,20 @@ HTML5 / CSS / JavaScript site — **no build step, no dependencies, no server co
 
 Swap adjacent gems to line up three or more, trigger cascades, forge special
 gems, and clear each level's objectives before you run out of moves. The game
-ships with **20 handcrafted levels**, a level map, synthesized audio (Web Audio
+ships with **27 handcrafted levels**, a level map, synthesized audio (Web Audio
 API), and a responsive touch-first UI.
+
+Levels 21–26 introduce the game's signature mechanic, **Crystal Resonance**:
+glowing energy veins run through the board. Match a crystal on a vein node and
+energy travels down the vein, shattering every crystal it reaches — the longer
+the vein, the bigger the chain. Blockers absorb the energy, so plan the path.
+
+The campaign is wrapped by **The Guardian** — a shield-sequence encounter on
+level 27 — plus a **Relic Vault** of six once-only collectibles, a
+date-seeded **Daily Challenge** with streaks, and **save-code export/import**
+for moving progress between devices. The game installs as an offline PWA
+(Home-screen Install App button), its text contrast passes WCAG AA, and all
+planned development phases are complete.
 
 ## Running it locally
 
@@ -27,13 +39,24 @@ Then open <http://localhost:8000> in your browser.
 .
 ├── index.html          # App shell, meta tags, canvas + UI containers
 ├── styles.css          # All styling (mobile-first, responsive)
+├── manifest.json       # PWA web app manifest
+├── sw.js               # Versioned offline service worker
+├── icon.svg            # App icon (SVG)
 ├── js/
 │   ├── audio.js        # Web Audio API — synthesized SFX and music
 │   ├── levels.js       # Level definitions (layouts, objectives, stars, hints)
-│   ├── engine.js       # Core match-3 engine (board, matches, cascades, moves)
-│   ├── render.js       # Canvas rendering of the board and effects
-│   ├── ui.js           # Screens, HUD, level map, dialogs
-│   └── main.js         # Bootstrap / wiring
+│   ├── engine.js       # Core match-3 engine (board, matches, cascades, resonance)
+│   ├── render.js       # Canvas rendering of the board, veins and effects
+│   ├── ads.js          # Optional rewarded-ads adapter (no provider configured)
+│   ├── ui.js           # Screens, HUD, level map, dialogs, save, daily, relics, install prompt
+│   └── main.js         # Bootstrap / wiring / built-in self-test (CQTest)
+├── dev/
+│   ├── harness.js      # Headless test harness (dev only, not loaded by the game)
+│   ├── bot.js          # Seeded playtest bot for win-rate measurement (dev only)
+│   └── debug.js        # Local debug panel, loaded only with ?debug=1 (dev only)
+├── android/           # Play Store (TWA) packaging prep — assetlinks template + Bubblewrap guide (see android/README.md)
+├── tests/
+│   └── game.test.js    # Node regression suite
 └── images/
     ├── bg_cavern.jpg   # Cavern background
     └── bg_map.jpg      # Level-map background
@@ -44,23 +67,61 @@ Then open <http://localhost:8000> in your browser.
 - **Swap** two adjacent gems by tapping/dragging to form a line of 3 or more.
 - Matches **cascade**: cleared gems fall, new gems drop in, and chains score extra.
 - Special gems are created from larger matches and clear rows, columns, or areas.
-- Each level defines **move limits**, **objectives** (score, gem types, ice, etc.),
-  and a **star rating**.
-- Progress and stars are stored locally in the browser.
+- **Resonance**: from level 21 on, match a crystal on a glowing vein node to send
+  energy down the vein and chain-clear everything it reaches.
+- Each level defines **move limits**, **objectives** (score, gem types, ice,
+  resonance, etc.), and a **star rating**.
+- Progress and stars are stored locally in your browser.
+- **Crystal Forest**: stars earned in levels 1–10 restore the forest — open
+  **Crystal Forest** from the main menu to watch it heal and read its story.
+- **The Guardian**: level 27 — the shield answers one gem colour at a time; match the
+  colour shown beside the shield counter to crack each segment before your moves run out.
+- **Relic Vault**: reach star milestones (forest restoration, resonance levels, the
+  Guardian) to claim six relics — open **Relics** from the main menu; each is granted once
+  and adds a piece of the legend.
+- **Daily Challenge**: a fresh date-seeded level every day (rotating templates: stones,
+  harvest, ice, resonance) — win it once a day to grow your streak; a changed phone
+  clock never breaks the streak.
+- **Rewarded revive (optional)**: no ads are configured. If an ad provider is ever
+  wired up, the lose screen offers a "watch ad for +5 moves" revive — granted only
+  on the provider's confirmation, once per attempt. The game is fully playable
+  without ads.
+- **Backing up progress**: Settings → *Export save code* gives a short code you
+  can copy and store; paste it and press *Import save code* on any device.
 
-## Known limitations
+## Tests
 
-- **Levels 14 and 19 are currently unwinnable.** Their ice objectives require
-  clearing more ice than actually exists in their layouts, so the objective can
-  never be satisfied. (Fix: reduce the ice objective count or add ice tiles to
-  the layout.)
-- **Pause during a cascade can freeze the game.** Pausing while a cascade is
-  resolving can leave the engine in a non-resolving state; the board may stop
-  responding until the page is reloaded.
-- **`canSwap` / `hasValidMove` mismatch affects hints.** The hint system and the
-  "no valid moves" detection can disagree with the actual swap validator, so
-  hints may occasionally point at a swap the engine then rejects (or fail to
-  detect a dead board).
+Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
+resonance, guardian, relic, daily-challenge, ads-adapter and install-prompt regression suite with Node — 25 groups:
+
+```bash
+node tests/game.test.js
+```
+
+The game also ships an in-browser self-test (`CQTest`, defined in
+`js/main.js`) and a dev-only headless harness (`dev/harness.js`) for running
+the engine suite without a browser.
+
+### Debug panel (dev only)
+
+Open the game with `?debug=1` in the URL (e.g. `index.html?debug=1`) to load
+a local playtest panel that runs the seeded bot against any level and shows
+attempts, wins, win rate, average moves and average score. Nothing is loaded
+without the flag; the panel makes no network requests and stores nothing.
+
+## Installing as an app (PWA)
+
+Over HTTPS the game can be installed from the Chrome menu ("Install app" /
+"Add to Home screen"): it opens standalone and starts offline thanks to a
+versioned service worker. Updates arrive whenever the cache version in
+`sw.js` is bumped. On `file://` or plain `http://` hosting the game runs
+exactly as before, just without the offline cache.
+
+The Home screen also shows an in-game Install App button as soon as the browser signals that installation is available; tapping it opens the native install dialog. If the browser does not offer installation, the button never appears.
+
+For a Play Store release, the `android/` folder holds the TWA packaging prep
+(assetlinks template + Bubblewrap guide); the required accounts, domain and
+signing are owner-side — see `android/README.md`.
 
 ## License
 
