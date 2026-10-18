@@ -31,3 +31,6 @@
 .relic-text{font-size:.85rem;color:#c9d9f2;line-height:1.45}
 .relic-card:not(.is-owned) .relic-name{color:#93a7c9}
 .relic-card:not(.is-owned) .relic-when{color:#8fa3c8}
+
+/* ---- Accessibility: global focus visibility ---- */
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,canvas:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--teal);outline-offset:2px}

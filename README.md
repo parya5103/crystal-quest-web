@@ -32,6 +32,9 @@ Then open <http://localhost:8000> in your browser.
 .
 ├── index.html          # App shell, meta tags, canvas + UI containers
 ├── styles.css          # All styling (mobile-first, responsive)
+├── manifest.json       # PWA web app manifest
+├── sw.js               # Versioned offline service worker
+├── icon.svg            # App icon (SVG)
 ├── js/
 │   ├── audio.js        # Web Audio API — synthesized SFX and music
 │   ├── levels.js       # Level definitions (layouts, objectives, stars, hints)
@@ -92,6 +95,14 @@ Open the game with `?debug=1` in the URL (e.g. `index.html?debug=1`) to load
 a local playtest panel that runs the seeded bot against any level and shows
 attempts, wins, win rate, average moves and average score. Nothing is loaded
 without the flag; the panel makes no network requests and stores nothing.
+
+## Installing as an app (PWA)
+
+Over HTTPS the game can be installed from the Chrome menu ("Install app" /
+"Add to Home screen"): it opens standalone and starts offline thanks to a
+versioned service worker. Updates arrive whenever the cache version in
+`sw.js` is bumped. On `file://` or plain `http://` hosting the game runs
+exactly as before, just without the offline cache.
 
 ## License
 

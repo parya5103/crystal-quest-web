@@ -1,0 +1,15 @@
+{
+  "name": "Crystal Quest: Gem Legends",
+  "short_name": "Crystal Quest",
+  "description": "An original mobile-first match-3 puzzle adventure with 27 handcrafted levels, Crystal Resonance veins, relics and a daily challenge.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0b0f2a",
+  "background_color": "#070a1c",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

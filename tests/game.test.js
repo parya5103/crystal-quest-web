@@ -606,4 +606,57 @@ test('daily challenge: date-seeded templates, exact-once streak, clock-safe, sol
   }
 });
 
+test('PWA: manifest, service worker and guarded registration are structurally valid', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
+  assert.equal(manifest.name, 'Crystal Quest: Gem Legends');
+  assert.equal(manifest.short_name, 'Crystal Quest');
+  assert.equal(manifest.start_url, './');
+  assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.theme_color, '#0b0f2a');
+  assert.equal(manifest.background_color, '#070a1c');
+  assert.ok(Array.isArray(manifest.icons) && manifest.icons.length >= 1, 'at least one icon entry');
+  assert.ok(manifest.icons.every((i) => i.src === 'icon.svg' && i.type === 'image/svg+xml' && i.sizes === 'any'), 'icons point at the shipped SVG');
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  assert.ok(/^var CACHE = 'cq-v\d+';$/m.test(sw), 'cache name is versioned');
+  assert.ok(sw.indexOf('caches.delete') >= 0, 'activate cleans old caches');
+  assert.ok(sw.indexOf('clients.claim') >= 0, 'activate claims open clients');
+  assert.ok(sw.indexOf("request.method !== 'GET'") >= 0, 'non-GET requests bypass the cache');
+  assert.ok(sw.indexOf("e.request.mode === 'navigate'") >= 0, 'navigations fall back to the cached shell');
+  assert.ok(sw.indexOf('dev/bot.js') < 0 && sw.indexOf('dev/debug.js') < 0, 'dev tooling is never precached');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('rel="manifest"') >= 0, 'manifest is linked');
+  assert.ok(html.indexOf("'serviceWorker' in navigator") >= 0, 'registration is guarded');
+  assert.ok(html.indexOf("location.protocol === 'https:'") >= 0, 'registration only on secure contexts');
+  const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+  assert.ok(css.indexOf(':focus-visible') >= 0, 'focus-visible styles shipped');
+});
+
+test('accessibility: shipped text colours meet WCAG AA contrast on their backgrounds', () => {
+  function lum(hex) {
+    const n = hex.replace('#', '');
+    const rgb = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16) / 255);
+    const lin = rgb.map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+  }
+  function ratio(fg, bg) { const a = lum(fg), b = lum(bg); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); }
+  const pairs = [
+    ['#eaf2ff', '#070a1c', 'ink on deep background'],
+    ['#a8b6d8', '#070a1c', 'ink-dim on deep background'],
+    ['#a8b6d8', '#131a3d', 'ink-dim on panel background'],
+    ['#ffc94d', '#070a1c', 'gold on deep background'],
+    ['#ff5f6d', '#070a1c', 'danger on deep background'],
+    ['#35e0d0', '#070a1c', 'teal on deep background'],
+    ['#04202a', '#17a8b4', 'primary button label'],
+    ['#c9d9f2', '#131a3d', 'relic text on panel background'],
+    ['#93a7c9', '#131a3d', 'unrecovered relic name on panel'],
+    ['#8fa3c8', '#131a3d', 'unrecovered relic hint on panel'],
+  ];
+  const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+  for (const [fg, bg, label] of pairs) {
+    assert.ok(css.indexOf(fg) >= 0, fg + ' is shipped in styles.css');
+    const r = ratio(fg, bg);
+    assert.ok(r >= 4.5, label + ': contrast ' + r.toFixed(2) + ':1');
+  }
+});
+
 console.log(`\n${passed.length} regression groups passed.`);
