@@ -13,6 +13,13 @@ glowing energy veins run through the board. Match a crystal on a vein node and
 energy travels down the vein, shattering every crystal it reaches — the longer
 the vein, the bigger the chain. Blockers absorb the energy, so plan the path.
 
+The campaign is wrapped by **The Guardian** — a shield-sequence encounter on
+level 27 — plus a **Relic Vault** of six once-only collectibles, a
+date-seeded **Daily Challenge** with streaks, and **save-code export/import**
+for moving progress between devices. The game installs as an offline PWA
+(Home-screen Install App button), its text contrast passes WCAG AA, and all
+planned development phases are complete.
+
 ## Running it locally
 
 The game is fully static, so any static file server works. From the project root:
@@ -40,13 +47,14 @@ Then open <http://localhost:8000> in your browser.
 │   ├── levels.js       # Level definitions (layouts, objectives, stars, hints)
 │   ├── engine.js       # Core match-3 engine (board, matches, cascades, resonance)
 │   ├── render.js       # Canvas rendering of the board, veins and effects
-│   ├── ui.js           # Screens, HUD, level map, dialogs, save
+│   ├── ads.js          # Optional rewarded-ads adapter (no provider configured)
+│   ├── ui.js           # Screens, HUD, level map, dialogs, save, daily, relics, install prompt
 │   └── main.js         # Bootstrap / wiring / built-in self-test (CQTest)
 ├── dev/
 │   ├── harness.js      # Headless test harness (dev only, not loaded by the game)
 │   ├── bot.js          # Seeded playtest bot for win-rate measurement (dev only)
 │   └── debug.js        # Local debug panel, loaded only with ?debug=1 (dev only)
-├── android/           # Play Store (TWA) packaging prep (not loaded by the game)
+├── android/           # Play Store (TWA) packaging prep — assetlinks template + Bubblewrap guide (see android/README.md)
 ├── tests/
 │   └── game.test.js    # Node regression suite
 └── images/
@@ -84,7 +92,7 @@ Then open <http://localhost:8000> in your browser.
 ## Tests
 
 Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
-resonance, guardian, relic, daily-challenge, ads-adapter and install-prompt regression suite with Node:
+resonance, guardian, relic, daily-challenge, ads-adapter and install-prompt regression suite with Node — 25 groups:
 
 ```bash
 node tests/game.test.js
@@ -110,6 +118,10 @@ versioned service worker. Updates arrive whenever the cache version in
 exactly as before, just without the offline cache.
 
 The Home screen also shows an in-game Install App button as soon as the browser signals that installation is available; tapping it opens the native install dialog. If the browser does not offer installation, the button never appears.
+
+For a Play Store release, the `android/` folder holds the TWA packaging prep
+(assetlinks template + Bubblewrap guide); the required accounts, domain and
+signing are owner-side — see `android/README.md`.
 
 ## License
 
