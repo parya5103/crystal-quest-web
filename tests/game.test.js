@@ -90,8 +90,8 @@ test('existing built-in engine/save regression tests', () => {
   assert.equal(result.pass, true, JSON.stringify(result.results.filter(x => !x.pass)));
 });
 
-test('all 20 level layouts match blocker-objective counts and start playable', () => {
-  assert.equal(LV.LEVELS.length, 20);
+test('all 26 level layouts match blocker-objective counts and start playable', () => {
+  assert.equal(LV.LEVELS.length, 26);
   LV.LEVELS.forEach((level) => {
     const chars = level.layout.join('');
     for (const obj of level.objectives.filter(x => x.type === 'clear')) {

@@ -8,7 +8,7 @@ Read this file before every work session. Update it whenever architecture, mecha
 - Unique selling point (in progress): "Crystal Resonance" — energy veins linking board nodes that chain-clear when activated (signature mechanic, not found in mainstream match-3 clones).
 - Target platform: Android-first mobile web (Chrome), static hosting (GitHub Pages), PWA planned.
 - Budget: ₹0. Free tools only, no paid services, no backend, no paid assets.
-- Current status: base game (20 levels) playable and stable on branch `fix/crystal-quest-mobile-gameplay` (commit a9b9b3d). Upgrade work happens on `feature/resonance-upgrade` (branched from a9b9b3d on 2026-10-18).
+- Current status: base game (20 levels) stable on `fix/crystal-quest-mobile-gameplay` (commit a9b9b3d). Phase 2 Crystal Resonance implemented and headless-tested on `feature/resonance-upgrade` (commit 46eb098 docs; Phase 2 code commit follows). 26 levels total.
 
 ## B. Architecture map
 
@@ -19,11 +19,11 @@ Pure static site: no build step, no dependencies, no framework. Plain HTML/CSS/J
 | `index.html` | App shell: screens (home/map/game), HUD, modals (pause/win/lose/settings/help), canvas `#board-canvas`, live region, loading overlay. Loads scripts in order: audio, levels, engine, render, ui, main. |
 | `styles.css` | All styling, mobile-first; CSS variables for theme; `body.reduced-motion` + `prefers-reduced-motion` support. |
 | `js/audio.js` | `CQAudio` — Web Audio API synthesis (SFX + music loop), master/sfx/music gains, safe unlock on first gesture, no external audio files. |
-| `js/levels.js` | `CQLevels.LEVELS` — 20 level objects `{id,name,moves,layout,objectives,stars,hint}`. Layout strings 8x8: `.` empty, `#` hole, `S` stone, `I` ice. `CQLevels.get(id)`. |
-| `js/engine.js` | `CQEngine` — pure logic: 8x8 grid, seeded RNG (`makeRng`, mulberry32-like), `createBoard` (no initial match, guaranteed valid move), `findMatches`, `planSpecials` (4-run→line, 5-run→prism, L/T→bomb), `expandClears` (BFS special detonation), `applyGravity`, `canSwap` (includes prism+plain and special+special), `trySwap` (swap/combo/prism paths, emits animation steps), `resolveBoard` (cascade loop, guard 60), `shuffleBoard` (deterministic via rng), `damageBlockers`, `makeCtx`, `objectiveProgress/objectivesMet`, `starsFor`. |
-| `js/render.js` | `CQRender` — canvas board rendering: cached gem/blocker sprites (per shape/special/size), `playSteps` animation queue (`swap/revert/clear/fall` step types), particles, popups, flashes, shake, hint/selected/cursor overlays, single rAF loop. |
+| `js/levels.js` | `CQLevels.LEVELS` — 26 level objects `{id,name,moves,layout,objectives,stars,hint}`. Layout strings 8x8: `.` empty, `#` hole, `S` stone, `I` ice, `R` resonance vein node (levels 21–26). `CQLevels.get(id)`. |
+| `js/engine.js` | `CQEngine` — pure logic: 8x8 grid, seeded RNG (`makeRng`, mulberry32-like), `createBoard` (no initial match, guaranteed valid move), `findMatches`, `planSpecials` (4-run→line, 5-run→prism, L/T→bomb), `expandClears` (BFS special detonation), `applyGravity`, `canSwap` (includes prism+plain and special+special), `trySwap` (swap/combo/prism paths, emits animation steps), `resolveBoard` (cascade loop, guard 60), `shuffleBoard` (deterministic via rng), `damageBlockers`, `makeCtx`, `objectiveProgress/objectivesMet`, `starsFor`. Phase 2 additions: `parseTiles` (layout→tile map: hole/vein/normal), `hasVeins`, `veinClusters` (4-connected vein grouping), `applyResonance` (pure BFS, see D), `validateBoard` (grid↔layout invariant check), `RESONANCE_MAX_DEPTH=8`, `findHint(grid,rng)` seeded, `resolveSpecialCombo` now takes rng (no Math.random fallback), `makeCtx` sets `ctx.tiles` + `ctx.resonanceCleared` when the layout contains `R`, `objectiveProgress` supports `{type:"resonance",count}`. |
+| `js/render.js` | `CQRender` — canvas board rendering: cached gem/blocker sprites (per shape/special/size), `playSteps` animation queue (`swap/revert/clear/fall` step types), particles, popups, flashes, shake, hint/selected/cursor overlays, single rAF loop. Phase 2 additions: `R.setTiles(tiles)`, teal energy-vein drawing on vein nodes (pulsing when selected gem sits on a vein), staggered resonance energy-travel flashes inside clear steps, `RESONANCE xN` popup, teal particles. |
 | `js/ui.js` | `CQSave` (localStorage `crystal-quest-save-v1`, schema v1, corrupt-storage recovery), `UI` (screens/toast/modals/level map/settings), `Game` controller (pointer/keyboard input, attemptSwap→playSteps→afterTurn win/lose/shuffle flow, pause/resume, hints), `CQBoot`. |
-| `js/main.js` | DOM-ready boot + `CQTest.run()` in-browser self test (27 checks). |
+| `js/main.js` | DOM-ready boot + `CQTest.run()` in-browser self test (43 checks incl. 16 resonance checks). |
 | `dev/harness.js` | Headless test harness (dev only, not loaded by the game): browser shims, used by dev runner scripts. |
 
 Hosting: GitHub Pages static. No service worker yet (PWA planned in Phase 6 of the roadmap).
@@ -36,12 +36,13 @@ Verified implemented (all verified by headless test run unless noted "browser on
 - Special gems: Line Blaster (4-run), Prism Core (5-run, clears a colour; swapped with plain gem clears that colour), Star Bomb (L/T), all pair combos of specials (CROSS BEAM, NOVA BLAST, QUAKE, PRISM SURGE, TOTAL ECLIPSE).
 - Blockers: stone (hp 1, break by adjacent match), ice (hp 2), holes (`#`) affect gravity.
 - 20 levels: score / collect / clear objectives, 3 star thresholds, level map with lock progression, last-level continue button.
+- Crystal Resonance (Phase 2, headless-tested): vein nodes (`R` in layouts, levels 21–26) linked in clusters; matching on a vein node sends energy along the vein; chain-clears gems, absorbed by blockers, destroys specials without detonating them; deterministic, depth-capped, per-resolution visited set; `{type:"resonance",count}` objective; vein rendering + energy-travel animation + `RESONANCE xN` popup + `resonance` SFX; levels 21–26: First Resonance, Vein Weaver, Chain Current, Resonance Array, Quiet Hollow (breather), Harmonic Vault.
 - Save: localStorage v1 (unlocked, stars, best, lastLevel, settings: sfx/music/reduced-motion/symbols), corrupt JSON → defaults, non-removing recovery. (Browser only: not headless-testable in current layout — see G.)
 - UI: pause/resume/restart/quit, settings modal, help modal, toast + aria live region, keyboard controls (arrows/space/enter/esc/h), manual hint + manual shuffle (costs 1 move), auto-reshuffle when no valid moves (free, deterministic), error toasts on runtime errors.
 - Audio: synthesized SFX/music, gesture unlock, toggles persisted.
 - Responsive board via ResizeObserver + resize handler; reduced-motion support (CSS + render flags).
 
-Planned / not yet implemented: Crystal Resonance, auto-hint after idle, playtest bot + balance, Crystal Forest world restoration, save schemaVersion migration + export/import, relics + Guardian, daily challenges, PWA (manifest/service worker), ad adapter.
+Planned / not yet implemented: playtest bot + balance + auto-hint after 6s idle (Phase 3), Crystal Forest world restoration, save schemaVersion migration + export/import, relics + Guardian, daily challenges, PWA (manifest/service worker), ad adapter.
 
 Known base-game issues (verified in README, present on main; fixed on fix branch — verified by reading fix-branch levels.js): levels 14/19 ice objective counts now match layouts. README on `main` is stale relative to the fix branch.
 
@@ -50,8 +51,15 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 - Engine API contracts (as of base): `trySwap(grid,a,b,rng,ctx) -> {ok,reason?,steps,cascades}`; steps: `{t:"swap",a,b}`, `{t:"revert",a,b}`, `{t:"clear",cleared,blockers,forged,activated,score,combo,mult,label?}`, `{t:"fall",moves,spawns}`. `grid` cells: `{k:"g",g:0-5,s:special|null}`, `{k:"b",b:"stone"|"ice",hp}`, `{k:"e"}`, `null` (hole). `ctx` from `makeCtx(level)`: `{score,collected[6],blockersCleared{stone,ice},preferred,prismColor,rng,level}`.
 - Move resolution: swap → (special combo | prism+plain | findMatches) → resolveBoard cascade loop (match → plan specials → expandClears → keep specials → score 60/clear × cascade mult + 200/forged + 100/blocker → damage adjacent blockers → forge specials → gravity) until no matches. Guard: 60 iterations.
 - Save schema v1: `{v:1,unlocked,stars{},best{},lastLevel,settings{sfx,music,motion,symbols}}`, key `crystal-quest-save-v1`.
-- Level objectives: `{type:"score",target}`, `{type:"collect",gem,count}`, `{type:"clear",blocker:"stone"|"ice",count}`; all must be met to win; ≥1 star forced on win.
-- RNG policy: all gameplay randomness must use the seeded `makeRng`. Known violations in base code being fixed in this upgrade: `findHint` uses `Math.random` (hint choice), `resolveSpecialCombo` gravity falls back to `Math.random` when `ctx.rng` unset (Game always sets it). Rendering-only randomness (particles/shake) may use Math.random (visual only).
+- Level objectives: `{type:"score",target}`, `{type:"collect",gem,count}`, `{type:"clear",blocker:"stone"|"ice",count}`, `{type:"resonance",count}`; all must be met to win; ≥1 star forced on win.
+- Crystal Resonance rules (Phase 2, verified by CQTest):
+  - Tiles: `R` in a level layout marks a vein node. `makeCtx` parses the layout into `ctx.tiles` (`"h"` hole / `"v"` vein / `"n"` normal). Vein nodes form 4-connected clusters (`veinClusters`).
+  - Activation: after any clear step (normal match cascade, prism path, or special combo) whose cleared set includes ≥1 gem standing on a vein node, `applyResonance` runs on the same step. Cost: 0 moves (rides an existing clear; no extra move is consumed).
+  - Chaining: BFS from the cleared vein cells (sources, depth 0) along vein tiles only. Each new node contributes its cell: gems are shattered (become holes, collected in `ctx.collected`), specials are destroyed WITHOUT detonating, blockers absorb one hit (via `damageBlockers`) and stop energy from propagating past them, holes/empties on a vein pass energy through. One shared visited set per resolution prevents duplicate triggers; sources are never re-cleared (they are already empty).
+  - Depth cap: `RESONANCE_MAX_DEPTH=8` — energy travels at most 8 nodes per path (depth 0 source + 7 hops), i.e. `chain ≤ 7` gems beyond sources on a straight vein. Verified by test: straight 7-node vein from a source yields order length 10, chain 7.
+  - Scoring: 30 pts per resonance-shattered gem + 50 × (chain−1) bonus; counts toward `ctx.resonanceCleared` for `{type:"resonance"}` objectives and toward `collect` objectives.
+  - Safety: after every resolution the board passes `validateBoard` (grid matches layout holes, cells well-formed) and has zero leftover matches; cascade guard unchanged at 60.
+- RNG policy: all gameplay randomness must use the seeded `makeRng`. Fixed in Phase 2: `findHint(grid,rng)` is now seeded (passes rng from Game), `resolveSpecialCombo` takes rng (Math.random fallback removed). Remaining known Math.random uses are rendering-only (particles/shake) and are allowed (visual only). No gameplay Math.random remains.
 - Mobile input: pointer events with threshold-based swipe; tap-tap and drag both swap; blockers not selectable; canvas has pointer capture.
 - Audio: created lazily on first gesture (autoplay policy); every play call must be safe if audio unavailable.
 - Dependencies: none. Constraint: no new frameworks; total shipped size < 2 MB (current: ~92 KB code + 2 background images, verify images size before release).
@@ -62,12 +70,12 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 |---|---|---|---|
 | Levels 14/19 unwinnable (ice objective > ice in layout) | Objective counts didn't match layout tiles | Layouts/objectives corrected on `fix/crystal-quest-mobile-gameplay` (levels.js: L14 ice count 6 = 6 tiles, L19 ice 4 = 4 tiles) | Fixed on fix branch; verified by inspection 2026-10-18; solvability re-verified by bot in Phase 3 |
 | Pause during cascade could freeze game | resolving state had no pause path | `pauseRequested` flag handled at end of resolution (ui.js attemptSwap/afterTurn) | Fixed on fix branch; verified by code inspection |
-| Hint/no-move detection mismatch (`canSwap` vs `hasValidMove`) | hint used a different validator | `findHint`/`hasValidMove` now both use `canSwap` (fix branch) | Fixed; `findHint` still uses `Math.random` for choice → converted to seeded rng in Phase 2 |
-| Headless `save: module available` test fails | Save object lives in ui.js which requires real DOM | ASSUMPTION: browser-only. Plan: extract Save to its own module in Phase 4 so save tests run headless | Open (planned) |
+| Hint/no-move detection mismatch (`canSwap` vs `hasValidMove`) | hint used a different validator | `findHint`/`hasValidMove` now both use `canSwap` (fix branch) | Fixed; `findHint` Math.random converted to seeded rng in Phase 2 (test: determinism with same seed) |
+| Headless `save: module available` test fails in minimal harness | Minimal harness loads only engine/levels/main; CQSave lives in ui.js | Not a code defect: full harness (ui.js + shims, mirrors tests/game.test.js) passes all save tests. Optional later: extract Save to its own module | Closed (clarified) |
 
 ## F. Product roadmap (priority order)
 
-1. Crystal Resonance (signature mechanic) — in progress.
+1. Crystal Resonance (signature mechanic) — DONE (Phase 2, headless-tested; browser/viewport check pending).
 2. Playtest bot + level balance (win-rates 85–95% for levels 1–10, breather levels after hard ones) + auto-hint (6s idle) + free deterministic auto-shuffle.
 3. World restoration: Crystal Forest region (CSS/SVG visuals, restoration progress, story fragments), save schemaVersion + migration + backup + export/import.
 4. Relics collection + one Guardian encounter (shield-sequence objective).
@@ -78,6 +86,9 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 ## G. Testing and release status
 
 - Baseline (2026-10-18, branch point a9b9b3d): syntax parse of all 6 JS files — OK (via `new Function` parse in headless harness). `CQTest.run()` headless: 26/27 pass; 1 fail is `save: module available` (browser-only module, see E). Browser run of CQTest not yet performed this session.
+- Phase 2 (2026-10-18, after Resonance implementation): syntax parse of all 6 JS files — OK. Two headless runs: (1) minimal harness (engine/levels/main only): 42/43, only fail = `save: module available` (minimal harness does not load ui.js; not a code defect). (2) full harness mirroring `tests/game.test.js` (loads audio/levels/engine/ui/main + DOM shims + render stub): all 10 Node regression groups pass, including a full `CQTest.run()` with `result.pass === true` asserted (43/43 incl. save tests). Resonance coverage: API present, parseTiles, veinClusters, activation on match, chain/order data, objective progress, board validity, visited-set duplicate prevention, depth cap (order 10 / chain 7), blocker absorb+stop, specials destroyed without detonating, special-combo swap triggers resonance, determinism same-seed, levels 21–26 valid (veins + validateBoard + hasValidMove + initial match-free).
+- `tests/game.test.js` (Node, `node tests/game.test.js`): NOT run with real Node this session (no Node in this environment). An equivalent replication of the full suite was executed in the agent sandbox against the current working files — 10/10 groups pass. Assertion `LV.LEVELS.length` updated 20 → 26 (legitimate count change with 6 new levels; not a weakening). Real-Node run pending.
+- NOT VERIFIED: real-browser CQTest run, real-Node test run, 360x800 / other viewport emulation (no browser emulation available in this session), touch interaction, animation quality, audio. Physical Android device testing: NOT performed.
 - Headless runner: `dev/harness.js` + runner executed in the agent sandbox (no Node available; harness uses JS shims). Commands: load engine.js/levels.js/main.js into shim, call `window.CQTest.run()`.
 - Physical Android device testing: NOT performed. All testing this session is headless logic testing; browser emulation/viewport checks pending.
 - Deployment: none. Work only on `feature/resonance-upgrade`. No merges, no force-push, no deploy without owner authorization.
@@ -89,13 +100,18 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 | 2026-10-18 | Branch `feature/resonance-upgrade` from `fix/crystal-quest-mobile-gameplay` tip (a9b9b3d), not from `main` | fix branch contains verified gameplay/mobile fixes absent from main | — | GitHub API branch creation |
 | 2026-10-18 | Add `dev/` folder for headless harness/bot (shipped but not referenced by index.html) | Reproducible tests without Node/pytest; zero runtime cost | dev/harness.js | Baseline run 26/27 |
 | 2026-10-18 | Keep engine pure (no DOM) so all gameplay logic is headless-testable | Existing architecture already separates engine/render; testability requirement | engine.js | CQTest engine checks pass headless |
+| 2026-10-18 | Resonance rides existing clear steps (activation = a clear set that touches a vein node) instead of a separate move/action | Minimal engine extension, no new input mode, zero extra move cost, deterministic per resolution | engine.js, levels.js, render.js, ui.js, audio.js, main.js | 16 resonance checks pass headless |
+| 2026-10-18 | Depth-cap semantics fixed as "energy travels at most 8 nodes per path" (source depth 0 + 7 hops → chain 7 on a straight vein) | RESONANCE_MAX_DEPTH=8 counts nodes, not hops; initial test expected hop semantics and was corrected to match the documented rule (test expectation fix, not a weakening — chain 7 and order 10 both asserted) | engine.js, main.js | depth-cap test passes headless |
+| 2026-10-18 | Removed an environment-injected media-guard script tag (`tmly` guard, ~2.9 KB) found committed in index.html on the feature branch | It was not authored game code, injects third-party network behaviour, violates the no-tracking/no-network constraint | index.html | Local copy stripped; verified by inspecting repo index.html via GitHub API before strip |
+| 2026-10-18 | Authoritative file pipeline: fetch content via GitHub `get_file_contents` (resource.text) and write locally via `write_file`; NEVER use `jq` to extract file content from tool results | `jq` extraction corrupted UTF-8 (em-dashes became mojibake in levels.js/index.html in a previous session) | — | UTF-8 verified (charCode 8212) after pipeline switch |
+| 2026-10-18 | `findHint` takes optional rng; `resolveSpecialCombo` signature now takes rng (no Math.random fallback) | RNG policy: all gameplay randomness seeded | engine.js | determinism test passes headless |
 
 ## I. Next actions
 
-- Completed: Phase 0 (repo inspection, baseline tests, branch created), Phase 1 (KNOWLEDGE.md established).
-- Pending: Phase 2 Crystal Resonance (rules below → implement → test → commit), then roadmap F.2 onward.
+- Completed: Phase 0 (repo inspection, baseline tests, branch created), Phase 1 (KNOWLEDGE.md established), Phase 2 (Crystal Resonance implemented, headless-tested, documented; commit pending at time of writing).
+- Pending: Phase 3 playtest bot + balance + auto-hint + debug panel, then roadmap F.3 onward.
 - Blockers: none.
-- Exact next task: document Resonance rules in this file, then extend `js/engine.js` with resonance functions (pure, seeded, depth-capped), add `R` vein nodes to level layouts, add vein rendering to `js/render.js`, wire hint-idle timer in `js/ui.js`, extend `js/main.js` CQTest with resonance tests.
+- Exact next task: Phase 3 — write `dev/bot.js` (seeded random + greedy heuristic bot), run ≥200 plays per level (21–26 first, then all 26), record win-rate table in section G, tune moves/objectives for 85–95% win-rate on levels 1–10, add 6s idle auto-hint timer in ui.js (cleaned up on pause/quit/level change), add `?debug=1` local debug panel.
 
 ## J. Asset and license log
 
