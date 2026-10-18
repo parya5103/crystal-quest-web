@@ -67,13 +67,16 @@ Then open <http://localhost:8000> in your browser.
 - **Relic Vault**: reach star milestones (forest restoration, resonance levels, the
   Guardian) to claim six relics — open **Relics** from the main menu; each is granted once
   and adds a piece of the legend.
+- **Daily Challenge**: a fresh date-seeded level every day (rotating templates: stones,
+  harvest, ice, resonance) — win it once a day to grow your streak; a changed phone
+  clock never breaks the streak.
 - **Backing up progress**: Settings → *Export save code* gives a short code you
   can copy and store; paste it and press *Import save code* on any device.
 
 ## Tests
 
 Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
-resonance, guardian and relic regression suite with Node:
+resonance, guardian, relic and daily-challenge regression suite with Node:
 
 ```bash
 node tests/game.test.js

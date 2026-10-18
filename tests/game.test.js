@@ -286,7 +286,7 @@ test('save v2: migrates v1 saves with a backup copy and keeps all progress', () 
   assert.equal(d.best[1], 4200);
   assert.equal(d.lastLevel, 3);
   assert.equal(d.settings.sfx, false);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [] }, 'v1 save gains default world state');
+  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 } }, 'v1 save gains default world state');
   assert.equal(storage.get('crystal-quest-save-backup'), JSON.stringify(v1), 'backup holds the original v1 raw save');
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).v, 2, 'main key rewritten as v2');
   const again = Save.load();
@@ -301,14 +301,14 @@ test('save v2: corrupted storage falls back safely, corrupt world resets without
   const d = Save.load();
   assert.equal(d.v, 2);
   assert.equal(d.unlocked, 1);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [] });
+  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 } });
   assert.ok(!storage.has('crystal-quest-save-v1'), 'corrupt main save removed');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 5, stars: { '3': 1 }, best: {}, lastLevel: 4, settings: {}, world: 'garbage' }));
   const d2 = Save.load();
   assert.equal(d2.v, 2);
   assert.equal(d2.unlocked, 5, 'rest of the save survives a corrupt world field');
   assert.equal(d2.stars[3], 1);
-  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [] });
+  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 } });
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 2, world: { forest: { seen: [42, 'spark', null, 'spark'] } } }));
   const d3 = Save.load();
   assert.deepEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
@@ -521,6 +521,89 @@ test('relics: conditions, exact-once claiming, persistence, and win toasts', () 
   assert.ok(re3.stars[27] >= 1, 'corrupt relics field does not lose other progress');
   Save.reset();
   assert.deepEqual(Save.data.world.relics, []);
+});
+
+test('daily challenge: date-seeded templates, exact-once streak, clock-safe, solvable, b64 padding', () => {
+  storage.clear();
+  Save.data = Save.defaults();
+  Save.persist();
+  const DY = context.CQDaily;
+  assert.ok(DY, 'CQDaily exposed');
+  assert.equal(DY.TEMPLATES.length, 4, 'four rotating templates');
+  assert.equal(DY.level('nonsense'), null, 'malformed date rejected');
+  assert.deepEqual(DY.level('2026-10-18'), DY.level('2026-10-18'), 'same date gives the same level');
+  assert.equal(DY.level('2026-10-18').id, 'daily-2026-10-18');
+  function shift(ds, n) { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+  const templateNames = new Set(DY.TEMPLATES.map((t) => t.name));
+  for (let i = 0; i < 40; i++) {
+    const ds = shift('2026-10-18', i);
+    const lv = DY.level(ds);
+    assert.ok(lv && templateNames.has(lv.name) && lv.moves >= 15 && lv.objectives.length >= 2 && lv.stars.length === 3, 'daily ' + ds + ' is a valid template level');
+  }
+  const r1 = DY.claimWin('2026-10-18', 4200);
+  assert.ok(r1 && r1.streak === 1 && r1.newBest === true, 'first claim starts a streak');
+  assert.equal(DY.claimWin('2026-10-18', 9000), null, 'same date claims exactly once');
+  const r2 = DY.claimWin('2026-10-19', 5100);
+  assert.ok(r2 && r2.streak === 2 && r2.newBest === true, 'consecutive day extends the streak');
+  assert.equal(DY.claimWin('2026-10-17', 9000), null, 'clock-backwards claim ignored');
+  assert.equal(Save.data.world.daily.streak, 2, 'backwards clock does not reset the streak');
+  const r3 = DY.claimWin('2026-10-23', 1000);
+  assert.ok(r3 && r3.streak === 1 && r3.newBest === false, 'missed days reset the streak');
+  assert.equal(Save.data.world.daily.best, 5100, 'best score kept across days');
+  assert.equal(DY.claimWin('', 100), null, 'empty date rejected');
+  const re = Save.load();
+  assert.equal(re.world.daily.streak, 1, 'daily state persists across reload');
+  assert.equal(re.world.daily.best, 5100, 'daily best persists');
+  let raw = JSON.parse(storage.get('crystal-quest-save-v1'));
+  raw.world.daily = 'junk';
+  storage.set('crystal-quest-save-v1', JSON.stringify(raw));
+  assert.deepEqual(Save.load().world.daily, { date: '', streak: 0, best: 0 }, 'corrupt daily field resets safely');
+  raw = JSON.parse(storage.get('crystal-quest-save-v1'));
+  raw.world.daily = { date: 42, streak: -5, best: 'x' };
+  storage.set('crystal-quest-save-v1', JSON.stringify(raw));
+  const rej = Save.load().world.daily;
+  assert.equal(rej.date, '', 'non-string date rejected');
+  assert.equal(rej.streak, 0, 'negative streak rejected');
+  assert.equal(rej.best, 0, 'non-numeric best rejected');
+  storage.clear();
+  Save.data = Save.defaults();
+  Save.persist();
+  const dlv = DY.level('2026-10-18');
+  Game.level = dlv; Game.ctx = E.makeCtx(dlv); Game.ctx.score = 99999;
+  Game.state = 'won'; Game.outcomeShown = false; Game.movesLeft = 5;
+  Game.renderObjectives = function () {};
+  let dailyToasted = '';
+  const prevToast = context.CQUI.toast;
+  context.CQUI.toast = (m) => { dailyToasted = m; };
+  Game.finishWin();
+  context.CQUI.toast = prevToast;
+  assert.equal(Save.data.world.daily.date, '2026-10-18', 'win claims the daily');
+  assert.ok(!Save.data.stars['daily-2026-10-18'], 'daily wins do not write level stars');
+  assert.ok(dailyToasted.toLowerCase().includes('daily'), 'daily toast fired: ' + dailyToasted);
+  for (const pad of [0, 1, 2]) {
+    Save.data = Save.defaults();
+    Save.data.best[1] = 12345;
+    Save.data.world.daily.date = 'x'.repeat(pad);
+    const code = Save.exportCode();
+    storage.clear();
+    Save.load();
+    assert.equal(Save.importCode(code), true, 'import round-trips (pad ' + pad + ')');
+    assert.equal(Save.data.best[1], 12345, 'best survives round trip (pad ' + pad + ')');
+    assert.equal(Save.data.world.daily.date, 'x'.repeat(pad), 'daily date survives round trip (pad ' + pad + ')');
+  }
+  const bot = context.CQDev.bot;
+  for (let i = 0; i < DY.TEMPLATES.length; i++) {
+    const t = DY.TEMPLATES[i];
+    const probe = { id: 900 + i, name: t.name, moves: t.moves, layout: t.layout, objectives: t.objectives, stars: t.stars, hint: t.hint };
+    assert.equal(bot.proveSolvable(probe, 20, 'greedy').solvable, true, t.name + ' proven solvable');
+    const stats = bot.runStats(probe, 30, 'greedy');
+    assert.ok(stats.winRate >= 70, t.name + ' greedy win-rate: ' + stats.winRate + '%');
+  }
+  for (let i = 0; i < 40; i++) {
+    const ds = shift('2026-10-18', i);
+    const probe = Object.assign({}, DY.level(ds), { id: 900 + i });
+    assert.equal(bot.proveSolvable(probe, 50, 'greedy').solvable, true, 'daily ' + ds + ' solvable');
+  }
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
