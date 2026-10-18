@@ -32,7 +32,7 @@ const context = {
 };
 context.window = context;
 vm.createContext(context);
-for (const file of ['js/audio.js', 'js/levels.js', 'js/engine.js', 'js/ui.js', 'js/main.js', 'dev/bot.js', 'dev/debug.js']) {
+for (const file of ['js/audio.js', 'js/levels.js', 'js/engine.js', 'js/ads.js', 'js/ui.js', 'js/main.js', 'dev/bot.js', 'dev/debug.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 }
 
@@ -657,6 +657,49 @@ test('accessibility: shipped text colours meet WCAG AA contrast on their backgro
     const r = ratio(fg, bg);
     assert.ok(r >= 4.5, label + ': contrast ' + r.toFixed(2) + ':1');
   }
+});
+
+test('ads adapter: rewarded-only, default no-op, reward only on provider confirmation', () => {
+  const ads = context.CQAds;
+  assert.ok(ads, 'CQAds exposed');
+  ads.reset();
+  assert.equal(ads.isAvailable(), false, 'no provider: ads unavailable');
+  let rewarded = 0;
+  assert.equal(ads.showRewarded({ onReward: () => { rewarded += 1; } }), false, 'no provider: showRewarded is a no-op');
+  assert.equal(rewarded, 0, 'no reward without a provider');
+  storage.clear();
+  Save.data = Save.defaults();
+  Save.persist();
+  const lv = LV.get(1);
+  Game.level = lv; Game.ctx = E.makeCtx(lv); Game.ctx.score = 120;
+  Game.state = 'lost'; Game.outcomeShown = false; Game.movesLeft = 0;
+  Game.renderObjectives = function () {};
+  Game.finishLose();
+  assert.equal(document.getElementById('btn-ad-revive').hidden, true, 'revive button hidden when ads unavailable');
+  assert.equal(Game.adRevive(), false, 'revive refuses when ads unavailable');
+  let toasted = '';
+  const prevToast = context.CQUI.toast;
+  context.CQUI.toast = (m) => { toasted = m; };
+  ads.register({ isAvailable: () => true, showRewarded: (onReward) => { onReward(); } });
+  assert.equal(ads.isAvailable(), true, 'registered provider available');
+  Game.state = 'lost'; Game.outcomeShown = true; Game.movesLeft = 0; Game.adUsed = false;
+  assert.equal(Game.adRevive(), true, 'showRewarded engaged the provider');
+  assert.equal(Game.movesLeft, 5, 'confirmed reward grants +5 moves');
+  assert.equal(Game.state, 'playing', 'revive returns the game to playing');
+  assert.ok(toasted.toLowerCase().includes('moves'), 'reward toast fired: ' + toasted);
+  assert.equal(Game.adRevive(), false, 'revive is once per attempt');
+  ads.register({ isAvailable: () => true, showRewarded: (a, b, onError) => { onError(new Error('no fill')); } });
+  Game.state = 'lost'; Game.outcomeShown = true; Game.movesLeft = 0; Game.adUsed = false;
+  assert.equal(Game.adRevive(), true, 'provider engaged');
+  assert.equal(Game.movesLeft, 0, 'error path grants no moves');
+  assert.equal(Game.state, 'lost', 'error path keeps the lose state');
+  ads.register({ isAvailable: () => true, showRewarded: () => {} });
+  Game.state = 'lost'; Game.outcomeShown = false; Game.movesLeft = 0; Game.adUsed = false;
+  Game.finishLose();
+  assert.equal(document.getElementById('btn-ad-revive').hidden, false, 'revive button shown when a provider is available');
+  context.CQUI.toast = prevToast;
+  ads.reset();
+  assert.equal(ads.isAvailable(), false, 'reset clears the provider');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);

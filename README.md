@@ -73,13 +73,17 @@ Then open <http://localhost:8000> in your browser.
 - **Daily Challenge**: a fresh date-seeded level every day (rotating templates: stones,
   harvest, ice, resonance) — win it once a day to grow your streak; a changed phone
   clock never breaks the streak.
+- **Rewarded revive (optional)**: no ads are configured. If an ad provider is ever
+  wired up, the lose screen offers a "watch ad for +5 moves" revive — granted only
+  on the provider's confirmation, once per attempt. The game is fully playable
+  without ads.
 - **Backing up progress**: Settings → *Export save code* gives a short code you
   can copy and store; paste it and press *Import save code* on any device.
 
 ## Tests
 
 Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
-resonance, guardian, relic and daily-challenge regression suite with Node:
+resonance, guardian, relic, daily-challenge and ads-adapter regression suite with Node:
 
 ```bash
 node tests/game.test.js

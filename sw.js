@@ -1,6 +1,6 @@
 /* Crystal Quest service worker - versioned offline cache.
    Ship an update by bumping CACHE below; old caches delete on activation. */
-var CACHE = 'cq-v6';
+var CACHE = 'cq-v7';
 var PRECACHE = [
   './',
   'index.html',
@@ -11,6 +11,7 @@ var PRECACHE = [
   'js/levels.js',
   'js/engine.js',
   'js/render.js',
+  'js/ads.js',
   'js/ui.js',
   'js/main.js',
   'images/bg_cavern.jpg',
