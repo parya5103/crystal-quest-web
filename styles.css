@@ -20,3 +20,14 @@
 .world-story-req{margin:0;font-size:12px;color:var(--ink-dim);font-style:italic}
 .world-new{display:inline-block;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;background:var(--teal);color:#04202a;border-radius:999px;padding:2px 8px;vertical-align:middle;margin-left:6px}
 @media(min-width:700px){.screen{padding-left:calc(var(--safe-l) + 24px);padding-right:calc(var(--safe-r) + 24px)}.hud,.objective-bar,.game-controls,.topbar{max-width:720px;width:100%;margin-left:auto;margin-right:auto}.level-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}.modal-actions{flex-direction:row;flex-wrap:wrap}.modal-actions .btn{flex:1 1 44%}}@media(min-width:1024px){.hud,.objective-bar,.game-controls,.topbar{max-width:640px}}@media(max-height:620px){.logo-gem{width:66px;height:66px}.home-inner{gap:14px}.ctrl-btn{min-height:44px;padding:6px 10px}.hud-moves-num{font-size:20px}}body.reduced-motion *,body.reduced-motion *:before,body.reduced-motion *:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+/* ---- Relic vault ---- */
+.relic-list{display:flex;flex-direction:column;gap:10px;padding:2px 2px 4px;max-width:720px;margin-left:auto;margin-right:auto}
+.relic-card{display:flex;align-items:flex-start;gap:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:12px;box-shadow:0 4px 14px #00000059}
+.relic-card.is-owned{background:#12294acc;border-color:#35e0d059}
+.relic-icon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+.relic-body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;text-align:left}
+.relic-name{font-weight:800;color:#eaf6ff;font-size:1rem}
+.relic-when{font-size:.76rem;color:var(--gold);letter-spacing:.3px}
+.relic-text{font-size:.85rem;color:#c9d9f2;line-height:1.45}
+.relic-card:not(.is-owned) .relic-name{color:#93a7c9}
+.relic-card:not(.is-owned) .relic-when{color:#8fa3c8}

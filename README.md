@@ -5,7 +5,7 @@ HTML5 / CSS / JavaScript site — **no build step, no dependencies, no server co
 
 Swap adjacent gems to line up three or more, trigger cascades, forge special
 gems, and clear each level's objectives before you run out of moves. The game
-ships with **26 handcrafted levels**, a level map, synthesized audio (Web Audio
+ships with **27 handcrafted levels**, a level map, synthesized audio (Web Audio
 API), and a responsive touch-first UI.
 
 Levels 21–26 introduce the game's signature mechanic, **Crystal Resonance**:
@@ -62,13 +62,18 @@ Then open <http://localhost:8000> in your browser.
 - Progress and stars are stored locally in your browser.
 - **Crystal Forest**: stars earned in levels 1–10 restore the forest — open
   **Crystal Forest** from the main menu to watch it heal and read its story.
+- **The Guardian**: level 27 — the shield answers one gem colour at a time; match the
+  colour shown beside the shield counter to crack each segment before your moves run out.
+- **Relic Vault**: reach star milestones (forest restoration, resonance levels, the
+  Guardian) to claim six relics — open **Relics** from the main menu; each is granted once
+  and adds a piece of the legend.
 - **Backing up progress**: Settings → *Export save code* gives a short code you
   can copy and store; paste it and press *Import save code* on any device.
 
 ## Tests
 
-Run the dependency-free engine, level-definition, UI-state, save/load, blocker
-and resonance regression suite with Node:
+Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
+resonance, guardian and relic regression suite with Node:
 
 ```bash
 node tests/game.test.js

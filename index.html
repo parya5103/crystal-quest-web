@@ -40,6 +40,7 @@
           <button id="btn-play" class="btn btn-primary btn-lg" type="button">Play</button>
           <button id="btn-continue" class="btn btn-ghost btn-lg" type="button" hidden>Continue</button>
           <button id="btn-world" class="btn btn-ghost btn-lg" type="button">Crystal Forest</button>
+          <button id="btn-relics" class="btn btn-ghost btn-lg" type="button">Relics</button>
           <div class="home-row">
             <button id="btn-help" class="btn btn-ghost" type="button">How to Play</button>
             <button id="btn-settings" class="btn btn-ghost" type="button">Settings</button>
@@ -142,6 +143,25 @@
         </div>
         <p class="world-note">Star crystals earned in levels 1–10 restore the forest. Every milestone awakens another part of it.</p>
         <div id="world-stories" class="world-stories"></div>
+      </div>
+    </section>
+
+    <!-- ============ RELICS ============ -->
+    <section id="screen-relics" class="screen" aria-label="Relic collection">
+      <div class="bg-layer bg-game" aria-hidden="true"></div>
+      <header class="topbar">
+        <button id="btn-relics-back" class="icon-btn" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h2 class="topbar-title">Relic Vault</h2>
+        <div class="star-pill" title="Relics recovered">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5.2-3.4 8.6-8 10-4.6-1.4-8-4.8-8-10V6z" fill="currentColor"/></svg>
+          <span id="relic-count">0</span>
+        </div>
+      </header>
+      <div id="relic-scroll" class="world-scroll">
+        <div id="relic-list" class="relic-list"></div>
+        <p class="world-note">Relics recover themselves as your legend grows. Each one remembers a piece of the forest's oldest mystery.</p>
       </div>
     </section>
 

@@ -90,8 +90,8 @@ test('existing built-in engine/save regression tests', () => {
   assert.equal(result.pass, true, JSON.stringify(result.results.filter(x => !x.pass)));
 });
 
-test('all 26 level layouts match blocker-objective counts and start playable', () => {
-  assert.equal(LV.LEVELS.length, 26);
+test('all 27 level layouts match blocker-objective counts and start playable', () => {
+  assert.equal(LV.LEVELS.length, 27);
   LV.LEVELS.forEach((level) => {
     const chars = level.layout.join('');
     for (const obj of level.objectives.filter(x => x.type === 'clear')) {
@@ -286,7 +286,7 @@ test('save v2: migrates v1 saves with a backup copy and keeps all progress', () 
   assert.equal(d.best[1], 4200);
   assert.equal(d.lastLevel, 3);
   assert.equal(d.settings.sfx, false);
-  assert.deepEqual(d.world, { forest: { seen: [] } }, 'v1 save gains default world state');
+  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [] }, 'v1 save gains default world state');
   assert.equal(storage.get('crystal-quest-save-backup'), JSON.stringify(v1), 'backup holds the original v1 raw save');
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).v, 2, 'main key rewritten as v2');
   const again = Save.load();
@@ -301,14 +301,14 @@ test('save v2: corrupted storage falls back safely, corrupt world resets without
   const d = Save.load();
   assert.equal(d.v, 2);
   assert.equal(d.unlocked, 1);
-  assert.deepEqual(d.world, { forest: { seen: [] } });
+  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [] });
   assert.ok(!storage.has('crystal-quest-save-v1'), 'corrupt main save removed');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 5, stars: { '3': 1 }, best: {}, lastLevel: 4, settings: {}, world: 'garbage' }));
   const d2 = Save.load();
   assert.equal(d2.v, 2);
   assert.equal(d2.unlocked, 5, 'rest of the save survives a corrupt world field');
   assert.equal(d2.stars[3], 1);
-  assert.deepEqual(d2.world, { forest: { seen: [] } });
+  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [] });
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 2, world: { forest: { seen: [42, 'spark', null, 'spark'] } } }));
   const d3 = Save.load();
   assert.deepEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
@@ -390,6 +390,137 @@ test('world restoration: forest milestones unlock from stars, persist, and are s
   assert.ok(toasted.includes('Crystal Forest milestone'), 'milestone toast fired on first win: ' + toasted);
   Game.finishWin();
   assert.ok(Save.data.world.forest.seen.indexOf('spark') === -1, 'seen still pending until the world screen is opened');
+});
+
+test('guardian shield: sequence advances only on the called colour and hooks into real swaps', () => {
+  const glv = LV.get(27);
+  assert.ok(glv.guardian && Array.isArray(glv.guardian.sequence) && glv.guardian.sequence.length === 5, 'guardian level defines a 5-colour sequence');
+  const ctx = E.makeCtx(glv);
+  assert.ok(ctx.guardian && ctx.guardian.idx === 0, 'makeCtx initializes the shield state');
+  assert.equal(E.guardianAdvance(ctx, [{ r: 0, c: 0, g: 2, s: null }]), null, 'wrong colour ignored');
+  assert.equal(ctx.guardian.idx, 0);
+  let prog = E.objectiveProgress(glv, ctx).find(p => p.type === 'guardian');
+  assert.ok(prog && prog.done === false && prog.current === 0 && prog.target === 5);
+  assert.equal(prog.expected, glv.guardian.sequence[0], 'progress exposes the next called colour');
+  const adv = E.guardianAdvance(ctx, [{ r: 0, c: 0, g: 9, s: null }, { r: 0, c: 1, g: glv.guardian.sequence[0], s: null }]);
+  assert.ok(adv && adv.hit === true && adv.idx === 1 && adv.expected === glv.guardian.sequence[0] && adv.hp === 4);
+  prog = E.objectiveProgress(glv, ctx).find(p => p.type === 'guardian');
+  assert.equal(prog.current, 1);
+  assert.equal(prog.expected, glv.guardian.sequence[1], 'next called colour updates');
+  for (let i = 1; i < 5; i++) E.guardianAdvance(ctx, [{ r: 0, c: 0, g: glv.guardian.sequence[i], s: null }]);
+  prog = E.objectiveProgress(glv, ctx).find(p => p.type === 'guardian');
+  assert.equal(prog.done, true, 'shield broken when the sequence completes');
+  assert.equal(prog.expected, null);
+  assert.equal(E.guardianAdvance(ctx, [{ r: 0, c: 0, g: glv.guardian.sequence[0], s: null }]), null, 'no advance after the shield is broken');
+  assert.equal(E.objectivesMet(glv, ctx), false, 'score objective still required');
+  ctx.score = 99999;
+  assert.equal(E.objectivesMet(glv, ctx), true);
+  const seq = [4, 2];
+  const gtest = { id: 90, name: 'Guardian Test', moves: 20, layout: ['........', '........', '........', '........', '........', '........', '........', '........'], objectives: [{ type: 'guardian' }], stars: [1, 2, 3], guardian: { sequence: seq } };
+  function baseGrid() {
+    const g = [];
+    for (let r = 0; r < 8; r++) { const row = []; for (let c = 0; c < 8; c++) row.push({ k: 'g', g: (r * 3 + c) % 6, s: null }); g.push(row); }
+    return g;
+  }
+  let grid = baseGrid();
+  grid[0][0].g = 4; grid[0][1].g = 4; grid[1][2].g = 4;
+  let gctx = E.makeCtx(gtest);
+  gctx.rng = E.makeRng(42);
+  let res = E.trySwap(grid, { r: 0, c: 2 }, { r: 1, c: 2 }, gctx.rng, gctx);
+  assert.equal(res.ok, true, 'called-colour swap resolves');
+  const gStep = res.steps.find(s => s.t === 'clear' && s.guardian && s.guardian.hit);
+  assert.ok(gStep, 'a clear step carries the guardian advance');
+  assert.equal(gStep.guardian.expected, 4, 'first segment was colour 4');
+  assert.ok(gctx.guardian.idx >= 1, 'shield advanced');
+  grid = baseGrid();
+  grid[0][0].g = 5; grid[0][1].g = 5;
+  gctx = E.makeCtx(gtest);
+  gctx.rng = E.makeRng(43);
+  res = E.trySwap(grid, { r: 0, c: 2 }, { r: 1, c: 2 }, gctx.rng, gctx);
+  assert.equal(res.ok, true, 'wrong-colour swap resolves');
+  assert.ok(!res.steps.some(s => s.t === 'clear' && s.guardian && s.guardian.hit), 'no guardian step for the wrong colour');
+  assert.equal(gctx.guardian.idx, 0, 'shield untouched by the wrong colour');
+});
+
+test('guardian encounter: win and loss resolve exactly once through the game flow', () => {
+  const glv = LV.get(27);
+  Game.level = glv; Game.ctx = E.makeCtx(glv); Game.ctx.score = 99999;
+  glv.guardian.sequence.forEach((col) => E.guardianAdvance(Game.ctx, [{ r: 0, c: 0, g: col, s: null }]));
+  Game.grid = E.createBoard(glv, 777).grid; Game.movesLeft = 4;
+  Game.state = 'resolving'; Game.outcomeResolved = false; Game.outcomeShown = false;
+  Game.afterTurn(); Game.afterTurn();
+  assert.equal(Game.state, 'won', 'duplicate afterTurn calls resolve the win once');
+  Game.ctx = E.makeCtx(glv); Game.ctx.score = 99999;
+  E.guardianAdvance(Game.ctx, [{ r: 0, c: 0, g: glv.guardian.sequence[0], s: null }]);
+  Game.grid = E.createBoard(glv, 778).grid; Game.movesLeft = 0;
+  Game.state = 'resolving'; Game.outcomeResolved = false; Game.outcomeShown = false;
+  Game.afterTurn(); Game.afterTurn();
+  assert.equal(Game.state, 'lost', 'guardian failure when the shield is incomplete');
+});
+
+test('guardian encounter: solvable and balanced for the seeded bot', () => {
+  const bot = context.CQDev.bot;
+  const glv = LV.get(27);
+  const proof = bot.proveSolvable(glv, 50, 'greedy');
+  assert.equal(proof.solvable, true, 'guardian proven solvable (seeded play ' + proof.plays + ')');
+  const stats = bot.runStats(glv, 100, 'greedy');
+  assert.ok(stats.winRate >= 70, 'greedy bot win-rate on the Guardian: ' + stats.winRate + '%');
+  assert.equal(stats.attempts, 100);
+});
+
+test('relics: conditions, exact-once claiming, persistence, and win toasts', () => {
+  storage.clear();
+  Save.data = Save.defaults();
+  Save.persist();
+  const RL = context.CQRelics;
+  assert.ok(RL, 'CQRelics exposed');
+  assert.equal(RL.list.length, 6, 'six original relics');
+  assert.deepEqual(RL.owned(), []);
+  assert.deepEqual(RL.claimNew(), [], 'nothing eligible at zero progress');
+  Save.record(1, 5000, 3);
+  const fresh = RL.claimNew();
+  assert.equal(fresh.length, 1);
+  assert.equal(fresh[0].id, 'ember-seed');
+  assert.deepEqual(Save.data.world.relics, ['ember-seed']);
+  assert.deepEqual(RL.claimNew(), [], 'second claim grants nothing');
+  assert.equal(Save.data.world.relics.length, 1, 'no duplicate entry');
+  Save.record(2, 5000, 3); Save.record(3, 5000, 3); Save.record(4, 5000, 3); Save.record(5, 5000, 3);
+  Save.data.stars[25] = 3; Save.data.stars[26] = 3;
+  const eligible = RL.eligible(Save.data).map(r => r.id);
+  assert.ok(eligible.indexOf('nova-shard') >= 0, 'five 3-star levels unlock Nova Shard');
+  assert.ok(eligible.indexOf('vein-compass') >= 0, '3 stars at levels 21+ unlock Vein Compass');
+  assert.ok(eligible.indexOf('guardian-tear') === -1, 'Guardian not yet beaten');
+  assert.ok(eligible.indexOf('forest-heart') === -1, 'forest not fully restored');
+  Game.level = LV.get(27); Game.ctx = E.makeCtx(LV.get(27)); Game.ctx.score = 99999;
+  Game.state = 'won'; Game.outcomeShown = false; Game.movesLeft = 5;
+  Game.renderObjectives = function () {};
+  let toasted = '';
+  const prevToast = context.CQUI.toast;
+  context.CQUI.toast = (m) => { toasted = m; };
+  Game.finishWin();
+  context.CQUI.toast = prevToast;
+  assert.ok((Save.data.stars[27] || 0) >= 1, 'guardian win recorded');
+  assert.ok(Save.data.world.relics.indexOf('guardian-tear') >= 0, 'guardian tear claimed on first win');
+  assert.ok(toasted.includes('Relic recovered'), 'relic toast fired: ' + toasted);
+  Game.finishWin();
+  assert.equal(Save.data.world.relics.filter(x => x === 'guardian-tear').length, 1, 'granted exactly once');
+  const re = Save.load();
+  assert.ok(re.world.relics.indexOf('guardian-tear') >= 0, 'relics persist across reload');
+  assert.ok(RL.owned().indexOf('ember-seed') >= 0, 'owned set survives reload');
+  const raw = JSON.parse(storage.get('crystal-quest-save-v1'));
+  delete raw.world.relics;
+  storage.set('crystal-quest-save-v1', JSON.stringify(raw));
+  const re2 = Save.load();
+  assert.deepEqual(re2.world.relics, [], 'missing relics field defaults safely');
+  assert.ok(re2.stars[27] >= 1, 'other progress kept');
+  const raw3 = JSON.parse(storage.get('crystal-quest-save-v1'));
+  raw3.world.relics = 'junk';
+  storage.set('crystal-quest-save-v1', JSON.stringify(raw3));
+  const re3 = Save.load();
+  assert.deepEqual(re3.world.relics, [], 'corrupt relics field resets to empty');
+  assert.ok(re3.stars[27] >= 1, 'corrupt relics field does not lose other progress');
+  Save.reset();
+  assert.deepEqual(Save.data.world.relics, []);
 });
 
 console.log(`\n${passed.length} regression groups passed.`);

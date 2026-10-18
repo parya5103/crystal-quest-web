@@ -49,6 +49,12 @@
         hitCount = 0;
         for (j = 0; j < blockerHits.length; j++) hitCount++;
         delta += (Math.min(cur + hitCount, o.count) - cur) / o.count;
+      } else if (o.type === "guardian") {
+        if (ctx.guardian && ctx.guardian.idx < ctx.guardian.sequence.length) {
+          var want = ctx.guardian.sequence[ctx.guardian.idx], gHit = 0;
+          for (j = 0; j < cleared.length; j++) if (cleared[j].g === want) gHit++;
+          delta += gHit ? 1 / ctx.guardian.sequence.length : 0;
+        }
       }
     }
     return delta;
