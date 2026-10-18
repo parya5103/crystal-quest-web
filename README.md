@@ -46,6 +46,7 @@ Then open <http://localhost:8000> in your browser.
 │   ├── harness.js      # Headless test harness (dev only, not loaded by the game)
 │   ├── bot.js          # Seeded playtest bot for win-rate measurement (dev only)
 │   └── debug.js        # Local debug panel, loaded only with ?debug=1 (dev only)
+├── android/           # Play Store (TWA) packaging prep (not loaded by the game)
 ├── tests/
 │   └── game.test.js    # Node regression suite
 └── images/
@@ -83,7 +84,7 @@ Then open <http://localhost:8000> in your browser.
 ## Tests
 
 Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
-resonance, guardian, relic, daily-challenge and ads-adapter regression suite with Node:
+resonance, guardian, relic, daily-challenge, ads-adapter and install-prompt regression suite with Node:
 
 ```bash
 node tests/game.test.js
@@ -107,6 +108,8 @@ Over HTTPS the game can be installed from the Chrome menu ("Install app" /
 versioned service worker. Updates arrive whenever the cache version in
 `sw.js` is bumped. On `file://` or plain `http://` hosting the game runs
 exactly as before, just without the offline cache.
+
+The Home screen also shows an in-game Install App button as soon as the browser signals that installation is available; tapping it opens the native install dialog. If the browser does not offer installation, the button never appears.
 
 ## License
 

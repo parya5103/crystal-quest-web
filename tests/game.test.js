@@ -702,4 +702,34 @@ test('ads adapter: rewarded-only, default no-op, reward only on provider confirm
   assert.equal(ads.isAvailable(), false, 'reset clears the provider');
 });
 
+test('install prompt: hidden until beforeinstallprompt, accept prompts once, appinstalled hides', () => {
+  const inst = context.CQInstall;
+  assert.ok(inst, 'CQInstall exposed');
+  const btn = document.getElementById('btn-install');
+  inst.hide();
+  assert.equal(inst.promptable(), false, 'no captured event: not promptable');
+  assert.equal(btn.hidden, true, 'button hidden with no captured event');
+  assert.equal(inst.accept(), false, 'accept without an event does nothing');
+  let prevented = 0, prompted = 0;
+  inst.offer({ preventDefault() { prevented++; }, prompt() { prompted++; } });
+  assert.equal(inst.promptable(), true, 'offer captured the event');
+  assert.equal(prevented, 1, 'offer prevents the default mini-infobar');
+  assert.equal(btn.hidden, false, 'Install App button revealed');
+  assert.equal(inst.accept(), true, 'accept triggers the native prompt');
+  assert.equal(prompted, 1, 'native prompt called exactly once');
+  assert.equal(inst.promptable(), false, 'the captured event is consumed');
+  assert.equal(btn.hidden, true, 'button hidden again after accept');
+  assert.equal(inst.accept(), false, 'a second accept does nothing');
+  inst.offer({ preventDefault() {}, prompt() {} });
+  assert.equal(btn.hidden, false, 'button revealed again after a new offer');
+  inst.hide();
+  assert.equal(inst.promptable(), false, 'hide discards the captured event');
+  assert.equal(btn.hidden, true, 'button hidden after hide');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('id="btn-install"') >= 0, 'home ships the Install App button');
+  const ui = fs.readFileSync(path.join(root, 'js/ui.js'), 'utf8');
+  assert.ok(ui.indexOf('beforeinstallprompt') >= 0, 'ui listens for beforeinstallprompt');
+  assert.ok(ui.indexOf('appinstalled') >= 0, 'ui listens for appinstalled');
+});
+
 console.log(`\n${passed.length} regression groups passed.`);

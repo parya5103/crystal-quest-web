@@ -1,6 +1,6 @@
 /* Crystal Quest service worker - versioned offline cache.
    Ship an update by bumping CACHE below; old caches delete on activation. */
-var CACHE = 'cq-v7';
+var CACHE = 'cq-v8';
 var PRECACHE = [
   './',
   'index.html',
