@@ -60,6 +60,10 @@ Then open <http://localhost:8000> in your browser.
 - Each level defines **move limits**, **objectives** (score, gem types, ice,
   resonance, etc.), and a **star rating**.
 - Progress and stars are stored locally in your browser.
+- **Crystal Forest**: stars earned in levels 1–10 restore the forest — open
+  **Crystal Forest** from the main menu to watch it heal and read its story.
+- **Backing up progress**: Settings → *Export save code* gives a short code you
+  can copy and store; paste it and press *Import save code* on any device.
 
 ## Tests
 

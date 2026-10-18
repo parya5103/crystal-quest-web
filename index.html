@@ -39,6 +39,7 @@
         <div class="home-actions">
           <button id="btn-play" class="btn btn-primary btn-lg" type="button">Play</button>
           <button id="btn-continue" class="btn btn-ghost btn-lg" type="button" hidden>Continue</button>
+          <button id="btn-world" class="btn btn-ghost btn-lg" type="button">Crystal Forest</button>
           <div class="home-row">
             <button id="btn-help" class="btn btn-ghost" type="button">How to Play</button>
             <button id="btn-settings" class="btn btn-ghost" type="button">Settings</button>
@@ -64,6 +65,83 @@
       </header>
       <div id="level-scroll" class="level-scroll">
         <div id="level-grid" class="level-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ WORLD: CRYSTAL FOREST ============ -->
+    <section id="screen-world" class="screen" aria-label="Crystal Forest restoration">
+      <div class="bg-layer bg-game" aria-hidden="true"></div>
+      <header class="topbar">
+        <button id="btn-world-back" class="icon-btn" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h2 class="topbar-title">Crystal Forest</h2>
+        <div class="star-pill" title="Forest star crystals">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 14h5l-2 8 9-13h-5l1-7z" fill="currentColor"/></svg>
+          <span id="world-star-count">0</span>
+        </div>
+      </header>
+      <div id="world-scroll" class="world-scroll">
+        <div class="world-scene">
+          <svg viewBox="0 0 360 200" class="world-svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="wfSky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0d1630"/><stop offset="1" stop-color="#0a2a2e"/>
+              </linearGradient>
+              <linearGradient id="wfHeart" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#7ff5ea"/><stop offset="0.5" stop-color="#35e0d0"/><stop offset="1" stop-color="#1a8fa8"/>
+              </linearGradient>
+            </defs>
+            <rect width="360" height="200" fill="url(#wfSky)"/>
+            <circle cx="38" cy="28" r="1.6" fill="#dfe6ff" opacity=".8"/>
+            <circle cx="120" cy="18" r="1.2" fill="#dfe6ff" opacity=".6"/>
+            <circle cx="200" cy="34" r="1.4" fill="#dfe6ff" opacity=".7"/>
+            <circle cx="258" cy="14" r="1.2" fill="#dfe6ff" opacity=".5"/>
+            <circle cx="316" cy="30" r="14" fill="#dfe6ff" opacity=".85"/>
+            <path d="M0 150 Q90 128 180 142 T360 138 V200 H0 Z" fill="#0c2431"/>
+            <path d="M0 170 Q120 152 240 164 T360 160 V200 H0 Z" fill="#091b26"/>
+            <path d="M52 150 l6 -60 -3 -6 9 0 -2 8 8 58 Z" fill="#14303f"/>
+            <path d="M296 150 l8 -70 -4 -6 10 0 -3 7 6 69 Z" fill="#14303f"/>
+            <path d="M180 148 l6 -76 -3 -5 8 0 -2 6 5 75 Z" fill="#122a37"/>
+            <g id="wf-spark" class="wf-layer">
+              <circle cx="70" cy="92" r="2.6" fill="#ffe98a"/>
+              <circle cx="92" cy="118" r="2" fill="#9ff5ff"/>
+              <circle cx="130" cy="96" r="2.3" fill="#ffe98a"/>
+              <circle cx="250" cy="104" r="2" fill="#9ff5ff"/>
+              <circle cx="212" cy="70" r="2.6" fill="#ffe98a"/>
+              <circle cx="40" cy="122" r="2" fill="#9ff5ff"/>
+              <polygon points="316,120 324,140 308,140" fill="#ffe98a" opacity=".9"/>
+            </g>
+            <g id="wf-saplings" class="wf-layer">
+              <circle cx="58" cy="84" r="16" fill="#1d7a5f"/>
+              <circle cx="74" cy="94" r="12" fill="#26a374"/>
+              <circle cx="300" cy="72" r="18" fill="#1d7a5f"/>
+              <circle cx="286" cy="86" r="12" fill="#26a374"/>
+              <circle cx="122" cy="72" r="10" fill="#26a374"/>
+            </g>
+            <g id="wf-stream" class="wf-layer">
+              <path d="M0 192 Q80 180 150 188 T360 182" stroke="#5ad7f0" stroke-width="9" fill="none" stroke-linecap="round" opacity=".9"/>
+              <path d="M10 191 Q70 183 140 189" stroke="#bdf3ff" stroke-width="2" fill="none" opacity=".8"/>
+            </g>
+            <g id="wf-bloom" class="wf-layer">
+              <circle cx="84" cy="152" r="3.4" fill="#ff8fc4"/>
+              <circle cx="132" cy="160" r="3" fill="#ff8fc4"/>
+              <circle cx="230" cy="154" r="3.4" fill="#c58cff"/>
+              <circle cx="272" cy="162" r="3" fill="#ff8fc4"/>
+              <circle cx="192" cy="166" r="3" fill="#ffd98a"/>
+            </g>
+            <g id="wf-heart" class="wf-layer">
+              <polygon points="180,54 208,94 180,146 152,94" fill="url(#wfHeart)" stroke="#eafffb" stroke-width="2"/>
+              <polygon points="180,54 208,94 152,94" fill="#ffffff" opacity=".22"/>
+            </g>
+          </svg>
+        </div>
+        <div class="world-progress">
+          <div class="world-progress-bar"><div id="world-progress-fill"></div></div>
+          <p id="world-progress-text" class="world-progress-text">0 / 30 star crystals restored</p>
+        </div>
+        <p class="world-note">Star crystals earned in levels 1–10 restore the forest. Every milestone awakens another part of it.</p>
+        <div id="world-stories" class="world-stories"></div>
       </div>
     </section>
 
@@ -179,6 +257,13 @@
             <span>Colorblind symbols</span>
             <input type="checkbox" id="set-symbols" class="switch" />
           </label>
+        </div>
+        <div class="save-io">
+          <div class="save-io-btns">
+            <button id="btn-save-export" class="btn btn-ghost" type="button">Export save code</button>
+            <button id="btn-save-import" class="btn btn-ghost" type="button">Import save code</button>
+          </div>
+          <textarea id="save-code" class="save-code" rows="3" spellcheck="false" placeholder="Your save code appears here — copy it to back up progress. To restore, paste a code and press Import." aria-label="Save code"></textarea>
         </div>
         <div class="modal-actions">
           <button id="btn-settings-close" class="btn btn-primary" type="button">Done</button>
