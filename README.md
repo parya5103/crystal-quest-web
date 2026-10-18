@@ -48,19 +48,13 @@ Then open <http://localhost:8000> in your browser.
   and a **star rating**.
 - Progress and stars are stored locally in the browser.
 
-## Known limitations
+## Tests
 
-- **Levels 14 and 19 are currently unwinnable.** Their ice objectives require
-  clearing more ice than actually exists in their layouts, so the objective can
-  never be satisfied. (Fix: reduce the ice objective count or add ice tiles to
-  the layout.)
-- **Pause during a cascade can freeze the game.** Pausing while a cascade is
-  resolving can leave the engine in a non-resolving state; the board may stop
-  responding until the page is reloaded.
-- **`canSwap` / `hasValidMove` mismatch affects hints.** The hint system and the
-  "no valid moves" detection can disagree with the actual swap validator, so
-  hints may occasionally point at a swap the engine then rejects (or fail to
-  detect a dead board).
+Run the dependency-free engine, level-definition, UI-state, save/load, and blocker regression suite with:
+
+```bash
+node tests/game.test.js
+```
 
 ## License
 
