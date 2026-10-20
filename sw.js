@@ -1,6 +1,6 @@
 /* Crystal Quest service worker - versioned offline cache.
    Ship an update by bumping CACHE below; old caches delete on activation. */
-var CACHE = 'cq-v8';
+var CACHE = 'cq-v13';
 var PRECACHE = [
   './',
   'index.html',
@@ -12,6 +12,7 @@ var PRECACHE = [
   'js/engine.js',
   'js/render.js',
   'js/ads.js',
+  'js/story.js',
   'js/ui.js',
   'js/main.js',
   'images/bg_cavern.jpg',
@@ -19,7 +20,11 @@ var PRECACHE = [
 ];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (cache) { return cache.addAll(PRECACHE); }).then(function () { return self.skipWaiting(); }));
+  e.waitUntil(caches.open(CACHE).then(function (cache) { return cache.addAll(PRECACHE); }));
+});
+
+self.addEventListener('message', function (e) {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', function (e) {

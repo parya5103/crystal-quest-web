@@ -32,7 +32,7 @@ const context = {
 };
 context.window = context;
 vm.createContext(context);
-for (const file of ['js/audio.js', 'js/levels.js', 'js/engine.js', 'js/ads.js', 'js/ui.js', 'js/main.js', 'dev/bot.js', 'dev/debug.js']) {
+for (const file of ['js/audio.js', 'js/levels.js', 'js/engine.js', 'js/story.js', 'js/ads.js', 'js/ui.js', 'js/main.js', 'dev/bot.js', 'dev/debug.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context, { filename: file });
 }
 
@@ -286,7 +286,7 @@ test('save v2: migrates v1 saves with a backup copy and keeps all progress', () 
   assert.equal(d.best[1], 4200);
   assert.equal(d.lastLevel, 3);
   assert.equal(d.settings.sfx, false);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 } }, 'v1 save gains default world state');
+  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] }, 'v1 save gains default world state');
   assert.equal(storage.get('crystal-quest-save-backup'), JSON.stringify(v1), 'backup holds the original v1 raw save');
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).v, 2, 'main key rewritten as v2');
   const again = Save.load();
@@ -301,14 +301,14 @@ test('save v2: corrupted storage falls back safely, corrupt world resets without
   const d = Save.load();
   assert.equal(d.v, 2);
   assert.equal(d.unlocked, 1);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 } });
+  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
   assert.ok(!storage.has('crystal-quest-save-v1'), 'corrupt main save removed');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 5, stars: { '3': 1 }, best: {}, lastLevel: 4, settings: {}, world: 'garbage' }));
   const d2 = Save.load();
   assert.equal(d2.v, 2);
   assert.equal(d2.unlocked, 5, 'rest of the save survives a corrupt world field');
   assert.equal(d2.stars[3], 1);
-  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 } });
+  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 2, world: { forest: { seen: [42, 'spark', null, 'spark'] } } }));
   const d3 = Save.load();
   assert.deepEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
@@ -744,6 +744,115 @@ test('2D-only direction: no 3D renderer ships anywhere in the game', () => {
   let r3 = null;
   try { r3 = fs.readFileSync(path.join(root, 'js/render3d.js'), 'utf8'); } catch (e) { /* absent = 2D-only */ }
   assert.ok(r3 === null, 'js/render3d.js is not shipped');
+});
+
+test('story: three contiguous regions, cast, palettes and structural markers', () => {
+  const S = context.CQStory;
+  assert.ok(S && Array.isArray(S.REGIONS) && S.REGIONS.length === 3, 'story module exposes three regions');
+  let from = 1;
+  S.REGIONS.forEach((reg) => {
+    assert.equal(reg.from, from, 'region starts where the previous ended');
+    assert.ok(reg.to >= reg.from, 'region end after start');
+    from = reg.to + 1;
+    assert.ok(reg.theme && typeof reg.theme.plate === 'string' && typeof reg.theme.cellA === 'string' && typeof reg.theme.cellB === 'string', 'region palette complete');
+    assert.ok(Array.isArray(reg.beats) && reg.beats.length >= 2, 'region carries story beats');
+    reg.beats.forEach((b) => assert.ok(b.id && b.who && b.text, 'beat well formed'));
+  });
+  assert.equal(from, 28, 'regions cover levels 1 through 27 contiguously');
+  assert.ok(S.CHARACTERS.mira && S.CHARACTERS.guardian && S.CHARACTERS.ember && S.CHARACTERS.nix, 'cast defined');
+  assert.ok(S.themeFor(LV.get(1)) && S.themeFor(LV.get(11)) && S.themeFor(LV.get(21)), 'region palettes resolve for real levels');
+  assert.equal(S.themeFor({ id: 905 }), null, 'daily levels carry no story theme');
+  const src = fs.readFileSync(path.join(root, 'js/story.js'), 'utf8');
+  assert.ok(src.indexOf('http') < 0, 'story module makes no network references');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('js/story.js') >= 0, 'index loads the story module');
+  assert.ok(html.indexOf('id="modal-story"') >= 0 && html.indexOf('btn-story-next') >= 0, 'story modal shipped');
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  assert.ok(sw.indexOf('js/story.js') >= 0, 'offline cache precaches the story module');
+  const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+  assert.ok(css.indexOf('.story-portrait') >= 0 && css.indexOf('.story-text') >= 0, 'story modal styles shipped');
+});
+
+test('story flow: pending beats are exact-once and the modal cycles with persistence', () => {
+  const S = context.CQStory;
+  storage.clear();
+  Save.data = Save.defaults();
+  Save.persist();
+  const lv = LV.get(1);
+  const beats = S.pending(lv, Save.data);
+  assert.ok(Array.isArray(beats) && beats.length >= 2, 'a fresh save has pending region beats');
+  assert.equal(JSON.stringify(S.pending(lv, Save.data)), JSON.stringify(beats), 'pending is stable until marked seen');
+  assert.equal(S.pending({ id: 903 }, Save.data).length, 0, 'daily levels have no story beats');
+  const SU = context.CQStoryUI;
+  assert.ok(SU && typeof SU.show === 'function' && typeof SU.next === 'function', 'ui exports the Story controller');
+  const opened = [], closed = [];
+  const om = context.CQUI.openModal, cm = context.CQUI.closeModal;
+  context.CQUI.openModal = (id) => opened.push(id);
+  context.CQUI.closeModal = (id) => closed.push(id);
+  let done = 0;
+  SU.show(beats, () => done++);
+  for (let i = 1; i < beats.length; i++) SU.next();
+  assert.equal(opened.length, beats.length, 'every beat opens the story modal');
+  assert.equal(done, 0, 'done not fired while beats remain');
+  SU.next();
+  assert.equal(done, 1, 'emptying the queue fires done exactly once');
+  assert.equal(closed.length, 1, 'story modal closed once at the end');
+  context.CQUI.openModal = om; context.CQUI.closeModal = cm;
+  assert.equal(S.pending(lv, Save.data).length, 0, 'shown beats never pend again');
+  const reloaded = Save.load();
+  assert.deepEqual(reloaded.world.story.slice().sort(), beats.map((b) => b.id).sort(), 'seen beats persist through reload');
+  storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 3, stars: {}, best: {}, lastLevel: 1, settings: {}, world: { relics: ['a'], daily: { date: '', streak: 0, best: 0 }, story: [42, 'x', null, 'x'] } }));
+  const junk = Save.load();
+  assert.deepEqual(junk.world.story, ['x'], 'story seen list sanitized to unique strings');
+  const code = Save.exportCode();
+  assert.ok(Save.importCode(code), 'export/import round trip works');
+  assert.deepEqual(Save.data.world.story, ['x'], 'import keeps the story seen list');
+});
+
+test('guardian two: level 20 is a valid, balanced Ember Warden encounter', () => {
+  const glv = LV.get(20);
+  assert.equal(glv.name, 'Ember Warden', 'level 20 redesigned as the second Guardian');
+  assert.ok(glv.guardian && Array.isArray(glv.guardian.sequence) && glv.guardian.sequence.length === 5, 'level 20 defines a 5-colour warden sequence');
+  const ctx = E.makeCtx(glv);
+  assert.equal(ctx.guardian.idx, 0, 'makeCtx initializes the warden shield');
+  const adv = E.guardianAdvance(ctx, [{ r: 0, c: 0, g: glv.guardian.sequence[0], s: null }]);
+  assert.ok(adv && adv.hit === true && adv.idx === 1, 'called colour advances the warden shield');
+  let wrong = 0; while (wrong === glv.guardian.sequence[1]) wrong++;
+  assert.equal(E.guardianAdvance(ctx, [{ r: 0, c: 0, g: wrong, s: null }]), null, 'wrong colour ignored');
+  const bot = context.CQDev.bot;
+  const proof = bot.proveSolvable(glv, 50, 'greedy');
+  assert.equal(proof.solvable, true, 'warden level proven solvable (seeded play ' + proof.plays + ')');
+  const stats = bot.runStats(glv, 100, 'greedy');
+  assert.equal(stats.attempts, 100);
+  assert.ok(stats.winRate >= 70, 'greedy bot win-rate on the Warden: ' + stats.winRate + '%');
+});
+
+test('2D polish: easing, palettes and renderer API surface are shipped', () => {
+  const src = fs.readFileSync(path.join(root, 'js/render.js'), 'utf8');
+  assert.ok(src.indexOf('function easeOutBack(') >= 0, 'fall overshoot easing shipped');
+  assert.ok(src.indexOf('Math.sin(p*Math.PI)') >= 0, 'swap arcs lift mid-flight');
+  assert.ok(src.indexOf('TH.cellA') >= 0 && src.indexOf('TH.cellB') >= 0, 'themed cell colours shipped');
+  assert.ok(src.indexOf('d.flash') >= 0, 'clear flash shipped');
+  assert.ok(src.indexOf('Math.sin(this._time*6)') >= 0, 'selection ring pulses');
+  assert.ok(src.indexOf('R.playSteps=') >= 0 && src.indexOf('R.syncFromGrid=') >= 0 && src.indexOf('R.isBusy=') >= 0 && src.indexOf('R.cellAt=') >= 0, 'renderer API surface unchanged');
+  assert.ok(src.indexOf('http') < 0, 'renderer makes no network references');
+  const ui = fs.readFileSync(path.join(root, 'js/ui.js'), 'utf8');
+  assert.ok(ui.indexOf('R.theme=global.CQStory?CQStory.themeFor(lv):null') >= 0, 'ui applies the region palette');
+});
+
+test('PWA: update activation is controlled - installs wait for the page, controllerchange reloads', () => {
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v13';") >= 0, 'cache version bumped for this update');
+  assert.equal(sw.split('self.skipWaiting()').length - 1, 1, 'skipWaiting lives only in the SKIP_WAITING message handler');
+  assert.ok(sw.indexOf("e.data.type === 'SKIP_WAITING'") >= 0, 'a waiting worker installs only when the page asks');
+  assert.ok(sw.indexOf('clients.claim') >= 0, 'activation still claims open clients');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('updatefound') >= 0, 'page watches for a new worker');
+  assert.ok(html.indexOf("postMessage({ type: 'SKIP_WAITING' })") >= 0, 'page asks the waiting worker to install');
+  assert.ok(html.indexOf('controllerchange') >= 0, 'page reloads when the new worker takes over');
+  assert.ok(html.indexOf('cqReloading') >= 0, 'reload guard prevents update loops');
+  assert.ok(html.indexOf('Progress is stored only in this browser') >= 0, 'privacy note shipped');
+  assert.ok(html.indexOf('Ads are off by default') >= 0, 'ads stance documented for players');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
