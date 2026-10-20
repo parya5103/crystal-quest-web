@@ -732,4 +732,18 @@ test('install prompt: hidden until beforeinstallprompt, accept prompts once, app
   assert.ok(ui.indexOf('appinstalled') >= 0, 'ui listens for appinstalled');
 });
 
+test('2D-only direction: no 3D renderer ships anywhere in the game', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  const ui = fs.readFileSync(path.join(root, 'js/ui.js'), 'utf8');
+  assert.ok(html.indexOf('render3d') < 0, 'index.html loads no 3D renderer');
+  assert.ok(html.indexOf('set-3d') < 0, 'settings modal ships no 3D toggle');
+  assert.ok(sw.indexOf('render3d') < 0, 'offline cache precaches no 3D renderer');
+  assert.ok(ui.indexOf('CQRender3D') < 0, 'ui wires no 3D renderer');
+  assert.ok(ui.indexOf('gfx3d') < 0, 'save settings carry no gfx3d flag');
+  let r3 = null;
+  try { r3 = fs.readFileSync(path.join(root, 'js/render3d.js'), 'utf8'); } catch (e) { /* absent = 2D-only */ }
+  assert.ok(r3 === null, 'js/render3d.js is not shipped');
+});
+
 console.log(`\n${passed.length} regression groups passed.`);
