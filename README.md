@@ -20,6 +20,11 @@ for moving progress between devices. The game installs as an offline PWA
 (Home-screen Install App button), its text contrast passes WCAG AA, and all
 planned development phases are complete.
 
+The 2D evolution is live: a story mode with three regions (Crystal Forest,
+Emberfall Canyon, Starlit Summit), a small cast led by Mira, region board
+palettes, a second Guardian encounter at level 20 (Ember Warden), and
+controlled service-worker updates that activate only on the next reload.
+
 ## Running it locally
 
 The game is fully static, so any static file server works. From the project root:

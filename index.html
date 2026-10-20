@@ -296,6 +296,19 @@
       </div>
     </div>
 
+    <div id="modal-story" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="story-title">
+        <h3 id="story-title" class="modal-title">Story</h3>
+        <div class="help-body">
+          <div class="story-portrait" id="story-portrait" aria-hidden="true"></div>
+          <div class="story-speaker" id="story-speaker"></div>
+          <p class="story-text" id="story-text"></p>
+        </div>
+        <div class="modal-actions">
+          <button id="btn-story-next" class="btn btn-primary" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
     <div id="modal-help" class="modal" hidden>
       <div class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <h3 id="help-title" class="modal-title">How to Play</h3>
@@ -308,6 +321,7 @@
           <p><strong>Stone blocks</strong> cannot be swapped — clear them by matching gems next to them.</p>
           <p><strong>Resonance:</strong> some levels have glowing <strong>energy veins</strong>. Match a crystal on a vein and energy travels along it, shattering every crystal it reaches. Stone blocks absorb the energy and stop it.</p>
           <p>Finish the objectives before you run out of moves. Fewer moves used means more stars.</p>
+          <p><strong>Privacy:</strong> this game runs entirely on your device. Progress is stored only in this browser, no accounts, no tracking, no network requests. Ads are off by default; if ever enabled they will be optional and rewarded-only.</p>
         </div>
         <div class="modal-actions">
           <button id="btn-help-close" class="btn btn-primary" type="button">Got it</button>
@@ -328,6 +342,7 @@
   <script src="js/engine.js"></script>
   <script src="js/render.js"></script>
   <script src="js/ads.js"></script>
+  <script src="js/story.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
   <script>
@@ -350,7 +365,25 @@
     try {
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js').catch(function () { /* offline cache unavailable - the game still runs */ });
+          navigator.serviceWorker.register('sw.js').then(function (reg) {
+            if (!reg) return;
+            reg.addEventListener('updatefound', function () {
+              var nw = reg.installing;
+              if (!nw) return;
+              nw.addEventListener('statechange', function () {
+                if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                  window.CQUI && window.CQUI.toast && window.CQUI.toast('A new version is ready - installing...');
+                  nw.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+          }).catch(function () { /* offline cache unavailable - the game still runs */ });
+          var cqReloading = false;
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (cqReloading) return;
+            cqReloading = true;
+            location.reload();
+          });
         });
       }
     } catch (e) { /* older browsers: game runs without offline support */ }

@@ -34,3 +34,8 @@
 
 /* ---- Accessibility: global focus visibility ---- */
 a:focus-visible,button:focus-visible,[tabindex]:focus-visible,canvas:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+/* ---- Story modal ---- */
+.story-portrait{display:flex;align-items:center;justify-content:center;min-height:54px}
+.story-portrait-dot{width:34px;height:34px;border-radius:50%;display:inline-block;box-shadow:0 0 12px rgba(255,255,255,.3)}
+.story-speaker{font-weight:800;color:var(--gold);letter-spacing:.4px;margin:4px 0 2px;font-size:.95rem}
+.story-text{font-size:.92rem;color:#c9d9f2;line-height:1.5;margin:0}
