@@ -842,7 +842,7 @@ test('2D polish: easing, palettes and renderer API surface are shipped', () => {
 
 test('PWA: update activation is controlled - installs wait for the page, controllerchange reloads', () => {
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v13';") >= 0, 'cache version bumped for this update');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v14';") >= 0, 'cache version bumped for this update');
   assert.equal(sw.split('self.skipWaiting()').length - 1, 1, 'skipWaiting lives only in the SKIP_WAITING message handler');
   assert.ok(sw.indexOf("e.data.type === 'SKIP_WAITING'") >= 0, 'a waiting worker installs only when the page asks');
   assert.ok(sw.indexOf('clients.claim') >= 0, 'activation still claims open clients');
@@ -853,6 +853,21 @@ test('PWA: update activation is controlled - installs wait for the page, control
   assert.ok(html.indexOf('cqReloading') >= 0, 'reload guard prevents update loops');
   assert.ok(html.indexOf('Progress is stored only in this browser') >= 0, 'privacy note shipped');
   assert.ok(html.indexOf('Ads are off by default') >= 0, 'ads stance documented for players');
+});
+
+test('UI polish: home progress, map regions, objective meters and combo feedback are shipped', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+  const ui = fs.readFileSync(path.join(root, 'js/ui.js'), 'utf8');
+  const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  assert.ok(html.indexOf('id="home-progress"') >= 0 && html.indexOf('id="home-level"') >= 0 && html.indexOf('id="home-stars"') >= 0, 'home ships the real progress chip');
+  assert.ok(html.indexOf('btn-play') >= 0 && html.indexOf('home-grid') >= 0, 'home hierarchy shipped');
+  assert.ok(html.indexOf('id="win-newbest"') >= 0, 'win modal ships the new-best badge');
+  assert.ok((html.match(/id="btn-pause"/g) || []).length === 1, 'pause button appears exactly once');
+  assert.ok(css.indexOf('.region-head') >= 0 && css.indexOf('.home-progress') >= 0 && css.indexOf('.obj-meter') >= 0 && css.indexOf('.btn-play') >= 0, 'polish styles shipped');
+  assert.ok(ui.indexOf('updateHome') >= 0 && ui.indexOf('region-head') >= 0 && ui.indexOf('comboBanner') >= 0, 'ui wires home progress, region headers and combo feedback');
+  assert.ok(ui.indexOf('var nb=$("win-newbest")') >= 0, 'win flow toggles the new-best badge');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v14';") >= 0, 'cache bumped for the polish pass');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);

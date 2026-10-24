@@ -37,16 +37,22 @@
           <p class="logo-sub">GEM LEGENDS</p>
         </div>
 
+        <div class="home-progress" id="home-progress" aria-label="Adventure progress">
+          <span>Level <strong id="home-level">1</strong></span>
+          <span class="hp-sep" aria-hidden="true"></span>
+          <span class="hp-stars"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z" fill="currentColor"/></svg><strong id="home-stars">0</strong> / 81</span>
+        </div>
+
         <div class="home-actions">
-          <button id="btn-play" class="btn btn-primary btn-lg" type="button">Play</button>
+          <button id="btn-play" class="btn btn-primary btn-lg btn-play" type="button">Play</button>
           <button id="btn-continue" class="btn btn-ghost btn-lg" type="button" hidden>Continue</button>
-          <button id="btn-world" class="btn btn-ghost btn-lg" type="button">Crystal Forest</button>
-          <button id="btn-daily" class="btn btn-ghost btn-lg" type="button">Daily Challenge</button>
-          <button id="btn-install" class="btn btn-ghost btn-lg" type="button" hidden>Install App</button>
-          <button id="btn-relics" class="btn btn-ghost btn-lg" type="button">Relics</button>
-          <div class="home-row">
+          <div class="home-grid">
+            <button id="btn-world" class="btn btn-ghost" type="button">Crystal Forest</button>
+            <button id="btn-daily" class="btn btn-ghost" type="button">Daily Challenge</button>
+            <button id="btn-relics" class="btn btn-ghost" type="button">Relics</button>
             <button id="btn-help" class="btn btn-ghost" type="button">How to Play</button>
             <button id="btn-settings" class="btn btn-ghost" type="button">Settings</button>
+            <button id="btn-install" class="btn btn-ghost" type="button" hidden>Install App</button>
           </div>
         </div>
 
@@ -185,6 +191,9 @@
           <div class="hud-score-label">Score</div>
           <div class="hud-score" id="hud-score">0</div>
         </div>
+        <button id="btn-pause" class="icon-btn hud-pause" type="button" aria-label="Pause game">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
+        </button>
       </header>
 
       <div class="objective-bar" id="objectives" aria-label="Level objectives"></div>
@@ -198,10 +207,6 @@
       </div>
 
       <div class="game-controls">
-        <button id="btn-pause" class="ctrl-btn" type="button" aria-label="Pause game">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
-          <span>Pause</span>
-        </button>
         <button id="btn-hint" class="ctrl-btn" type="button" aria-label="Show a hint">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 00-3.5 10.9V16a1.5 1.5 0 001.5 1.5h4A1.5 1.5 0 0015.5 16v-2.1A6 6 0 0012 3z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M10 20.5h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
           <span>Hint</span>
@@ -232,6 +237,7 @@
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="win-title">
         <h3 id="win-title" class="modal-title">Level Cleared!</h3>
         <div class="stars-row" id="win-stars" aria-label="Stars earned"></div>
+        <div class="new-best" id="win-newbest" hidden>New Best Score</div>
         <div class="result-rows">
           <div class="result-row"><span>Score</span><strong id="win-score">0</strong></div>
           <div class="result-row"><span>Best</span><strong id="win-best">0</strong></div>
