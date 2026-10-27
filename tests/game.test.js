@@ -10,8 +10,8 @@ const root = path.resolve(__dirname, '..');
 const storage = new Map();
 const scheduled = [];
 const render = {
-  canvas: { focus() {} }, selected: null, hint: null, particles: [], popups: [], flashes: [],
-  syncFromGrid() {}, resize() {}, isBusy() { return false; }, playSteps(_steps, hooks) { hooks && hooks.done && hooks.done(); },
+  canvas: { focus() {}, hidden: false, style: {}, classList: { add() {}, remove() {}, toggle() {} }, querySelector() { return null; } }, selected: null, hint: null, particles: [], popups: [], flashes: [],
+  syncFromGrid() {}, resize() {}, isBusy() { return false; }, playSteps(_steps, hooks) { hooks && hooks.done && hooks.done(); }, setTiles() {}, theme: null,
 };
 const audio = { play() {}, stopMusic() {}, unlock() {}, startMusic() {}, setSfx() {}, setMusic() {} };
 const document = {
@@ -606,6 +606,50 @@ test('daily challenge: date-seeded templates, exact-once streak, clock-safe, sol
   }
 });
 
+
+test('daily challenge: boards are date-seeded, identical on retry and differ per date', () => {
+  storage.clear();
+  Save.data = Save.defaults();
+  const DY = context.CQDaily;
+  const d1 = DY.level('2027-03-14');
+  assert.ok(d1 && d1.daily && typeof d1.daily.seed === 'number', 'daily level carries a numeric seed');
+  scheduled.length = 0;
+  Game.start(d1);
+  assert.equal(Game.state, 'playing', 'daily level starts');
+  const g1 = JSON.stringify(Game.grid);
+  Game.start(d1);
+  assert.equal(JSON.stringify(Game.grid), g1, 'same daily level replays identically');
+  Game.retryLevel();
+  assert.equal(JSON.stringify(Game.grid), g1, 'retry rebuilds the identical daily board');
+  const d2 = DY.level('2027-03-15');
+  Game.start(d2);
+  assert.notEqual(JSON.stringify(Game.grid), g1, 'another date seeds a different board');
+});
+
+test('daily losses never pollute the level best table', () => {
+  storage.clear();
+  Save.data = Save.defaults();
+  Save.persist();
+  const DY = context.CQDaily;
+  const d = DY.level('2027-03-14');
+  Game.level = d;
+  Game.ctx = E.makeCtx(d);
+  Game.ctx.score = 3210;
+  Game.state = 'lost';
+  Game.outcomeShown = false;
+  Game.finishLose();
+  assert.equal(JSON.stringify(Save.data.best), '{}', 'no best["daily-*"] junk keys are written');
+  const lv1 = LV.get(1);
+  Game.level = lv1;
+  Game.ctx = E.makeCtx(lv1);
+  Game.ctx.score = 12345;
+  Game.state = 'lost';
+  Game.outcomeShown = false;
+  Game.finishLose();
+  assert.equal(Save.data.best[1], 12345, 'normal levels still record their best score');
+  assert.deepEqual(Object.keys(Save.data.best), ['1'], 'best table holds only the normal level');
+});
+
 test('PWA: manifest, service worker and guarded registration are structurally valid', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
   assert.equal(manifest.name, 'Crystal Quest: Gem Legends');
@@ -842,7 +886,7 @@ test('2D polish: easing, palettes and renderer API surface are shipped', () => {
 
 test('PWA: update activation is controlled - installs wait for the page, controllerchange reloads', () => {
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v14';") >= 0, 'cache version bumped for this update');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v15';") >= 0, 'cache version bumped for this update');
   assert.equal(sw.split('self.skipWaiting()').length - 1, 1, 'skipWaiting lives only in the SKIP_WAITING message handler');
   assert.ok(sw.indexOf("e.data.type === 'SKIP_WAITING'") >= 0, 'a waiting worker installs only when the page asks');
   assert.ok(sw.indexOf('clients.claim') >= 0, 'activation still claims open clients');
@@ -867,7 +911,7 @@ test('UI polish: home progress, map regions, objective meters and combo feedback
   assert.ok(css.indexOf('.region-head') >= 0 && css.indexOf('.home-progress') >= 0 && css.indexOf('.obj-meter') >= 0 && css.indexOf('.btn-play') >= 0, 'polish styles shipped');
   assert.ok(ui.indexOf('updateHome') >= 0 && ui.indexOf('region-head') >= 0 && ui.indexOf('comboBanner') >= 0, 'ui wires home progress, region headers and combo feedback');
   assert.ok(ui.indexOf('var nb=$("win-newbest")') >= 0, 'win flow toggles the new-best badge');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v14';") >= 0, 'cache bumped for the polish pass');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v15';") >= 0, 'cache bumped for the polish pass');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
