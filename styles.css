@@ -73,3 +73,20 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible,canvas:focus-visib
 @media(max-height:700px){.home-inner{gap:16px}.logo-gem{width:clamp(70px,20vw,96px);height:clamp(70px,20vw,96px)}.btn-play{min-height:54px;font-size:18px}.home-grid .btn{min-height:44px}}
 @media(max-height:560px){.home-progress{padding:5px 12px;font-size:12px}.home-foot{display:none}}
 
+
+/* ===== Google AdSense menu ad slot ===== */
+.ad-slot {
+  margin: 10px auto 6px;
+  max-width: 320px;
+  text-align: center;
+}
+.ad-slot[hidden] { display: none; }
+.ad-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8fa3c8;
+  margin-bottom: 2px;
+}
+.ad-slot ins.adsbygoogle { display: block; }
