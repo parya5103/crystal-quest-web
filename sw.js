@@ -3,7 +3,7 @@
    Only caches with THIS app's prefix (cq-*) are ever deleted, so other apps
    served from the same origin (e.g. arrow-out under the same domain) keep
    their own caches intact. */
-var CACHE = 'cq-v15';
+var CACHE = 'cq-v16';
 var CACHE_PREFIX = 'cq-';
 var PRECACHE = [
   './',
