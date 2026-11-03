@@ -1,6 +1,10 @@
 /* Crystal Quest service worker - versioned offline cache.
-   Ship an update by bumping CACHE below; old caches delete on activation. */
-var CACHE = 'cq-v14';
+   Ship an update by bumping CACHE below; old caches delete on activation.
+   Only caches with THIS app's prefix (cq-*) are ever deleted, so other apps
+   served from the same origin (e.g. arrow-out under the same domain) keep
+   their own caches intact. */
+var CACHE = 'cq-v15';
+var CACHE_PREFIX = 'cq-';
 var PRECACHE = [
   './',
   'index.html',
@@ -29,7 +33,7 @@ self.addEventListener('message', function (e) {
 
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (key) { return key !== CACHE; }).map(function (key) { return caches.delete(key); }));
+    return Promise.all(keys.filter(function (key) { return key.indexOf(CACHE_PREFIX) === 0 && key !== CACHE; }).map(function (key) { return caches.delete(key); }));
   }).then(function () { return self.clients.claim(); }));
 });
 
