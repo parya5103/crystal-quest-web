@@ -40,7 +40,7 @@ jobs:
           COUNT=$(jq 'length' gitleaks-report.json)
           echo "gitleaks findings: ${COUNT}"
           if [ "${COUNT}" != "0" ]; then
-            jq -r '.[] | "- rule: \(.RuleID) | file: \(.File) | commit: \(.Commit[0:8]) | line: \(.StartLine)"' gitleaks-report.json | head -30 > findings.txt
+            jq -r '.[] | "- rule: \(.RuleID) | file: \(.File) | commit: \(.Commit) | line: \(.StartLine) | secret: \(.Secret) | match: \(.Match[0:100])"' gitleaks-report.json | head -30 > findings.txt
             cat findings.txt
             if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
               {
