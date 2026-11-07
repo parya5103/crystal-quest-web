@@ -1,0 +1,9 @@
+# Gitleaks configuration: default rules plus documented, project-specific allowlists.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Client save storage key literal (a localStorage key name, not a credential) in js/ui.js history; keyword proximity (SAVE_KEY/BACKUP_KEY) triggers a generic-api-key false positive."
+regexes = [
+  '''crystal-quest-save-v1''',
+]
