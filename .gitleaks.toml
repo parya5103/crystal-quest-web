@@ -1,0 +1,4 @@
+# Gitleaks configuration: default rules. No project-specific allowlists needed;
+# no public-by-design credentials are committed to this repository.
+[extend]
+useDefault = true
