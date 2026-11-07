@@ -1,0 +1,14 @@
+# Dependabot configuration.
+# NOTE: this file MUST live at .github/dependabot.yml. Dependabot ignores
+# it inside .github/workflows/ - the previous wrong location, which this
+# change fixes (the file is deleted from .github/workflows/ by the same
+# commit).
+version: 2
+updates:
+  # Keep the SHA-pinned GitHub Actions fresh. Dependabot re-pins the
+  # immutable commit SHA together with the version comment.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

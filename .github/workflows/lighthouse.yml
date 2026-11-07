@@ -1,0 +1,38 @@
+name: Lighthouse
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly, Monday 05:50 UTC.
+    - cron: '50 5 * * 1'
+  workflow_dispatch:
+
+# Advisory-only job: scores are recorded in artifacts; nothing blocks.
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (pinned)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      # Advisory only - failures here do not block anything.
+      # Lighthouse's accessibility category runs the axe-core rule set,
+      # so this doubles as the automated axe-core accessibility audit.
+      # Canvas gameplay is not Lighthouse-measured; this audits the
+      # load of the game shell only.
+      - name: Run Lighthouse on the live site
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12.6.2
+        with:
+          urls: |
+            https://gogocompany.in/crystalquest/
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        continue-on-error: true
