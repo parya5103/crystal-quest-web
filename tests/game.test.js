@@ -870,4 +870,41 @@ test('UI polish: home progress, map regions, objective meters and combo feedback
   assert.ok(sw.indexOf("var CACHE = 'cq-v16';") >= 0, 'cache bumped for the polish pass');
 });
 
+test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and settings wiring (MOCKED)', () => {
+  // MOCKED: the module is evaluated in a plain Node vm context. No Firebase
+  // SDK, no service worker, no Notification API and no network are involved.
+  // These checks validate the fail-closed gate, payload shapes and wiring
+  // only. They do NOT prove live FCM delivery - that is a manual
+  // post-deployment device verification step.
+  const modSrc = fs.readFileSync(path.join(root, 'js', 'gogo-notifications.js'), 'utf8');
+  const gctx = {};
+  vm.createContext(gctx);
+  vm.runInContext(modSrc, gctx, { filename: 'js/gogo-notifications.js' });
+  const GN = gctx.GoGoNotifications;
+  assert.ok(GN, 'module loads inertly in plain Node');
+  const v = GN.internals.validateConfig();
+  assert.equal(v.ok, false, 'empty apiBase/vapidPublicKey keep the feature disabled');
+  assert.equal(v.disabled, true);
+  assert.equal(GN.config.appId, 'crystal-quest');
+  assert.equal(GN.config.swUrl, 'fcm/firebase-messaging-sw.js', 'FCM worker lives in its own subdirectory');
+  assert.equal(GN.config.authMode, 'anonymous');
+  const payload = GN.internals.buildRegisterPayload({ appId: 'crystal-quest' }, 'tok-abcdefghijklmnop', 'TestUA/1.0');
+  assert.deepEqual(payload, { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
+  const pref = GN.internals.buildPreferencePayload(false);
+  assert.equal(pref.enabled, false);
+  assert.equal(pref.webPush, false);
+  assert.equal(pref.quietHoursStart, '22:00');
+  assert.equal(GN.internals.safeUrl('https://evil.example/'), 'https://gogocompany.in/');
+  const swFcm = fs.readFileSync(path.join(root, 'fcm', 'firebase-messaging-sw.js'), 'utf8');
+  assert.ok(swFcm.indexOf('onBackgroundMessage') >= 0, 'background message handler present');
+  assert.ok(swFcm.indexOf("addEventListener('fetch'") < 0, 'FCM worker installs no fetch handler');
+  assert.ok(swFcm.indexOf('tag: notificationId') >= 0, 'collapsing tag prevents duplicate notifications');
+  assert.ok(swFcm.indexOf("new URL('../icon.svg', self.registration.scope).href") >= 0, 'icon resolves from the fcm/ scope');
+  const swGame = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  assert.ok(swGame.indexOf('GoGoNotifications') < 0, 'game service worker untouched by the feature');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(html.indexOf('data-gogo-notifications') >= 0, 'settings modal carries the mount container');
+  assert.ok(html.indexOf('<script src="js/main.js"></script>') < html.indexOf('js/gogo-notifications.js'), 'module loads after the game scripts');
+});
+
 console.log(`\n${passed.length} regression groups passed.`);

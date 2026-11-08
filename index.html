@@ -331,6 +331,9 @@
           </div>
           <textarea id="save-code" class="save-code" rows="3" spellcheck="false" placeholder="Your save code appears here — copy it to back up progress. To restore, paste a code and press Import." aria-label="Save code"></textarea>
         </div>
+        <!-- GoGo Central ecosystem notifications: the module renders its
+             opt-in card here. Fully inert until the backend is deployed. -->
+        <div data-gogo-notifications style="text-align:left"></div>
         <div class="modal-actions">
           <button id="btn-settings-close" class="btn btn-primary" type="button">Done</button>
           <button id="btn-reset" class="btn btn-danger" type="button">Reset Progress</button>
@@ -387,6 +390,7 @@
   <script src="js/story.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/gogo-notifications.js"></script>
   <script>
     /* Dev-only local debug tool: ?debug=1 loads the seeded bot + stats panel.
        No network beyond these same-site files; nothing loads without the flag. */
