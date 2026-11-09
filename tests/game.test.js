@@ -908,6 +908,37 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.ok(html.indexOf('data-gogo-notifications') >= 0, 'settings modal carries the mount container');
   assert.ok(html.indexOf('<script src="js/main.js"></script>') < html.indexOf('js/gogo-notifications.js'), 'module loads after the game scripts');
+
+  // onboarding (first-visit intro, 3-day reminder, denied guidance) + backend verification
+  const eo = GN.internals.evaluateOnboarding;
+  const DAY = 24 * 60 * 60 * 1000;
+  const envOk = { configOk: true, pushSupported: true, permission: 'default', active: false };
+  assert.equal(eo(null, 1000, envOk).action, 'intro', 'first visit shows the intro');
+  assert.equal(eo({ shownAt: 2000 }, 1000 + DAY / 2, envOk).action, 'none', 'no reshow within 24h');
+  assert.equal(eo({ decision: 'not-now', decidedAt: 1000 }, 1000 + DAY, envOk).action, 'none', 'no reminder before 3 days');
+  assert.equal(eo({ decision: 'not-now', decidedAt: 1000 }, 1000 + 3 * DAY + 1, envOk).action, 'reminder', 'reminder after 3 days');
+  assert.equal(eo({ decision: 'not-now', decidedAt: 1000, reminderShown: true }, 1000 + 3 * DAY + 1, envOk).action, 'none', 'reminder is one-time');
+  assert.equal(eo({ decision: 'dismissed-forever' }, 9999999999999, envOk).action, 'none', 'permanent dismissal respected');
+  assert.equal(eo(null, 1000, Object.assign({}, envOk, { active: true })).action, 'none', 'active devices never see the intro');
+  assert.equal(eo(null, 1000, Object.assign({}, envOk, { configOk: false })).action, 'none', 'fail-closed config hides the intro');
+  assert.equal(eo(null, 1000, Object.assign({}, envOk, { permission: 'denied' })).action, 'blocked', 'denied gets settings guidance');
+  assert.equal(eo({ blockedShown: true }, 1000, Object.assign({}, envOk, { permission: 'denied' })).action, 'none', 'denied guidance is one-time');
+  const devices = [
+    { deviceId: 'd1', fcmToken: 'tok-aaa', appId: 'crystal-quest', status: 'active' },
+    { deviceId: 'd2', fcmToken: 'tok-aaa', appId: 'other-app', status: 'active' },
+    { deviceId: 'd3', fcmToken: 'tok-bbb', appId: 'crystal-quest', status: 'revoked' },
+    { deviceId: 'd4', fcmToken: 'tok-bbb', appId: 'crystal-quest', status: 'active' }
+  ];
+  const find = GN.internals.findRegisteredDevice;
+  assert.equal(find(devices, 'tok-aaa', 'crystal-quest').deviceId, 'd1', 'token+appId verified');
+  assert.equal(find(devices, 'tok-bbb', 'crystal-quest').deviceId, 'd4', 'revoked rows skipped');
+  assert.equal(find(devices, 'tok-ccc', 'crystal-quest'), null, 'unknown token rejected');
+  for (const label of ['GoGo Company announcements', 'Sarkari Sarthi job alerts', 'Pika News breaking news', 'Crystal Quest updates', 'Arrow Out updates', 'Future GoGo product announcements']) {
+    assert.ok(modSrc.indexOf(label) >= 0, `intro lists: ${label}`);
+  }
+  assert.equal((modSrc.match(/requestPermission/g) || []).length, 1, 'native prompt only inside the Enable click path');
+  assert.ok(modSrc.indexOf("apiFetch('/api/v1/devices', { method: 'GET' })") >= 0, 'verification reuses the existing devices endpoint');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
+
