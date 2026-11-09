@@ -32,8 +32,8 @@
     authMode: 'anonymous',
     // FAIL-CLOSED deployment switches. BOTH stay empty until the backend is
     // deployed and the Firebase Console Web Push VAPID key has been created.
-    apiBase: '',
-    vapidPublicKey: '',
+    apiBase: 'https://gogo-central-backend-mg6z.onrender.com',
+    vapidPublicKey: 'BPoY5jfIGXpbeW1hhL8iQ4WU5RP8S1EAvu5ywa6RST0QArzZT21ArnRgZQc-vj24ufEAaTALMDxUOOuNeu86xmE',
     // Background messaging worker in the fcm/ SUBDIRECTORY: the game's own
     // sw.js owns the app root scope and its cq-v16 cache must stay
     // untouched, so the FCM worker lives at fcm/firebase-messaging-sw.js

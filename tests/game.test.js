@@ -883,8 +883,11 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   const GN = gctx.GoGoNotifications;
   assert.ok(GN, 'module loads inertly in plain Node');
   const v = GN.internals.validateConfig();
-  assert.equal(v.ok, false, 'empty apiBase/vapidPublicKey keep the feature disabled');
-  assert.equal(v.disabled, true);
+  assert.equal(v.ok, true, 'shipped config (apiBase + vapidPublicKey) enables the feature');
+  assert.equal(v.disabled, false);
+  const empty = GN.internals.validateConfig({ appId: 'crystal-quest', apiBase: '', vapidPublicKey: '' });
+  assert.equal(empty.ok, false, 'empty apiBase/vapidPublicKey keep the feature disabled');
+  assert.equal(empty.disabled, true);
   assert.equal(GN.config.appId, 'crystal-quest');
   assert.equal(GN.config.swUrl, 'fcm/firebase-messaging-sw.js', 'FCM worker lives in its own subdirectory');
   assert.equal(GN.config.authMode, 'anonymous');
