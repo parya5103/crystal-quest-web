@@ -942,7 +942,7 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
 
 test('SEO metadata stays concise and noscript links expose the GoGo product portfolio', () => {
   const page = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const title = page.match(/<title>([^<]*)<\\/title>/i);
+  const title = page.match(/<title>([^<]*)<\/title>/i);
   const description = page.match(/<meta name="description" content="([^"]*)"/i);
   const ogDescription = page.match(/<meta property="og:description" content="([^"]*)"/i);
   assert.ok(title && title[1].length <= 60, 'page title should stay within 60 characters');
