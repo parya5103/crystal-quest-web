@@ -20,4 +20,4 @@ jobs:
         with:
           node-version: '20'
       - name: Run game and SEO regression tests
-        run: node tests/game.test.js
+        run: node tests/seo.test.js
