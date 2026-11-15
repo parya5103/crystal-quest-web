@@ -867,7 +867,7 @@ test('UI polish: home progress, map regions, objective meters and combo feedback
   assert.ok(css.indexOf('.region-head') >= 0 && css.indexOf('.home-progress') >= 0 && css.indexOf('.obj-meter') >= 0 && css.indexOf('.btn-play') >= 0, 'polish styles shipped');
   assert.ok(ui.indexOf('updateHome') >= 0 && ui.indexOf('region-head') >= 0 && ui.indexOf('comboBanner') >= 0, 'ui wires home progress, region headers and combo feedback');
   assert.ok(ui.indexOf('var nb=$("win-newbest")') >= 0, 'win flow toggles the new-best badge');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v16';") >= 0, 'cache bumped for the polish pass');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v17';") >= 0, 'cache bumped for the polish pass');
 });
 
 test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and settings wiring (MOCKED)', () => {
