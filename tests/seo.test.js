@@ -27,3 +27,11 @@ const game = schemas.find(schema => schema['@type'] === 'VideoGame');
 assert.ok(game && game.publisher && game.publisher.logo === 'https://gogocompany.in/favicon.svg',
   'VideoGame publisher should include the GoGo Company logo');
 assert.match(page, /twitter:title/);
+
+const guide = fs.readFileSync(path.join(root, 'guide.html'), 'utf8');
+assert.match(guide, /<title>Crystal Quest Guide: Match-3 Tips, Gems &amp; Levels<\\/title>/);
+assert.match(guide, /<link rel="canonical" href="https:\\/\\/gogocompany\\.in\\/crystalquest\\/guide\\.html"/);
+assert.equal([...guide.matchAll(/<h1\\b/gi)].length, 1);
+assert.match(guide, /Crystal Resonance/);
+assert.match(guide, /The Guardian/);
+assert.match(page, /href="guide.html"/);
