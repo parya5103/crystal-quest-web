@@ -842,7 +842,7 @@ test('2D polish: easing, palettes and renderer API surface are shipped', () => {
 
 test('PWA: update activation is controlled - installs wait for the page, controllerchange reloads', () => {
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v16';") >= 0, 'cache version bumped for this update');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v17';") >= 0, 'cache version bumped for this update');
   assert.equal(sw.split('self.skipWaiting()').length - 1, 1, 'skipWaiting lives only in the SKIP_WAITING message handler');
   assert.ok(sw.indexOf("e.data.type === 'SKIP_WAITING'") >= 0, 'a waiting worker installs only when the page asks');
   assert.ok(sw.indexOf('clients.claim') >= 0, 'activation still claims open clients');
@@ -867,7 +867,7 @@ test('UI polish: home progress, map regions, objective meters and combo feedback
   assert.ok(css.indexOf('.region-head') >= 0 && css.indexOf('.home-progress') >= 0 && css.indexOf('.obj-meter') >= 0 && css.indexOf('.btn-play') >= 0, 'polish styles shipped');
   assert.ok(ui.indexOf('updateHome') >= 0 && ui.indexOf('region-head') >= 0 && ui.indexOf('comboBanner') >= 0, 'ui wires home progress, region headers and combo feedback');
   assert.ok(ui.indexOf('var nb=$("win-newbest")') >= 0, 'win flow toggles the new-best badge');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v16';") >= 0, 'cache bumped for the polish pass');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v17';") >= 0, 'cache bumped for the polish pass');
 });
 
 test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and settings wiring (MOCKED)', () => {
@@ -892,7 +892,7 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   assert.equal(GN.config.swUrl, 'fcm/firebase-messaging-sw.js', 'FCM worker lives in its own subdirectory');
   assert.equal(GN.config.authMode, 'anonymous');
   const payload = GN.internals.buildRegisterPayload({ appId: 'crystal-quest' }, 'tok-abcdefghijklmnop', 'TestUA/1.0');
-  assert.deepEqual(payload, { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
+  assert.deepEqual(JSON.parse(JSON.stringify(payload)), { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
   const pref = GN.internals.buildPreferencePayload(false);
   assert.equal(pref.enabled, false);
   assert.equal(pref.webPush, false);
@@ -938,6 +938,19 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   }
   assert.equal((modSrc.match(/requestPermission/g) || []).length, 1, 'native prompt only inside the Enable click path');
   assert.ok(modSrc.indexOf("apiFetch('/api/v1/devices', { method: 'GET' })") >= 0, 'verification reuses the existing devices endpoint');
+});
+
+test('SEO metadata stays concise and noscript links expose the GoGo product portfolio', () => {
+  const page = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const title = page.match(/<title>([^<]*)<\/title>/i);
+  const description = page.match(/<meta name="description" content="([^"]*)"/i);
+  const ogDescription = page.match(/<meta property="og:description" content="([^"]*)"/i);
+  assert.ok(title && title[1].length <= 60, 'page title should stay within 60 characters');
+  assert.ok(description && description[1].length <= 155, 'meta description should stay within 155 characters');
+  assert.ok(ogDescription && ogDescription[1].length <= 160, 'Open Graph description should stay concise');
+  for (const href of ['../', '../arrowout/', '../pikanews/', '../sarkari-sarthi/']) {
+    assert.ok(page.includes('href="' + href + '"'), 'noscript should link to ' + href);
+  }
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
