@@ -31,7 +31,7 @@ assert.match(page, /twitter:title/);
 const guide = fs.readFileSync(path.join(root, 'guide.html'), 'utf8');
 assert.ok(guide.includes('<title>Crystal Quest Guide: Match-3 Tips, Gems &amp; Levels</title>'));
 assert.ok(guide.includes('href="https://gogocompany.in/crystalquest/guide.html"'));
-assert.equal([...guide.matchAll(/<h1\\b/gi)].length, 1);
+assert.equal([...guide.matchAll(/<h1\b/gi)].length, 1);
 assert.match(guide, /Crystal Resonance/);
 assert.match(guide, /The Guardian/);
 assert.match(page, /href="guide.html"/);
