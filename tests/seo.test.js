@@ -20,3 +20,18 @@ for (const href of ['../', '../arrowout/', '../pikanews/', '../sarkari-sarthi/']
 }
 
 console.log('Crystal Quest SEO metadata and crawlable product links: PASS');
+
+assert.equal([...page.matchAll(/<h1\b/gi)].length, 1, 'only the visible game title should be H1');
+const schemas = [...page.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m => JSON.parse(m[1]));
+const game = schemas.find(schema => schema['@type'] === 'VideoGame');
+assert.ok(game && game.publisher && game.publisher.logo === 'https://gogocompany.in/favicon.svg',
+  'VideoGame publisher should include the GoGo Company logo');
+assert.match(page, /twitter:title/);
+
+const guide = fs.readFileSync(path.join(root, 'guide.html'), 'utf8');
+assert.ok(guide.includes('<title>Crystal Quest Guide: Match-3 Tips, Gems &amp; Levels</title>'));
+assert.ok(guide.includes('href="https://gogocompany.in/crystalquest/guide.html"'));
+assert.equal([...guide.matchAll(/<h1\b/gi)].length, 1);
+assert.match(guide, /Crystal Resonance/);
+assert.match(guide, /The Guardian/);
+assert.match(page, /href="guide.html"/);
