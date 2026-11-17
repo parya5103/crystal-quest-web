@@ -264,7 +264,7 @@ test('debug runner is deterministic and reports attempts/wins/averages per level
   assert.ok(D, 'CQDev.debug present');
   const a = D.run(1, 10, 'greedy', 0);
   const b = D.run(1, 10, 'greedy', 0);
-  assert.deepEqual(a, b, 'identical inputs give identical stats');
+  jsonEqual(a, b, 'identical inputs give identical stats');
   assert.equal(a.attempts, 10);
   assert.ok(a.wins >= 0 && a.wins <= 10);
   assert.equal(typeof a.winRate, 'number');
@@ -289,7 +289,7 @@ test('save v2: migrates v1 saves with a backup copy and keeps all progress', () 
   assert.equal(d.best[1], 4200);
   assert.equal(d.lastLevel, 3);
   assert.equal(d.settings.sfx, false);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] }, 'v1 save gains default world state');
+  jsonEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] }, 'v1 save gains default world state');
   assert.equal(storage.get('crystal-quest-save-backup'), JSON.stringify(v1), 'backup holds the original v1 raw save');
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).v, 2, 'main key rewritten as v2');
   const again = Save.load();
@@ -304,17 +304,17 @@ test('save v2: corrupted storage falls back safely, corrupt world resets without
   const d = Save.load();
   assert.equal(d.v, 2);
   assert.equal(d.unlocked, 1);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
+  jsonEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
   assert.ok(!storage.has('crystal-quest-save-v1'), 'corrupt main save removed');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 5, stars: { '3': 1 }, best: {}, lastLevel: 4, settings: {}, world: 'garbage' }));
   const d2 = Save.load();
   assert.equal(d2.v, 2);
   assert.equal(d2.unlocked, 5, 'rest of the save survives a corrupt world field');
   assert.equal(d2.stars[3], 1);
-  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
+  jsonEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 2, world: { forest: { seen: [42, 'spark', null, 'spark'] } } }));
   const d3 = Save.load();
-  assert.deepEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
+  jsonEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
 });
 
 test('save v2: export/import round trip and rejection of invalid codes', () => {
@@ -334,7 +334,7 @@ test('save v2: export/import round trip and rejection of invalid codes', () => {
   assert.equal(Save.data.unlocked, 4);
   assert.equal(Save.data.stars[1], 2);
   assert.equal(Save.data.best[1], 5300);
-  assert.deepEqual(Save.data.world.forest.seen, ['spark']);
+  jsonEqual(Save.data.world.forest.seen, ['spark']);
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).unlocked, 4, 'import persists to storage');
   assert.equal(Save.importCode(''), false);
   assert.equal(Save.importCode('CQSAVE2-'), false);
@@ -348,7 +348,7 @@ test('save v2: export/import round trip and rejection of invalid codes', () => {
   assert.equal(Save.data.unlocked, 4, 'rejected import leaves current save untouched');
   const re = Save.load();
   assert.equal(re.unlocked, 4, 'imported progress survives reload');
-  assert.deepEqual(re.world.forest.seen, ['spark']);
+  jsonEqual(re.world.forest.seen, ['spark']);
 });
 
 test('world restoration: forest milestones unlock from stars, persist, and are seen exactly once', () => {
@@ -367,15 +367,15 @@ test('world restoration: forest milestones unlock from stars, persist, and are s
   assert.equal(reached[0].id, 'spark');
   assert.equal(Save.data.world.forest.seen.indexOf('spark'), -1, 'new milestone not seen yet');
   assert.equal(Save.markForestSeen(), true, 'viewing marks it seen and persists');
-  assert.deepEqual(Save.data.world.forest.seen, ['spark']);
+  jsonEqual(Save.data.world.forest.seen, ['spark']);
   assert.equal(Save.markForestSeen(), true, 'idempotent: no duplicate entry');
   assert.equal(Save.data.world.forest.seen.length, 1);
   const re = Save.load();
   assert.equal(re.stars[3], 3, 'stars persist');
-  assert.deepEqual(re.world.forest.seen, ['spark'], 'seen fragments persist across reload');
-  assert.deepEqual(W.newlyReached(0, 8).map(m => m.id), ['spark', 'saplings']);
-  assert.deepEqual(W.newlyReached(3, 8).map(m => m.id), ['saplings']);
-  assert.deepEqual(W.newlyReached(8, 8), []);
+  jsonEqual(re.world.forest.seen, ['spark'], 'seen fragments persist across reload');
+  jsonEqual(W.newlyReached(0, 8).map(m => m.id), ['spark', 'saplings']);
+  jsonEqual(W.newlyReached(3, 8).map(m => m.id), ['saplings']);
+  jsonEqual(W.newlyReached(8, 8), []);
   // a forest win that crosses a milestone announces restoration
   Save.data = Save.defaults();
   storage.clear();
@@ -478,14 +478,14 @@ test('relics: conditions, exact-once claiming, persistence, and win toasts', () 
   const RL = context.CQRelics;
   assert.ok(RL, 'CQRelics exposed');
   assert.equal(RL.list.length, 6, 'six original relics');
-  assert.deepEqual(RL.owned(), []);
-  assert.deepEqual(RL.claimNew(), [], 'nothing eligible at zero progress');
+  jsonEqual(RL.owned(), []);
+  jsonEqual(RL.claimNew(), [], 'nothing eligible at zero progress');
   Save.record(1, 5000, 3);
   const fresh = RL.claimNew();
   assert.equal(fresh.length, 1);
   assert.equal(fresh[0].id, 'ember-seed');
-  assert.deepEqual(Save.data.world.relics, ['ember-seed']);
-  assert.deepEqual(RL.claimNew(), [], 'second claim grants nothing');
+  jsonEqual(Save.data.world.relics, ['ember-seed']);
+  jsonEqual(RL.claimNew(), [], 'second claim grants nothing');
   assert.equal(Save.data.world.relics.length, 1, 'no duplicate entry');
   Save.record(2, 5000, 3); Save.record(3, 5000, 3); Save.record(4, 5000, 3); Save.record(5, 5000, 3);
   Save.data.stars[25] = 3; Save.data.stars[26] = 3;
@@ -514,16 +514,16 @@ test('relics: conditions, exact-once claiming, persistence, and win toasts', () 
   delete raw.world.relics;
   storage.set('crystal-quest-save-v1', JSON.stringify(raw));
   const re2 = Save.load();
-  assert.deepEqual(re2.world.relics, [], 'missing relics field defaults safely');
+  jsonEqual(re2.world.relics, [], 'missing relics field defaults safely');
   assert.ok(re2.stars[27] >= 1, 'other progress kept');
   const raw3 = JSON.parse(storage.get('crystal-quest-save-v1'));
   raw3.world.relics = 'junk';
   storage.set('crystal-quest-save-v1', JSON.stringify(raw3));
   const re3 = Save.load();
-  assert.deepEqual(re3.world.relics, [], 'corrupt relics field resets to empty');
+  jsonEqual(re3.world.relics, [], 'corrupt relics field resets to empty');
   assert.ok(re3.stars[27] >= 1, 'corrupt relics field does not lose other progress');
   Save.reset();
-  assert.deepEqual(Save.data.world.relics, []);
+  jsonEqual(Save.data.world.relics, []);
 });
 
 test('daily challenge: date-seeded templates, exact-once streak, clock-safe, solvable, b64 padding', () => {
@@ -534,7 +534,7 @@ test('daily challenge: date-seeded templates, exact-once streak, clock-safe, sol
   assert.ok(DY, 'CQDaily exposed');
   assert.equal(DY.TEMPLATES.length, 4, 'four rotating templates');
   assert.equal(DY.level('nonsense'), null, 'malformed date rejected');
-  assert.deepEqual(DY.level('2026-10-18'), DY.level('2026-10-18'), 'same date gives the same level');
+  jsonEqual(DY.level('2026-10-18'), DY.level('2026-10-18'), 'same date gives the same level');
   assert.equal(DY.level('2026-10-18').id, 'daily-2026-10-18');
   function shift(ds, n) { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
   const templateNames = new Set(DY.TEMPLATES.map((t) => t.name));
@@ -560,7 +560,7 @@ test('daily challenge: date-seeded templates, exact-once streak, clock-safe, sol
   let raw = JSON.parse(storage.get('crystal-quest-save-v1'));
   raw.world.daily = 'junk';
   storage.set('crystal-quest-save-v1', JSON.stringify(raw));
-  assert.deepEqual(Save.load().world.daily, { date: '', streak: 0, best: 0 }, 'corrupt daily field resets safely');
+  jsonEqual(Save.load().world.daily, { date: '', streak: 0, best: 0 }, 'corrupt daily field resets safely');
   raw = JSON.parse(storage.get('crystal-quest-save-v1'));
   raw.world.daily = { date: 42, streak: -5, best: 'x' };
   storage.set('crystal-quest-save-v1', JSON.stringify(raw));
@@ -803,13 +803,13 @@ test('story flow: pending beats are exact-once and the modal cycles with persist
   context.CQUI.openModal = om; context.CQUI.closeModal = cm;
   assert.equal(S.pending(lv, Save.data).length, 0, 'shown beats never pend again');
   const reloaded = Save.load();
-  assert.deepEqual(reloaded.world.story.slice().sort(), beats.map((b) => b.id).sort(), 'seen beats persist through reload');
+  jsonEqual(reloaded.world.story.slice().sort(), beats.map((b) => b.id).sort(), 'seen beats persist through reload');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 3, stars: {}, best: {}, lastLevel: 1, settings: {}, world: { relics: ['a'], daily: { date: '', streak: 0, best: 0 }, story: [42, 'x', null, 'x'] } }));
   const junk = Save.load();
-  assert.deepEqual(junk.world.story, ['x'], 'story seen list sanitized to unique strings');
+  jsonEqual(junk.world.story, ['x'], 'story seen list sanitized to unique strings');
   const code = Save.exportCode();
   assert.ok(Save.importCode(code), 'export/import round trip works');
-  assert.deepEqual(Save.data.world.story, ['x'], 'import keeps the story seen list');
+  jsonEqual(Save.data.world.story, ['x'], 'import keeps the story seen list');
 });
 
 test('guardian two: level 20 is a valid, balanced Ember Warden encounter', () => {
@@ -895,7 +895,7 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   assert.equal(GN.config.swUrl, 'fcm/firebase-messaging-sw.js', 'FCM worker lives in its own subdirectory');
   assert.equal(GN.config.authMode, 'anonymous');
   const payload = GN.internals.buildRegisterPayload({ appId: 'crystal-quest' }, 'tok-abcdefghijklmnop', 'TestUA/1.0');
-  assert.deepEqual(JSON.parse(JSON.stringify(payload)), { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
+  jsonEqual(JSON.parse(JSON.stringify(payload)), { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
   const pref = GN.internals.buildPreferencePayload(false);
   assert.equal(pref.enabled, false);
   assert.equal(pref.webPush, false);
