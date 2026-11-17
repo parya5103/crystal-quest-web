@@ -847,7 +847,7 @@ test('2D polish: easing, palettes and renderer API surface are shipped', () => {
 
 test('PWA: update activation is controlled - installs wait for the page, controllerchange reloads', () => {
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  assert.ok(/var CACHE = 'cq-v\\d+';/.test(sw), 'cache version bumped for this update');
+  assert.ok(/var CACHE = 'cq-v[0-9]+';/.test(sw), 'cache version bumped for this update');
   assert.equal(sw.split('self.skipWaiting()').length - 1, 1, 'skipWaiting lives only in the SKIP_WAITING message handler');
   assert.ok(sw.indexOf("e.data.type === 'SKIP_WAITING'") >= 0, 'a waiting worker installs only when the page asks');
   assert.ok(sw.indexOf('clients.claim') >= 0, 'activation still claims open clients');
@@ -872,7 +872,7 @@ test('UI polish: home progress, map regions, objective meters and combo feedback
   assert.ok(css.indexOf('.region-head') >= 0 && css.indexOf('.home-progress') >= 0 && css.indexOf('.obj-meter') >= 0 && css.indexOf('.btn-play') >= 0, 'polish styles shipped');
   assert.ok(ui.indexOf('updateHome') >= 0 && ui.indexOf('region-head') >= 0 && ui.indexOf('comboBanner') >= 0, 'ui wires home progress, region headers and combo feedback');
   assert.ok(ui.indexOf('var nb=$("win-newbest")') >= 0, 'win flow toggles the new-best badge');
-  assert.ok(/var CACHE = 'cq-v\\d+';/.test(sw), 'cache bumped for the polish pass');
+  assert.ok(/var CACHE = 'cq-v[0-9]+';/.test(sw), 'cache bumped for the polish pass');
 });
 
 test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and settings wiring (MOCKED)', () => {
