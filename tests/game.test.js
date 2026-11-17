@@ -889,6 +889,8 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   assert.equal(empty.ok, false, 'empty apiBase/vapidPublicKey keep the feature disabled');
   assert.equal(empty.disabled, true);
   assert.equal(GN.config.appId, 'crystal-quest');
+  assert.equal(GN.config.apiBase, 'https://gogo-central-backend.onrender.com', 'notifications use the current GoGo Central backend');
+  assert.equal(modSrc.includes('gogo-central-backend-mg6z.onrender.com'), false, 'retired backend host is not shipped');
   assert.equal(GN.config.swUrl, 'fcm/firebase-messaging-sw.js', 'FCM worker lives in its own subdirectory');
   assert.equal(GN.config.authMode, 'anonymous');
   const payload = GN.internals.buildRegisterPayload({ appId: 'crystal-quest' }, 'tok-abcdefghijklmnop', 'TestUA/1.0');
