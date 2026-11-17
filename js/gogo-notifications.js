@@ -35,9 +35,8 @@
     // to Firebase Anonymous auth when the player opts in (requires the
     // Anonymous provider in the Firebase Console - see deployment docs).
     authMode: 'anonymous',
-    // FAIL-CLOSED deployment switches. BOTH stay empty until the backend is
-    // deployed and the Firebase Console Web Push VAPID key has been created.
-    apiBase: 'https://gogo-central-backend-mg6z.onrender.com',
+    // Production GoGo Central API (keep aligned with the deployed backend).
+    apiBase: 'https://gogo-central-backend.onrender.com',
     vapidPublicKey: 'BPoY5jfIGXpbeW1hhL8iQ4WU5RP8S1EAvu5ywa6RST0QArzZT21ArnRgZQc-vj24ufEAaTALMDxUOOuNeu86xmE',
     // Background messaging worker in the fcm/ SUBDIRECTORY: the game's own
     // sw.js owns the app root scope and its cq-v16 cache must stay
