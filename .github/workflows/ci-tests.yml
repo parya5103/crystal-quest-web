@@ -23,3 +23,5 @@ jobs:
         run: node tests/game.test.js
       - name: Run SEO metadata and internal-link checks
         run: node tests/seo.test.js
+      - name: Run commercial UI regression checks
+        run: node tests/commercial-ui.test.js
