@@ -953,5 +953,49 @@ test('SEO metadata stays concise and noscript links expose the GoGo product port
   }
 });
 
+
+test('phase 1: square matches forge a seeker crystal without overriding higher-priority shapes', () => {
+  const E=context.CQEngine;
+  const g=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*2)%6,s:null})));
+  [[2,2],[2,3],[3,2],[3,3]].forEach(([r,c])=>g[r][c]={k:'g',g:4,s:null});
+  const groups=E.findMatches(g);
+  assert.ok(groups.some(x=>x.dir==='square'&&x.cells.length===4),'2x2 square detected');
+  assert.ok(E.planSpecials(groups,{r:2,c:2}).some(x=>x.special==='seeker'),'square forges seeker');
+  [[4,2],[4,3],[4,4]].forEach(([r,c])=>g[r][c]={k:'g',g:4,s:null});
+  assert.ok(E.findMatches(g).some(x=>x.dir==='h'&&x.len===5),'five-line remains detectable');
+  assert.ok(!E.planSpecials(E.findMatches(g),{r:2,c:2}).some(x=>x.special==='seeker'),'five-line takes priority over square');
+});
+test('phase 1: special combo matrix accepts seeker and preserves deterministic prism colour targeting', () => {
+  const E=context.CQEngine, a={r:3,c:3},b={r:3,c:4};
+  for(const pair of [['line-h','line-v'],['line-h','bomb'],['bomb','bomb'],['prism','line-h'],['prism','bomb'],['prism','prism'],['seeker','bomb']]){
+    const g=Array.from({length:8},()=>Array.from({length:8},()=>({k:'g',g:0,s:null})));
+    g[a.r][a.c]={k:'g',g:2,s:pair[0]};g[b.r][b.c]={k:'g',g:3,s:pair[1]};
+    const ctx=E.makeCtx({objectives:[{type:'score',target:1}],layout:Array(8).fill('........')});
+    const result=E.trySwap(g,a,b,E.makeRng(77),ctx);
+    assert.equal(result.ok,true,'combo accepted: '+pair.join('+'));
+    assert.ok(result.steps.some(x=>x.t==='clear'),'combo clears');
+  }
+});
+test('phase 1: blockers validate layered hp and locked crystals cannot be swapped', () => {
+  const E=context.CQEngine;
+  const level={layout:['........','........','........','........','........','........','........','........'],objectives:[]};
+  const g=E.createBoard(level,71).grid;
+  g[0][0]={k:'b',b:'obsidian',hp:3,layer:'reinforced'};
+  g[0][1]={k:'g',g:1,s:null,locked:true,lockHp:1};
+  assert.equal(E.validateBoard(g,level).ok,true);
+  assert.equal(E.canSwap(g,{r:0,c:1},{r:0,c:2}),false);
+});
+test('phase 1: hint engine returns a scored valid move and free shuffle removes deadlock', () => {
+  const E=context.CQEngine,level={layout:Array(8).fill('........'),objectives:[{type:'score',target:1}]};
+  const g=E.createBoard(level,991).grid;
+  const hint=E.findHint(g,E.makeRng(1),E.makeCtx(level));
+  assert.ok(hint&&hint.score>=10,'heuristic score is exposed');
+  assert.equal(E.hasValidMove(g),true);
+  const dead=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*2+c*3)%6,s:null})));
+  E.shuffleBoard(dead,E.makeRng(19));
+  assert.equal(E.findMatches(dead).length,0,'shuffle leaves no pre-existing match');
+  assert.equal(E.hasValidMove(dead),true,'shuffle guarantees a valid move');
+});
+
 console.log(`\n${passed.length} regression groups passed.`);
 
