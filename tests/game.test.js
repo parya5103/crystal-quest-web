@@ -902,6 +902,9 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   assert.equal(GN.internals.safeUrl('https://evil.example/'), 'https://gogocompany.in/');
   const swFcm = fs.readFileSync(path.join(root, 'fcm', 'firebase-messaging-sw.js'), 'utf8');
   assert.ok(swFcm.indexOf('onBackgroundMessage') >= 0, 'background message handler present');
+  assert.ok(swFcm.indexOf('function isTrustedClientUrl') >= 0, 'notification click validates client URLs');
+  assert.ok(swFcm.indexOf('client.url.indexOf') < 0, 'no substring-based host allowlist');
+  assert.ok(swFcm.indexOf("parsed.hostname === 'gogocompany.in'") >= 0 && swFcm.indexOf('parsed.origin === self.location.origin') >= 0, 'exact HTTPS GoGo origin required');
   assert.ok(swFcm.indexOf("addEventListener('fetch'") < 0, 'FCM worker installs no fetch handler');
   assert.ok(swFcm.indexOf('tag: notificationId') >= 0, 'collapsing tag prevents duplicate notifications');
   assert.ok(swFcm.indexOf("new URL('../icon.svg', self.registration.scope).href") >= 0, 'icon resolves from the fcm/ scope');
