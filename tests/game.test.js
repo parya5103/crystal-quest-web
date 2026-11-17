@@ -961,9 +961,10 @@ test('phase 1: square matches forge a seeker crystal without overriding higher-p
   const groups=E.findMatches(g);
   assert.ok(groups.some(x=>x.dir==='square'&&x.cells.length===4),'2x2 square detected');
   assert.ok(E.planSpecials(groups,{r:2,c:2}).some(x=>x.special==='seeker'),'square forges seeker');
-  [[4,2],[4,3],[4,4]].forEach(([r,c])=>g[r][c]={k:'g',g:4,s:null});
-  assert.ok(E.findMatches(g).some(x=>x.dir==='h'&&x.len===5),'five-line remains detectable');
-  assert.ok(!E.planSpecials(E.findMatches(g),{r:2,c:2}).some(x=>x.special==='seeker'),'five-line takes priority over square');
+  const five=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*2)%6,s:null})));
+  [[2,2],[2,3],[2,4],[2,5],[2,6]].forEach(([r,c])=>five[r][c]={k:'g',g:4,s:null});
+  assert.ok(E.findMatches(five).some(x=>x.dir==='h'&&x.len===5),'five-line remains detectable');
+  assert.ok(!E.planSpecials(E.findMatches(five),{r:2,c:2}).some(x=>x.special==='seeker'),'five-line takes priority over square');
 });
 test('phase 1: special combo matrix accepts seeker and preserves deterministic prism colour targeting', () => {
   const E=context.CQEngine, a={r:3,c:3},b={r:3,c:4};
