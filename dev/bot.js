@@ -70,7 +70,7 @@
       pair = pairs[i];
       ca = grid[pair.a.r][pair.a.c];
       cb = grid[pair.b.r][pair.b.c];
-      if (!E.isGem(ca) || !E.isGem(cb)) continue;
+      if (!E.isGem(ca) || !E.isGem(cb) || ca.locked || cb.locked) continue;
       bothSpecial = !!(ca.s && cb.s);
       prismPlain = (ca.s === "prism" && !cb.s) || (cb.s === "prism" && !ca.s);
       t = grid[pair.a.r][pair.a.c];
@@ -82,7 +82,7 @@
         seeds = [];
         for (k = 0; k < groups.length; k++)
           for (var p = 0; p < groups[k].cells.length; p++) seeds.push(groups[k].cells[p]);
-        exp = E.expandClears(grid, seeds, ctx.prismColor);
+        exp = E.expandClears(E.cloneGrid(grid), seeds, ctx.prismColor, ctx);
         forged = 0;
         for (k = 0; k < groups.length; k++)
           forged += groups[k].len >= 5 ? 500 : groups[k].len === 4 ? 200 : 0;
