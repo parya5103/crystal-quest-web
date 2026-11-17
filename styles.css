@@ -133,3 +133,113 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible,canvas:focus-visib
 @media (prefers-reduced-motion: reduce) {
   .logo-gem, .btn-play:after, .level-card.is-current { animation: none !important; }
 }
+
+
+/* ===== Commercial polish Phase 1: premium game feel ===== */
+:root {
+  --cq-glass: rgba(12, 19, 46, .82);
+  --cq-glass-edge: rgba(167, 207, 255, .24);
+  --cq-glow: rgba(75, 229, 212, .22);
+  --cq-gold-glow: rgba(255, 214, 107, .2);
+}
+.screen.is-active .bg-layer {
+  animation: cqBackdropDrift 24s ease-in-out infinite alternate;
+}
+.screen.is-active .bg-layer::after {
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(45, 112, 142, .14), transparent 52%),
+    linear-gradient(180deg, rgba(5, 9, 29, .28), rgba(5, 9, 29, .72));
+}
+@keyframes cqBackdropDrift {
+  from { background-position: 48% 48%; }
+  to { background-position: 52% 52%; }
+}
+.hud-moves, .star-pill, .home-progress, .obj-chip {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.hud-moves {
+  min-width: 82px;
+  border-color: var(--cq-glass-edge);
+  box-shadow: inset 0 1px rgba(255,255,255,.08), 0 5px 18px rgba(0,0,0,.22);
+}
+.hud-moves.is-low {
+  border-color: rgba(255, 95, 109, .72);
+  background: rgba(80, 14, 35, .72);
+}
+.objective-bar { align-items: stretch; }
+.obj-chip {
+  min-width: 0;
+  border-color: var(--cq-glass-edge);
+  background: var(--cq-glass);
+  box-shadow: inset 0 1px rgba(255,255,255,.06);
+}
+.obj-chip.is-done {
+  box-shadow: 0 0 18px var(--cq-glow), inset 0 1px rgba(255,255,255,.1);
+}
+.board-wrap {
+  isolation: isolate;
+  border-color: rgba(140, 220, 255, .32);
+  background: linear-gradient(145deg, rgba(18, 33, 68, .96), rgba(5, 9, 27, .98));
+}
+.board-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(117,244,228,.28), transparent 36%, rgba(173,133,255,.2) 72%, transparent);
+  filter: blur(12px);
+  opacity: .72;
+  pointer-events: none;
+}
+#board-canvas { position: relative; z-index: 1; }
+.combo-banner { z-index: 2; filter: drop-shadow(0 5px 18px rgba(255,77,157,.32)); }
+.level-card, .relic-card, .world-story, .modal-card {
+  box-shadow: inset 0 1px rgba(255,255,255,.055), 0 10px 26px rgba(0,0,0,.24);
+}
+.level-card.is-current {
+  border-color: rgba(117,244,228,.9);
+  box-shadow: 0 0 0 2px rgba(75,229,212,.24), 0 0 24px var(--cq-glow), 0 10px 26px rgba(0,0,0,.28);
+}
+.level-card.is-perfected { box-shadow: 0 0 18px var(--cq-gold-glow); }
+.btn-primary {
+  text-shadow: 0 1px rgba(255,255,255,.28);
+  box-shadow: 0 5px #0b6b78, 0 9px 24px rgba(23,168,180,.28);
+}
+.btn:not([disabled]):active, .ctrl-btn:not([disabled]):active, .icon-btn:active {
+  filter: brightness(1.12);
+}
+.toast {
+  border-color: rgba(117,244,228,.34);
+  background: rgba(7, 13, 35, .96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.modal {
+  background: rgba(3, 6, 20, .78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.modal-card {
+  background: linear-gradient(155deg, rgba(31, 43, 91, .98), rgba(10, 16, 43, .99));
+}
+.stars-row svg.on { filter: drop-shadow(0 0 14px rgba(255,214,107,.72)); }
+@media (max-width: 420px) {
+  .hud { gap: 6px; }
+  .hud-moves { min-width: 68px; padding-left: 10px; padding-right: 10px; }
+  .hud-score { font-size: 18px; }
+  .objective-bar { gap: 6px; }
+  .obj-chip { padding-right: 9px; font-size: 11px; }
+  .board-wrap { padding: 5px; border-radius: 17px; }
+}
+@media (max-height: 640px) and (orientation: landscape) {
+  .hud { padding-bottom: 4px; }
+  .objective-bar { padding-bottom: 4px; }
+  .game-controls { padding-top: 5px; }
+  .ctrl-btn { min-height: 42px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.is-active .bg-layer { animation: none !important; }
+  .board-wrap::before { filter: none; }
+}
