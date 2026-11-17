@@ -314,19 +314,21 @@ function canSwap(grid,a,b){
   if(ca.s&&cb.s&&supportedSpecial(ca.s)&&supportedSpecial(cb.s))return true;
   swapCells(grid,a,b);var ok=findMatches(grid).length>0;swapCells(grid,a,b);return ok;
 }
-function seekerTarget(grid,ctx){
-  var candidates=[],r,c,cell;
+function seekerTarget(grid,ctx,excluded){
+  excluded=excluded||{};
+  function available(p){return p&&!excluded[key(p.r,p.c)]}
+  var r,c,cell,candidates=[];
   if(ctx&&ctx.guardian&&ctx.guardian.idx<ctx.guardian.sequence.length){
     var wanted=ctx.guardian.sequence[ctx.guardian.idx];
-    for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&cell.g===wanted)candidates.push({r:r,c:c,rank:0})}
+    for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&cell.g===wanted&&!cell.locked&&!excluded[key(r,c)])candidates.push({r:r,c:c,rank:0})}
     if(candidates.length)return candidates[0];
   }
-  if(ctx&&ctx.tiles)for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(ctx.tiles[r][c]==="v"&&isGem(grid[r][c]))return{r:r,c:c,rank:1};
-  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isBlocker(cell))return{r:r,c:c,rank:2}}
+  if(ctx&&ctx.tiles)for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(ctx.tiles[r][c]==="v"&&isGem(grid[r][c])&&!grid[r][c].locked&&!excluded[key(r,c)])return{r:r,c:c,rank:1};
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isBlocker(cell)&&!excluded[key(r,c)])return{r:r,c:c,rank:2}}
   var wantedColors=[];
-  if(ctx&&ctx.level)ctx.level.objectives.forEach(function(o){if(o.type==="collect")wantedColors.push(o.gem)});
-  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&wantedColors.indexOf(cell.g)>=0)return{r:r,c:c,rank:3}}
-  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(isGem(grid[r][c]))return{r:r,c:c,rank:4};
+  if(ctx&&ctx.level&&ctx.level.objectives)ctx.level.objectives.forEach(function(o){if(o.type==="collect")wantedColors.push(o.gem)});
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&!cell.locked&&wantedColors.indexOf(cell.g)>=0&&!excluded[key(r,c)])return{r:r,c:c,rank:3}}
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(isGem(grid[r][c])&&!grid[r][c].locked&&!excluded[key(r,c)])return{r:r,c:c,rank:4};
   return null;
 }
 function specialTargets(grid,r,c,special,prismColor,ctx){
@@ -389,7 +391,7 @@ function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
   }else if(sa==="seeker"||sb==="seeker"){
     var seekPos=sa==="seeker"?a:b,otherS=sa==="seeker"?sb:sa,target=seekerTarget(grid,ctx);
     if(target){seeds.push(target);if(line(otherS)){addRow(target.r);addCol(target.c)}else if(otherS==="bomb")addBox(target.r,target.c,1);else if(otherS==="prism"){var col=grid[target.r][target.c].g;for(var sr=0;sr<ROWS;sr++)for(var sc=0;sc<COLS;sc++)if(isGem(grid[sr][sc])&&grid[sr][sc].g===col)seeds.push({r:sr,c:sc})}}
-    if(sa==="seeker"&&sb==="seeker"){var t2=seekerTarget(grid,ctx);if(t2)seeds.push(t2)}
+    if(sa==="seeker"&&sb==="seeker"){var excluded={};target&&(excluded[key(target.r,target.c)]=1);var t2=seekerTarget(grid,ctx,excluded);if(t2)seeds.push(t2)}
     label="SEEKER LINK";
   }else return null;
   var exp=expandClears(grid,seeds,null,ctx),gained=0;
@@ -431,23 +433,75 @@ function validateBoard(grid,level){
   }
   return{ok:true};
 }
+function countValidMoves(grid){
+  var count=0;
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    if(c+1<COLS&&canSwap(grid,{r:r,c:c},{r:r,c:c+1}))count++;
+    if(r+1<ROWS&&canSwap(grid,{r:r,c:c},{r:r+1,c:c}))count++;
+  }
+  return count;
+}
+function hasValidMove(grid){return countValidMoves(grid)>0}
+function fillNoMatch(grid,rng){
+  rng=rng||Math.random;
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var cell=grid[r][c];
+    if(!cell||cell.k!=="e")continue;
+    var banned={};
+    if(c>=2&&isGem(grid[r][c-1])&&isGem(grid[r][c-2])&&grid[r][c-1].g===grid[r][c-2].g)banned[grid[r][c-1].g]=1;
+    if(r>=2&&isGem(grid[r-1][c])&&isGem(grid[r-2][c])&&grid[r-1][c].g===grid[r-2][c].g)banned[grid[r-1][c].g]=1;
+    if(r>0&&c>0){
+      var ul=grid[r-1][c-1],up=grid[r-1][c],left=grid[r][c-1];
+      if(isGem(ul)&&isGem(up)&&isGem(left)&&ul.g===up.g&&ul.g===left.g)banned[ul.g]=1;
+    }
+    var choices=[];
+    for(var color=0;color<GEM_COUNT;color++)if(!banned[color])choices.push(color);
+    var pick=choices.length?choices[Math.floor(rng()*choices.length)]:Math.floor(rng()*GEM_COUNT);
+    grid[r][c]={k:"g",g:pick,s:null};
+  }
+}
+function plantSecondMove(grid,rng){
+  var originalHint=findHint(grid,rng),originalKey=originalHint?key(originalHint.a.r,originalHint.a.c)+"-"+key(originalHint.b.r,originalHint.b.c):"";
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS-2;c++)for(var side=0;side<2;side++){
+    var nr=r+(side===0?-1:1);if(nr<0||nr>=ROWS)continue;
+    var points=[{r:r,c:c},{r:r,c:c+1},{r:r,c:c+2},{r:nr,c:c+1}];
+    var a=grid[r][c],b=grid[r][c+1],d=grid[r][c+2],n=grid[nr][c+1];
+    if(!isGem(a)||!isGem(b)||!isGem(d)||!isGem(n)||a.locked||b.locked||d.locked||n.locked)continue;
+    var old=[a.g,b.g,d.g,n.g];
+    for(var color=0;color<GEM_COUNT;color++)for(var other=0;other<GEM_COUNT;other++){
+      if(color===other)continue;
+      a.g=color;b.g=other;d.g=color;n.g=color;
+      if(findMatches(grid).length===0&&countValidMoves(grid)>=2){
+        var h=findHint(grid,rng),hk=h?key(h.a.r,h.a.c)+"-"+key(h.b.r,h.b.c):"";
+        if(hk!==originalKey)return true;
+      }
+    }
+    a.g=old[0];b.g=old[1];d.g=old[2];n.g=old[3];
+  }
+  return false;
+}
 function shuffleBoard(grid,rng){
-  rng=rng||Math.random;var positions=[],specials=[];
-  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){var cell=grid[r][c];if(isGem(cell)&&!cell.locked){positions.push({r:r,c:c});if(cell.s)specials.push({r:r,c:c,s:cell.s})}}
-  if(positions.length<2)return false;
+  rng=rng||Math.random;
+  var positions=[],specials=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var cell=grid[r][c];
+    if(isGem(cell)&&!cell.locked){positions.push({r:r,c:c});if(cell.s)specials.push({r:r,c:c,s:cell.s})}
+  }
+  if(positions.length<4)return false;
   for(var attempt=0;attempt<500;attempt++){
     var vals=positions.map(function(p){return grid[p.r][p.c].g});
     for(var i=vals.length-1;i>0;i--){var j=Math.floor(rng()*(i+1)),t=vals[i];vals[i]=vals[j];vals[j]=t}
     positions.forEach(function(p,k){grid[p.r][p.c].g=vals[k]});
-    if(findMatches(grid).length===0&&hasValidMove(grid))return true;
+    if(findMatches(grid).length===0&&countValidMoves(grid)>=2)return true;
   }
   for(var attempt2=0;attempt2<300;attempt2++){
     positions.forEach(function(p){grid[p.r][p.c]={k:"e"}});
     fillNoMatch(grid,rng);
     specials.forEach(function(sp){if(isGem(grid[sp.r][sp.c]))grid[sp.r][sp.c].s=sp.s});
-    if(findMatches(grid).length===0&&hasValidMove(grid))return true;
+    if(findMatches(grid).length===0&&countValidMoves(grid)>=2)return true;
   }
-  return plantMove(grid,rng);
+  if(plantMove(grid,rng)&&countValidMoves(grid)>=2)return true;
+  return plantSecondMove(grid,rng)&&countValidMoves(grid)>=2;
 }
 function hintScore(grid,a,b,ctx){
   var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
@@ -461,4 +515,11 @@ function hintScore(grid,a,b,ctx){
   return groups.length?10:0;
 }
 
-global.CQEngine={ROWS,COLS,GEM_COUNT,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
+function createBoard(level,seed){
+  var rng=makeRng(seed||Date.now()&2147483647),grid,guard=0;
+  do{grid=parseLayout(level.layout);fillNoMatch(grid,rng);guard++}while(countValidMoves(grid)<2&&guard<30);
+  if(countValidMoves(grid)<2)shuffleBoard(grid,rng);
+  return{grid:grid,rng:rng};
+}
+
+global.CQEngine={ROWS,COLS,GEM_COUNT,countValidMoves,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
