@@ -65,7 +65,7 @@ this.state="resolving",this.movesLeft=Math.max(0,this.movesLeft-1),this.renderHu
 R.playSteps(res.steps,{step:function(step){if(step.t==="clear"){
 step.label?UI.comboBanner(step.label):step.resonance&&step.resonance.chain>0?UI.comboBanner("Resonance!"):step.combo>=2&&UI.comboBanner("Combo x"+step.combo);
 step.combo>=2?A.play("cascade",{pitch:Math.min(12,(step.combo-1)*2)}):A.play("match");
-step.activated&&step.activated.length&&A.play("special"),step.blockers&&step.blockers.length&&A.play("stone"),step.forged&&step.forged.length&&A.play("star"),step.label&&A.play(step.secondaryStage?"nova":step.label.indexOf("SEEKER")>=0?"seeker":"blast"),step.resonance&&step.resonance.chain>0&&(A.play("resonance"),UI.announce("Resonance! "+step.resonance.chain+" crystals shattered along the vein.")),self.animateScore(),self.renderObjectives()
+step.activated&&step.activated.length&&A.play(step.activated.some(function(p){return p.s==="seeker"})?"seeker":"special"),step.blockers&&step.blockers.length&&A.play("stone"),step.forged&&step.forged.length&&A.play("star"),step.label&&A.play(step.secondaryStage?"nova":step.label.indexOf("SEEKER")>=0?"seeker":"blast"),step.resonance&&step.resonance.chain>0&&(A.play("resonance"),UI.announce("Resonance! "+step.resonance.chain+" crystals shattered along the vein.")),self.animateScore(),self.renderObjectives()
 }},done:function(){R.syncFromGrid(self.grid),self.afterTurn()}})
 },afterTurn:function(){
 if(this.state!=="resolving"||this.outcomeResolved)return;
