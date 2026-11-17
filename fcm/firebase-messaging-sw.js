@@ -34,6 +34,20 @@ function safeUrl(raw) {
   return SAFE_FALLBACK_URL;
 }
 
+// Parse the full client URL and require an exact HTTPS GoGo origin.
+// Substring checks are unsafe: an attacker can place the brand hostname in
+// an unrelated host, path, or query string.
+function isTrustedClientUrl(raw) {
+  try {
+    var parsed = new URL(String(raw || ''));
+    return parsed.protocol === 'https:' &&
+      (parsed.hostname === 'gogocompany.in' || parsed.hostname === 'www.gogocompany.in') &&
+      parsed.origin === self.location.origin;
+  } catch (err) {
+    return false;
+  }
+}
+
 var messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function (payload) {
@@ -60,7 +74,7 @@ self.addEventListener('notificationclick', function (event) {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
-        if (client.url && client.url.indexOf('gogocompany.in') !== -1 && 'focus' in client) {
+        if (isTrustedClientUrl(client.url) && 'focus' in client) {
           return client.focus();
         }
       }
