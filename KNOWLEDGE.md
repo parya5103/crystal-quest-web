@@ -223,3 +223,21 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 - TWA via Bubblewrap: needs `manifest.json` + `assetlinks.json` hosting, a domain, and a Play Store app; Capacitor path needs local Android SDK build (free but complex on phone).
 - Play Store requirements (owner action, ₹25 one-time — NOT zero budget): developer account, privacy policy URL, data-safety form, target API level (currently API 34+ required), content rating questionnaire, app signing.
 - What must be done by the owner: decide ads vs no-ads, create accounts, pay registration if Play Store desired, host privacy policy.
+
+
+## Phase 1 implementation update — 2026-11-17
+
+- Work branch: `feature/crystal-quest-phase1-match3` (based on `main`); implementation is isolated from the default branch.
+- Updated files: `js/engine.js`, `tests/game.test.js`, `README.md`, and this file.
+- Engine changes currently on the branch:
+  - Match detection adds isolated 2×2 square groups; existing horizontal/vertical line and L/T detection is retained. Special planning prioritizes intersecting L/T bombs, then 5+ prism, 4-line blasters, then square Seeker.
+  - Adds `seeker` as a supported special; it targets guardian sequence colour, active resonance-vein gems, blockers, then objective-coloured gems, with a fallback gem target.
+  - Adds seeker participation in special-pair swaps.
+  - Prism + special now uses the swapped special gem's colour rather than the board's most-common colour; generated line/bomb specials chain through the existing clear expansion.
+  - Adds deterministic heuristic move scores (Prism 100, special pair 90, resonance/objective interactions 75, special creation 60, basic match 10); `findHint` retains the existing move-object API and includes `score`.
+  - Adds optional layout symbols `D` (2-HP cracked stone), `O` (3-HP reinforced obsidian), and `C` (caged crystal); existing `S`, `I`, `R`, and `#` meanings remain unchanged. Caged gems are non-swappable; first clear/blast contact opens the cage and preserves the inner gem.
+  - Deadlock reshuffle now makes up to 500 deterministic permutation attempts before a no-match refill fallback, preserving special types and locked gems.
+- Regression additions: four test groups covering square priority, all tested special pairs including Seeker, layered blocker/cage validation and swap lock, and hint/deadlock behaviour.
+- Compatibility intent: no save-schema changes, no external dependencies, no npm/build step, and no service-worker cache changes in this engine-only phase.
+- Verification status: GitHub accepted the source updates. The full `node tests/game.test.js`, browser `CQTest.run()`, seeded 27-level bot sweep, and device/PWA checks have NOT yet been executed against this branch. Do not mark Phase 1 complete until those checks pass.
+- Known follow-up items before Phase 1 merge: implement/verify true delayed second-stage Star Bomb + Star Bomb detonation (the current clear step carries explicit delayed-blast metadata); verify two-or-more valid-move reshuffle guarantee; execute regression suite and repair any failures; inspect renderer compatibility for the new `seeker` visual/special label.
