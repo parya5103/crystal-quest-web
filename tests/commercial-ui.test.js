@@ -9,7 +9,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const design = fs.readFileSync('DESIGN.md', 'utf8');
 
 const required = [
-  '--cq-glass', '--cq-glass-edge', '--cq-glow', '.combo-banner { z-index: 2;
+  '--cq-glass', '--cq-glass-edge', '--cq-glow', '.combo-banner { z-index: 2;',
   '.board-wrap::before', '.hud-moves.is-low',
   '.obj-chip.is-done', '.level-card.is-current',
   '@media (max-width: 420px)',
