@@ -46,6 +46,9 @@ function test(name, fn) {
   catch (err) { console.error(`FAIL ${name}\n${err.stack}`); process.exitCode = 1; }
 }
 function copyGrid(grid) { return JSON.parse(JSON.stringify(grid)); }
+function jsonEqual(actual, expected, message) {
+  assert.equal(JSON.stringify(actual), JSON.stringify(expected), message);
+}
 function adjacentPairs() {
   const pairs = [];
   for (let r = 0; r < E.ROWS; r++) for (let c = 0; c < E.COLS; c++) {
@@ -146,7 +149,7 @@ test('dead-board shuffle restores a legal move without moving blockers or losing
   assert.equal(E.findMatches(grid).length, 0);
   assert.equal(E.hasValidMove(grid), true);
   assert.equal(grid[3][2].s, 'bomb');
-  assert.deepEqual(JSON.parse(JSON.stringify(grid.map(row => row.map(cell => cell && cell.k === 'b' ? JSON.stringify(cell) : null)))), blockersBefore);
+  jsonEqual(JSON.parse(JSON.stringify(grid.map(row => row.map(cell => cell && cell.k === 'b' ? JSON.stringify(cell) : null)))), blockersBefore);
 });
 
 test('prism clears damage adjacent ice and special combinations damage blockers', () => {
@@ -956,7 +959,7 @@ test('SEO metadata stays concise and noscript links expose the GoGo product port
 
 test('phase 1: square matches forge a seeker crystal without overriding higher-priority shapes', () => {
   const E=context.CQEngine;
-  const g=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*2)%6,s:null})));
+  const g=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r+c)%2,s:null})));
   [[2,2],[2,3],[3,2],[3,3]].forEach(([r,c])=>g[r][c]={k:'g',g:4,s:null});
   const groups=E.findMatches(g);
   assert.ok(groups.some(x=>x.dir==='square'&&x.cells.length===4),'2x2 square detected');
@@ -968,7 +971,7 @@ test('phase 1: square matches forge a seeker crystal without overriding higher-p
 });
 test('phase 1: special combo matrix accepts seeker and preserves deterministic prism colour targeting', () => {
   const E=context.CQEngine, a={r:3,c:3},b={r:3,c:4};
-  for(const pair of [['line-h','line-v'],['line-h','bomb'],['bomb','bomb'],['prism','line-h'],['prism','bomb'],['prism','prism'],['seeker','bomb']]){
+  for(const pair of [['line-h','line-h'],['line-h','line-v'],['line-v','line-v'],['line-h','bomb'],['line-v','bomb'],['bomb','bomb'],['prism','line-h'],['prism','line-v'],['prism','bomb'],['prism','prism'],['seeker','line-h'],['seeker','line-v'],['seeker','bomb'],['seeker','prism'],['seeker','seeker']]){
     const g=Array.from({length:8},()=>Array.from({length:8},()=>({k:'g',g:0,s:null})));
     g[a.r][a.c]={k:'g',g:2,s:pair[0]};g[b.r][b.c]={k:'g',g:3,s:pair[1]};
     const ctx=E.makeCtx({objectives:[{type:'score',target:1}],layout:Array(8).fill('........')});
@@ -996,6 +999,7 @@ test('phase 1: hint engine returns a scored valid move and free shuffle removes 
   E.shuffleBoard(dead,E.makeRng(19));
   assert.equal(E.findMatches(dead).length,0,'shuffle leaves no pre-existing match');
   assert.equal(E.hasValidMove(dead),true,'shuffle guarantees a valid move');
+  assert.ok(E.countValidMoves(dead)>=2,'shuffle guarantees at least two distinct playable swaps');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
