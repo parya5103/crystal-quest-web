@@ -1080,6 +1080,58 @@ test('phase 2: renderer and audio include the new mechanics without adding depen
   assert.ok(uiSrc.includes('E.findHint(this.grid,this.rng,this.ctx)'),'hints use the active objective context');
 });
 
+test('phase 3: Seeker cascades inherit Guardian target context', () => {
+  const E=context.CQEngine;
+  const grid=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*5)%6,s:null})));
+  grid[0][0]={k:'g',g:5,s:null};
+  grid[0][1]={k:'b',b:'stone',hp:1};
+  grid[3][1]={k:'g',g:2,s:null};
+  grid[3][2]={k:'g',g:2,s:'seeker'};
+  grid[3][3]={k:'g',g:2,s:null};
+  const level={layout:Array(8).fill('........'),objectives:[],guardian:{sequence:[5]}};
+  const ctx=E.makeCtx(level);
+  const result=E.resolveBoard(grid,E.makeRng(44),ctx);
+  const firstClear=result.steps.find(step=>step.t==='clear');
+  assert.ok(firstClear.cleared.some(p=>p.r===0&&p.c===0),'Seeker must target the called Guardian colour before a blocker');
+  assert.equal(ctx.guardian.idx,1,'clearing the Seeker target advances the Guardian shield');
+});
+
+test('phase 3: hints rank Guardian and unfulfilled collection objectives first', () => {
+  const E=context.CQEngine;
+  const grid=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*5)%6,s:null})));
+  grid[3][1]={k:'g',g:3,s:null};
+  grid[3][2]={k:'g',g:3,s:null};
+  grid[3][3]={k:'g',g:0,s:null};
+  grid[4][3]={k:'g',g:3,s:null};
+  const layout=Array(8).fill('........');
+  const guardianCtx=E.makeCtx({layout,objectives:[],guardian:{sequence:[3]}});
+  const guardianHint=E.findHint(grid,E.makeRng(1),guardianCtx);
+  assert.ok(guardianHint&&guardianHint.score>=120,'hint prioritizes the currently called Guardian colour');
+  const collectCtx=E.makeCtx({layout,objectives:[{type:'collect',gem:3,count:10}]});
+  const collectHint=E.findHint(grid,E.makeRng(1),collectCtx);
+  assert.ok(collectHint&&collectHint.score>=110,'hint prioritizes an unfulfilled collect colour');
+});
+
+test('phase 3: caged gems cannot be replaced by forged specials', () => {
+  const E=context.CQEngine;
+  const grid=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*5)%6,s:null})));
+  for(let c=1;c<=4;c++)grid[3][c]={k:'g',g:2,s:null};
+  grid[3][2]={k:'g',g:2,s:null,locked:true,lockHp:1};
+  const level={layout:Array(8).fill('........'),objectives:[]};
+  const ctx=E.makeCtx(level);
+  ctx.preferred={r:3,c:2};
+  const result=E.resolveBoard(grid,E.makeRng(33),ctx);
+  const firstClear=result.steps.find(step=>step.t==='clear');
+  assert.ok(firstClear,'the four-match resolves');
+  assert.equal(firstClear.cleared.some(p=>p.r===3&&p.c===2),false,'the caged gem is opened, not cleared');
+  assert.equal(firstClear.forged.some(p=>p.r===3&&p.c===2),false,'the caged gem is never replaced by a special');
+});
+
+test('phase 3: damaged blocker HP is copied into the visible render cell', () => {
+  const renderSrc=fs.readFileSync(path.join(root,'js/render.js'),'utf8');
+  assert.ok(renderSrc.includes('d.cell.hp=p.hp'),'renderer must update the visible blocker HP from the damage event');
+});
+
 test('phase 3: seeded bot sweeps all 27 levels without dead-board or illegal-move failures', () => {
   const bot=context.CQDev.bot;
   const rows=LV.LEVELS.map(level=>bot.runStats(level,100,'greedy',0));

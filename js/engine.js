@@ -90,11 +90,11 @@ function resolveBoard(grid, rng, ctx) {
     var groups = findMatches(grid);
     if (!groups.length) break;
     cascade++;
-    var plans = planSpecials(groups, ctx.preferred);
+    var plans = planSpecials(groups, ctx.preferred, grid);
     ctx.preferred = null;
     var seeds = [];
     groups.forEach(function (grp) { grp.cells.forEach(function (p) { seeds.push({ r: p.r, c: p.c }); }); });
-    var expanded = expandClears(grid, seeds, ctx.prismColor);
+    var expanded = expandClears(grid, seeds, ctx.prismColor, ctx);
     ctx.prismColor = null;
     var keep = {};
     plans.forEach(function (pl) { keep[key(pl.r, pl.c)] = pl; });
@@ -142,7 +142,7 @@ function resolveBoard(grid, rng, ctx) {
     var otherCell = ca.s === "prism" ? cb : ca;
     var prismPos = ca.s === "prism" ? b : a;
     var otherPos = ca.s === "prism" ? a : b;
-    var exp = expandClears(grid, [{ r: prismPos.r, c: prismPos.c }, { r: otherPos.r, c: otherPos.c }], otherCell.g);
+    var exp = expandClears(grid, [{ r: prismPos.r, c: prismPos.c }, { r: otherPos.r, c: otherPos.c }], otherCell.g, ctx);
     var gained = 0;
     exp.cleared.forEach(function (p) { gained += 60; ctx.collected[p.g] = (ctx.collected[p.g] || 0) + 1; });
     exp.cleared.forEach(function (p) { grid[p.r][p.c] = { k: "e" }; });
@@ -195,7 +195,7 @@ function resolveBoard(grid, rng, ctx) {
     for (var d = -1; d <= 1; d++) { addRow(lr + d); addCol(lc + d); }
     label = "QUAKE";
   } else return null;
-  var exp = expandClears(grid, seeds, null), gained = 0;
+  var exp = expandClears(grid, seeds, null, ctx), gained = 0;
   exp.cleared.forEach(function (p) { gained += 60; ctx.collected[p.g] = (ctx.collected[p.g] || 0) + 1; });
   gained = Math.round(gained * 1.5);
   exp.cleared.forEach(function (p) { grid[p.r][p.c] = { k: "e" }; });
@@ -276,8 +276,12 @@ function findMatches(grid){
   }
   return runs;
 }
-function planSpecials(groups,preferred){
+function planSpecials(groups,preferred,grid){
   var byCell={},plans=[],used={};
+  function available(p){
+    var cell=grid&&grid[p.r]&&grid[p.r][p.c];
+    return !used[key(p.r,p.c)]&&(!cell||!cell.locked);
+  }
   groups.forEach(function(grp){
     if(grp.dir==="square")return;
     grp.cells.forEach(function(p){
@@ -286,25 +290,42 @@ function planSpecials(groups,preferred){
     });
   });
   Object.keys(byCell).forEach(function(k){
-    var e=byCell[k];
-    if(e.h&&e.v&&!used[k]){used[k]=1;plans.push({r:e.r,c:e.c,special:"bomb",gem:e.h.gem,priority:5})}
+    var cell=byCell[k];
+    if(cell.h&&cell.v&&available(cell)){
+      used[k]=1;plans.push({r:cell.r,c:cell.c,special:"bomb",gem:cell.h.gem,priority:5});
+    }
   });
   groups.forEach(function(grp){
-    if(grp.dir==="square")return;
-    if(grp.len>=5){var t=pickTarget(grp,preferred,used);if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:"prism",gem:grp.gem,priority:4})}}
+    if(grp.dir==="square"||grp.len<5)return;
+    var target=pickTarget(grp,preferred,used,grid);
+    if(target){used[key(target.r,target.c)]=1;plans.push({r:target.r,c:target.c,special:"prism",gem:grp.gem,priority:4});}
   });
   groups.forEach(function(grp){
     if(grp.dir==="square"||grp.len!==4)return;
-    var t=pickTarget(grp,preferred,used);
-    if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:grp.dir==="h"?"line-h":"line-v",gem:grp.gem,priority:3})}
+    var target=pickTarget(grp,preferred,used,grid);
+    if(target){used[key(target.r,target.c)]=1;plans.push({r:target.r,c:target.c,special:grp.dir==="h"?"line-h":"line-v",gem:grp.gem,priority:3});}
   });
   groups.forEach(function(grp){
     if(grp.dir!=="square")return;
-    var t=preferred&&grp.cells.find(function(p){return p.r===preferred.r&&p.c===preferred.c&&!used[key(p.r,p.c)]});
-    if(!t)t=grp.cells.find(function(p){return !used[key(p.r,p.c)]});
-    if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:"seeker",gem:grp.gem,priority:2})}
+    var target=preferred&&grp.cells.find(function(p){return p.r===preferred.r&&p.c===preferred.c&&available(p);});
+    if(!target)target=grp.cells.find(available);
+    if(target){used[key(target.r,target.c)]=1;plans.push({r:target.r,c:target.c,special:"seeker",gem:grp.gem,priority:2});}
   });
   return plans;
+}
+function pickTarget(grp,preferred,used,grid){
+  function available(p){
+    var cell=grid&&grid[p.r]&&grid[p.r][p.c];
+    return !used[key(p.r,p.c)]&&(!cell||!cell.locked);
+  }
+  if(preferred)for(var i=0;i<grp.cells.length;i++){
+    var p=grp.cells[i];
+    if(p.r===preferred.r&&p.c===preferred.c&&available(p))return p;
+  }
+  var mid=grp.cells[Math.floor(grp.cells.length/2)];
+  if(available(mid))return mid;
+  for(var j=0;j<grp.cells.length;j++)if(available(grp.cells[j]))return grp.cells[j];
+  return null;
 }
 function supportedSpecial(s){return s==="prism"||s==="bomb"||s==="line-h"||s==="line-v"||s==="seeker"}
 function canSwap(grid,a,b){
@@ -344,18 +365,10 @@ function specialTargets(grid,r,c,special,prismColor,ctx){
 function findHint(grid,rng,ctx){
   var dirs=[{dr:0,dc:1},{dr:1,dc:0}],moves=[];
   for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)for(var d=0;d<2;d++){
-    var b={r:r+dirs[d].dr,c:c+dirs[d].dc};if(!inB(b.r,b.c)||!canSwap(grid,{r:r,c:c},b))continue;
-    var ca=grid[r][c],cb=grid[b.r][b.c],score=10,copy=cloneGrid(grid);swapCells(copy,{r:r,c:c},b);
-    if(ca.s&&cb.s)score=90;
-    else if(ca.s==="prism"||cb.s==="prism")score=90;
-    else{
-      var groups=findMatches(copy),plans=planSpecials(groups,b);
-      if(plans.some(function(p){return p.special==="prism"}))score=100;
-      else if(plans.length)score=60;
-      else if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))score=75;
-      else if(groups.length)score=10;
-    }
-    moves.push({a:{r:r,c:c},b:b,score:score});
+    var b={r:r+dirs[d].dr,c:c+dirs[d].dc};
+    if(!inB(b.r,b.c)||!canSwap(grid,{r:r,c:c},b))continue;
+    var score=hintScore(grid,{r:r,c:c},b,ctx);
+    if(score>0)moves.push({a:{r:r,c:c},b:b,score:score});
   }
   if(!moves.length)return null;
   moves.sort(function(a,b){return b.score-a.score});
@@ -521,15 +534,29 @@ function shuffleBoard(grid,rng){
 }
 function hintScore(grid,a,b,ctx){
   var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
-  if(ca.s&&cb.s)return 90;
+  var guardianGem=ctx&&ctx.guardian&&ctx.guardian.idx<ctx.guardian.sequence.length?ctx.guardian.sequence[ctx.guardian.idx]:null;
+  var collectGems=[];
+  if(ctx&&ctx.level&&ctx.level.objectives)ctx.level.objectives.forEach(function(o){
+    if(o.type==="collect"&&o.gem!=null&&(ctx.collected[o.gem]||0)<(o.count||0))collectGems.push(o.gem);
+  });
+  if((ca.s==="prism"&&!cb.s)||(cb.s==="prism"&&!ca.s)){
+    var prismGem=ca.s==="prism"?cb.g:ca.g;
+    if(guardianGem!=null&&prismGem===guardianGem)return 130;
+    if(collectGems.indexOf(prismGem)>=0)return 120;
+    return 90;
+  }
+  if(ca.s&&cb.s)return 95;
   var copy=cloneGrid(grid);swapCells(copy,a,b);
-  var groups=findMatches(copy),plans=planSpecials(groups,b);
+  var groups=findMatches(copy);
+  if(guardianGem!=null&&groups.some(function(g){return g.gem===guardianGem}))return 130;
+  if(groups.some(function(g){return collectGems.indexOf(g.gem)>=0}))return 120;
+  if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))return 110;
+  var plans=planSpecials(groups,b,copy);
   if(plans.some(function(p){return p.special==="prism"}))return 100;
-  if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))return 75;
-  if(groups.some(function(g){return g.cells.some(function(p){return isBlocker(grid[p.r][p.c])})}))return 75;
   if(plans.length)return 60;
   return groups.length?10:0;
 }
+
 
 function createBoard(level,seed){
   var rng=makeRng(seed||Date.now()&2147483647),grid,guard=0;
