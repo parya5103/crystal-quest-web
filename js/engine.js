@@ -226,7 +226,7 @@ function parseLayout(layout){
       else if(ch==="D")row.push({k:"b",b:"stone",hp:2,layer:"cracked"});
       else if(ch==="O")row.push({k:"b",b:"obsidian",hp:3,layer:"reinforced"});
       else if(ch==="I")row.push({k:"b",b:"ice",hp:2,layer:"frost"});
-      else if(ch==="C")row.push({k:"g",g:0,s:null,locked:true,lockHp:1});
+      else if(ch==="C")row.push({k:"g",g:-1,s:null,locked:true,lockHp:1});
       else row.push({k:"e"});
     }
     grid.push(row);
@@ -459,8 +459,8 @@ function hasValidMove(grid){return countValidMoves(grid)>0}
 function fillNoMatch(grid,rng){
   rng=rng||Math.random;
   for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
-    var cell=grid[r][c];
-    if(!cell||cell.k!=="e")continue;
+    var cell=grid[r][c],lockedCell=!!(cell&&cell.k==="g"&&cell.locked&&cell.g<0);
+    if(!lockedCell&&(!cell||cell.k!=="e"))continue;
     var banned={};
     if(c>=2&&isGem(grid[r][c-1])&&isGem(grid[r][c-2])&&grid[r][c-1].g===grid[r][c-2].g)banned[grid[r][c-1].g]=1;
     if(r>=2&&isGem(grid[r-1][c])&&isGem(grid[r-2][c])&&grid[r-1][c].g===grid[r-2][c].g)banned[grid[r-1][c].g]=1;
@@ -471,7 +471,7 @@ function fillNoMatch(grid,rng){
     var choices=[];
     for(var color=0;color<GEM_COUNT;color++)if(!banned[color])choices.push(color);
     var pick=choices.length?choices[Math.floor(rng()*choices.length)]:Math.floor(rng()*GEM_COUNT);
-    grid[r][c]={k:"g",g:pick,s:null};
+    if(lockedCell){cell.g=pick;cell.s=null;cell.lockHp=Math.max(1,cell.lockHp||1)}else grid[r][c]={k:"g",g:pick,s:null};
   }
 }
 function plantSecondMove(grid,rng){
