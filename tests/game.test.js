@@ -1061,5 +1061,17 @@ test('phase 2: renderer and audio include the new mechanics without adding depen
   assert.ok(uiSrc.includes('E.findHint(this.grid,this.rng,this.ctx)'),'hints use the active objective context');
 });
 
+test('phase 3: seeded bot sweeps all 27 levels without dead-board or illegal-move failures', () => {
+  const bot=context.CQDev.bot;
+  const rows=LV.LEVELS.map(level=>bot.runStats(level,100,'greedy',0));
+  rows.forEach(row=>{
+    console.log('BOT_SWEEP L'+row.level+' '+row.name+': '+row.wins+'/'+row.attempts+' ('+row.winRate+'%), shuffles='+row.shuffles);
+    assert.ok(row.wins>=1,'level '+row.level+' is solvable by the seeded bot');
+    assert.equal(row.fails['dead-board']||0,0,'level '+row.level+' never deadlocks');
+    assert.equal(row.fails['illegal-move']||0,0,'level '+row.level+' never emits an illegal bot move');
+    if(row.level<=10)assert.ok(row.winRate>=80,'intro level '+row.level+' remains approachable: '+row.winRate+'%');
+  });
+});
+
 console.log(`\n${passed.length} regression groups passed.`);
 
