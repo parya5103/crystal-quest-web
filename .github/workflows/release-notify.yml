@@ -1,0 +1,44 @@
+name: GoGo Central release notification
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: gogo-central-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    if: github.event.release.draft == false && github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtain short-lived GitHub Actions OIDC token
+        id: oidc
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+        run: |
+          set -euo pipefail
+          TOKEN=$(curl -fsS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=gogo-central-notifications" | jq -r '.value')
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Notify opted-in GoGo users
+        env:
+          CENTRAL_API: https://gogo-central-backend.onrender.com
+          OIDC_TOKEN: ${{ steps.oidc.outputs.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          set -euo pipefail
+          jq -n --arg eventId "$RELEASE_ID" --arg title "Crystal Quest: $RELEASE_TAG" \
+            --arg body "A new Crystal Quest release is available. Open the game to explore the latest update." --arg deepLink "https://gogocompany.in/crystalquest/" \
+            '{eventType:"product_release",eventId:$eventId,title:$title,body:$body,deepLink:$deepLink}' > /tmp/gogo-event.json
+          curl -fsS --max-time 20 -X POST "$CENTRAL_API/api/v1/automation/publish" \
+            -H "Authorization: Bearer $OIDC_TOKEN" -H "Content-Type: application/json" \
+            --data-binary @/tmp/gogo-event.json
