@@ -11,7 +11,7 @@ API), and a responsive touch-first UI.
 Levels 21–26 introduce the game's signature mechanic, **Crystal Resonance**:
 glowing energy veins run through the board. Match a crystal on a vein node and
 energy travels down the vein, shattering every crystal it reaches — the longer
-the vein, the bigger the chain. Blockers absorb the energy, so plan the path.
+the vein, the bigger the chain. Blockers absorb the energy, so plan the path. The engine also supports layered stone/obsidian hit points and caged crystals.
 
 The campaign is wrapped by **The Guardian** — a shield-sequence encounter on
 level 27 — plus a **Relic Vault** of six once-only collectibles, a
@@ -71,7 +71,7 @@ Then open <http://localhost:8000> in your browser.
 
 - **Swap** two adjacent gems by tapping/dragging to form a line of 3 or more.
 - Matches **cascade**: cleared gems fall, new gems drop in, and chains score extra.
-- Special gems are created from larger matches and clear rows, columns, or areas.
+- Special gems are created from larger matches and clear rows, columns, or areas. A 2×2 square forges a Seeker Crystal that targets an objective-relevant tile; swapping two specials triggers a deterministic combo.
 - **Resonance**: from level 21 on, match a crystal on a glowing vein node to send
   energy down the vein and chain-clear everything it reaches.
 - Each level defines **move limits**, **objectives** (score, gem types, ice,
@@ -95,6 +95,8 @@ Then open <http://localhost:8000> in your browser.
   can copy and store; paste it and press *Import save code* on any device.
 
 ## Tests
+
+Phase 1 engine upgrades add regression coverage for square-to-Seeker creation, special-pair swaps, layered blockers/cages, heuristic hints and deadlock reshuffling. The Phase 1 branch is under validation; do not treat these additions as release-verified until the full Node suite and browser self-test pass.
 
 Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
 resonance, guardian, relic, daily-challenge, ads-adapter and install-prompt regression suite with Node — 25 groups:
