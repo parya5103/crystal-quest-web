@@ -501,7 +501,8 @@ function shuffleBoard(grid,rng){
     if(findMatches(grid).length===0&&countValidMoves(grid)>=2)return true;
   }
   if(plantMove(grid,rng)&&countValidMoves(grid)>=2)return true;
-  return plantSecondMove(grid,rng)&&countValidMoves(grid)>=2;
+  if(plantSecondMove(grid,rng)&&countValidMoves(grid)>=2)return true;
+  return countValidMoves(grid)>0;
 }
 function hintScore(grid,a,b,ctx){
   var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
