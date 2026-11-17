@@ -70,18 +70,19 @@ function damageBlockers(grid, cleared, directHits, ctx) {
     });
   });
   (directHits || []).forEach(function (q) { if (inB(q.r, q.c)) hits[key(q.r, q.c)] = q; });
-  var destroyed = [];
+  var destroyed = [], damaged = [];
   Object.keys(hits).forEach(function (k) {
     var q = hits[k], cell = grid[q.r][q.c];
     if (!isBlocker(cell)) return;
     cell.hp = Math.max(0, (cell.hp || 1) - 1);
+    if (cell.hp > 0) damaged.push({ r: q.r, c: q.c, b: cell.b, hp: cell.hp });
     if (cell.hp <= 0) {
       grid[q.r][q.c] = { k: "e" };
       destroyed.push({ r: q.r, c: q.c, b: cell.b });
       ctx.blockersCleared[cell.b] = (ctx.blockersCleared[cell.b] || 0) + 1;
     }
   });
-  return { destroyed: destroyed, score: destroyed.length * 100 };
+  return { destroyed: destroyed, damaged: damaged, score: destroyed.length * 100 };
 }
 function resolveBoard(grid, rng, ctx) {
   var steps = [], cascade = 0, guard = 0;
@@ -116,7 +117,7 @@ function resolveBoard(grid, rng, ctx) {
         forged.push({ r: pl.r, c: pl.c, s: pl.special, g: pl.gem });
       }
     });
-    steps.push({ t: "clear", cleared: cleared, blockers: damage.destroyed.concat(reso ? reso.destroyedBlockers : []), forged: forged, activated: expanded.activated, score: gained + (reso ? reso.score : 0), combo: cascade, mult: mult, guardian: gadv, resonance: reso });
+    steps.push({ t: "clear", cleared: cleared, blockers: damage.destroyed.concat(reso ? reso.destroyedBlockers : []), damagedBlockers: damage.damaged, forged: forged, activated: expanded.activated, score: gained + (reso ? reso.score : 0), combo: cascade, mult: mult, guardian: gadv, resonance: reso });
     var grav = applyGravity(grid, rng);
     steps.push({ t: "fall", moves: grav.moves, spawns: grav.spawns });
   }
@@ -400,7 +401,7 @@ function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
   exp.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
   var damage=damageBlockers(grid,exp.cleared,exp.blockers,ctx);gained+=damage.score;ctx.score+=gained;
   var gadv=guardianAdvance(ctx,exp.cleared),reso=ctx.tiles?applyResonance(grid,ctx.tiles,exp.cleared,ctx):null;
-  var steps=[{t:"clear",cleared:exp.cleared,blockers:damage.destroyed.concat(reso?reso.destroyedBlockers:[]),forged:[],activated:exp.activated,score:gained+(reso?reso.score:0),combo:1,mult:1.5,label:label,guardian:gadv,resonance:reso,secondary:secondary}];
+  var steps=[{t:"clear",cleared:exp.cleared,blockers:damage.destroyed.concat(reso?reso.destroyedBlockers:[]),damagedBlockers:damage.damaged,forged:[],activated:exp.activated,score:gained+(reso?reso.score:0),combo:1,mult:1.5,label:label,guardian:gadv,resonance:reso,secondary:secondary}];
   var grav=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav.moves,spawns:grav.spawns});
   if(secondary.length){
     steps.push({t:"delay",ms:180,centers:secondary.map(function(x){return x.center})});
@@ -412,7 +413,7 @@ function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
     exp2.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
     var damage2=damageBlockers(grid,exp2.cleared,exp2.blockers,ctx);gained2+=damage2.score;ctx.score+=gained2;
     var guardian2=guardianAdvance(ctx,exp2.cleared),resonance2=ctx.tiles?applyResonance(grid,ctx.tiles,exp2.cleared,ctx):null;
-    steps.push({t:"clear",cleared:exp2.cleared,blockers:damage2.destroyed.concat(resonance2?resonance2.destroyedBlockers:[]),forged:[],activated:exp2.activated,score:gained2+(resonance2?resonance2.score:0),combo:1,mult:1.5,label:"NOVA AFTERSHOCK",secondaryStage:true,guardian:guardian2,resonance:resonance2});
+    steps.push({t:"clear",cleared:exp2.cleared,blockers:damage2.destroyed.concat(resonance2?resonance2.destroyedBlockers:[]),damagedBlockers:damage2.damaged,forged:[],activated:exp2.activated,score:gained2+(resonance2?resonance2.score:0),combo:1,mult:1.5,label:"NOVA AFTERSHOCK",secondaryStage:true,guardian:guardian2,resonance:resonance2});
     var grav2=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav2.moves,spawns:grav2.spawns});
     var cascades=resolveBoard(grid,rng||ctx.rng||makeRng(1),ctx);steps=steps.concat(cascades.steps);
   }
@@ -537,4 +538,4 @@ function createBoard(level,seed){
   return{grid:grid,rng:rng};
 }
 
-global.CQEngine={ROWS,COLS,GEM_COUNT,countValidMoves,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
+global.CQEngine={ROWS,COLS,GEM_COUNT,countValidMoves,damageBlockers,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
