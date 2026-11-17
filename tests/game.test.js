@@ -98,13 +98,15 @@ test('all 27 level layouts match blocker-objective counts and start playable', (
   LV.LEVELS.forEach((level) => {
     const chars = level.layout.join('');
     for (const obj of level.objectives.filter(x => x.type === 'clear')) {
-      const tiles = [...chars].filter(ch => ch === (obj.blocker === 'ice' ? 'I' : 'S')).length;
+      const matches = obj.blocker === 'ice' ? ['I'] : obj.blocker === 'obsidian' ? ['O'] : ['S', 'D'];
+      const tiles = [...chars].filter(ch => matches.includes(ch)).length;
       assert.equal(obj.count, tiles, `level ${level.id} ${obj.blocker}: target ${obj.count}, tiles ${tiles}`);
     }
     for (const seed of [101, 202, 303]) {
       const board = E.createBoard(level, seed + level.id * 1000);
       assert.equal(E.findMatches(board.grid).length, 0, `level ${level.id} initial match`);
       assert.equal(E.hasValidMove(board.grid), true, `level ${level.id} initial move`);
+      assert.ok(E.countValidMoves(board.grid) >= 2, `level ${level.id} starts with two valid swaps`);
       const hint = E.findHint(board.grid);
       assert.ok(hint && E.canSwap(board.grid, hint.a, hint.b), `level ${level.id} legal hint`);
       const check = E.trySwap(copyGrid(board.grid), hint.a, hint.b, E.makeRng(seed), E.makeCtx(level));
@@ -1000,6 +1002,63 @@ test('phase 1: hint engine returns a scored valid move and free shuffle removes 
   assert.equal(E.findMatches(dead).length,0,'shuffle leaves no pre-existing match');
   assert.equal(E.hasValidMove(dead),true,'shuffle guarantees a valid move');
   assert.ok(E.countValidMoves(dead)>=2,'shuffle guarantees at least two distinct playable swaps');
+});
+
+test('phase 1: caged crystals unlock without being consumed and layered blockers take their correct hits', () => {
+  const E=context.CQEngine, cageLevel=LV.get(9), cageBoard=E.createBoard(cageLevel,901);
+  const cages=[];
+  for(let r=0;r<E.ROWS;r++)for(let c=0;c<E.COLS;c++)if(cageBoard.grid[r][c]&&cageBoard.grid[r][c].locked)cages.push({r,c});
+  assert.equal(cages.length,2,'Hollow Crown introduces two caged crystals');
+  const cage=cages[0], ctx=E.makeCtx(cageLevel);
+  const expansion=E.expandClears(cageBoard.grid,[cage],null,ctx);
+  assert.equal(expansion.cleared.some(p=>p.r===cage.r&&p.c===cage.c),false,'the cage hit does not consume its gem');
+  assert.equal(cageBoard.grid[cage.r][cage.c].locked,false,'first blast contact opens the cage');
+
+  const cracked=E.createBoard(LV.get(12),912).grid;
+  const crackedAt=cracked.flatMap((row,r)=>row.map((cell,c)=>cell&&cell.k==='b'&&cell.b==='stone'&&cell.hp===2?{r,c}:null)).find(Boolean);
+  assert.ok(crackedAt,'Shattered Span contains two-hit cracked stone');
+  const stoneCtx=E.makeCtx(LV.get(12));
+  E.damageBlockers(cracked,[],[crackedAt],stoneCtx);
+  assert.equal(cracked[crackedAt.r][crackedAt.c].hp,1,'first hit cracks but does not destroy');
+  E.damageBlockers(cracked,[],[crackedAt],stoneCtx);
+  assert.equal(cracked[crackedAt.r][crackedAt.c].k,'e','second hit destroys cracked stone');
+  assert.equal(stoneCtx.blockersCleared.stone,1);
+
+  const obsidian=E.createBoard(LV.get(14),914).grid;
+  const obsAt=obsidian.flatMap((row,r)=>row.map((cell,c)=>cell&&cell.k==='b'&&cell.b==='obsidian'?{r,c}:null)).find(Boolean);
+  assert.ok(obsAt,'Obsidian Ring contains reinforced blockers');
+  const obsCtx=E.makeCtx(LV.get(14));
+  E.damageBlockers(obsidian,[],[obsAt],obsCtx);
+  assert.equal(obsidian[obsAt.r][obsAt.c].hp,2);
+  E.damageBlockers(obsidian,[],[obsAt],obsCtx);
+  assert.equal(obsidian[obsAt.r][obsAt.c].hp,1);
+  E.damageBlockers(obsidian,[],[obsAt],obsCtx);
+  assert.equal(obsidian[obsAt.r][obsAt.c].k,'e','third hit destroys obsidian');
+  assert.equal(obsCtx.blockersCleared.obsidian,1);
+});
+
+test('phase 2: double Star Bomb performs a delayed second blast stage', () => {
+  const E=context.CQEngine, grid=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r+c)%6,s:null})));
+  grid[3][3]={k:'g',g:1,s:'bomb'};grid[3][4]={k:'g',g:2,s:'bomb'};
+  const ctx=E.makeCtx({layout:Array(8).fill('........'),objectives:[]});
+  const result=E.trySwap(grid,{r:3,c:3},{r:3,c:4},E.makeRng(45),ctx);
+  assert.equal(result.ok,true);
+  assert.ok(result.steps.some(step=>step.t==='delay'),'the aftershock has a visible delay step');
+  assert.ok(result.steps.some(step=>step.t==='clear'&&step.secondaryStage&&step.label==='NOVA AFTERSHOCK'),'the second blast actually clears the post-gravity board');
+});
+
+test('phase 2: renderer and audio include the new mechanics without adding dependencies', () => {
+  const renderSrc=fs.readFileSync(path.join(root,'js/render.js'),'utf8');
+  const audioSrc=fs.readFileSync(path.join(root,'js/audio.js'),'utf8');
+  const uiSrc=fs.readFileSync(path.join(root,'js/ui.js'),'utf8');
+  assert.doesNotThrow(()=>new Function(renderSrc),'renderer syntax');
+  assert.doesNotThrow(()=>new Function(audioSrc),'audio syntax');
+  assert.ok(renderSrc.includes('special==="seeker"'),'Seeker sprite exists');
+  assert.ok(renderSrc.includes('step.t==="delay"'),'delayed blast animation exists');
+  assert.ok(renderSrc.includes('kind==="obsidian"'),'obsidian has a dedicated sprite');
+  assert.ok(renderSrc.includes('d.cell.locked'),'caged gems have a lock overlay');
+  assert.ok(audioSrc.includes('case"seeker"')&&audioSrc.includes('case"nova"'),'original synthesized cues exist');
+  assert.ok(uiSrc.includes('E.findHint(this.grid,this.rng,this.ctx)'),'hints use the active objective context');
 });
 
 console.log(`\n${passed.length} regression groups passed.`);
