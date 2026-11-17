@@ -74,8 +74,7 @@ Then open <http://localhost:8000> in your browser.
 - Special gems are created from larger matches and clear rows, columns, or areas. A 2×2 square forges a Seeker Crystal that targets the next Guardian colour, a resonance vein, a blocker, or a needed collect colour. Every pair of special types has a deterministic combo; two Star Bombs trigger a delayed second-stage aftershock.
 - **Resonance**: from level 21 on, match a crystal on a glowing vein node to send
   energy down the vein and chain-clear everything it reaches.
-- Each level defines **move limits**, **objectives** (score, gem types, ice,
-  resonance, etc.), and a **star rating**.
+- Blockers include stone (1 hit), cracked stone (2 hits), ice (2 hits), and obsidian (3 hits). Caged crystals unlock on first clear/blast/resonance contact and remain on the board. Each level defines **move limits**, **objectives** (score, gem types, blockers, resonance, Guardian), and a **star rating**.
 - Progress and stars are stored locally in your browser.
 - **Crystal Forest**: stars earned in levels 1–10 restore the forest — open
   **Crystal Forest** from the main menu to watch it heal and read its story.
