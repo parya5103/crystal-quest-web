@@ -11,7 +11,7 @@ API), and a responsive touch-first UI.
 Levels 21–26 introduce the game's signature mechanic, **Crystal Resonance**:
 glowing energy veins run through the board. Match a crystal on a vein node and
 energy travels down the vein, shattering every crystal it reaches — the longer
-the vein, the bigger the chain. Blockers absorb the energy, so plan the path.
+the vein, the bigger the chain. Blockers absorb the energy, so plan the path. The engine also supports layered stone/obsidian hit points and caged crystals.
 
 The campaign is wrapped by **The Guardian** — a shield-sequence encounter on
 level 27 — plus a **Relic Vault** of six once-only collectibles, a
@@ -71,11 +71,10 @@ Then open <http://localhost:8000> in your browser.
 
 - **Swap** two adjacent gems by tapping/dragging to form a line of 3 or more.
 - Matches **cascade**: cleared gems fall, new gems drop in, and chains score extra.
-- Special gems are created from larger matches and clear rows, columns, or areas.
+- Special gems are created from larger matches and clear rows, columns, or areas. A 2×2 square forges a Seeker Crystal that targets the next Guardian colour, a resonance vein, a blocker, or a needed collect colour. Every pair of special types has a deterministic combo; two Star Bombs trigger a delayed second-stage aftershock.
 - **Resonance**: from level 21 on, match a crystal on a glowing vein node to send
   energy down the vein and chain-clear everything it reaches.
-- Each level defines **move limits**, **objectives** (score, gem types, ice,
-  resonance, etc.), and a **star rating**.
+- Blockers include stone (1 hit), cracked stone (2 hits), ice (2 hits), and obsidian (3 hits). Caged crystals unlock on first clear/blast/resonance contact and remain on the board. Each level defines **move limits**, **objectives** (score, gem types, blockers, resonance, Guardian), and a **star rating**.
 - Progress and stars are stored locally in your browser.
 - **Crystal Forest**: stars earned in levels 1–10 restore the forest — open
   **Crystal Forest** from the main menu to watch it heal and read its story.
@@ -96,16 +95,18 @@ Then open <http://localhost:8000> in your browser.
 
 ## Tests
 
+Phases 1–3 are implemented on the current feature branch: 2×2 Seeker creation, all special-pair combinations, delayed Star Bomb aftershock, objective-aware hints, locked crystals, layered blockers, dedicated Canvas visuals/audio, and a seeded bot sweep across all 27 levels.
+
 Run the dependency-free engine, level-definition, UI-state, save/load, blocker,
-resonance, guardian, relic, daily-challenge, ads-adapter and install-prompt regression suite with Node — 25 groups:
+resonance, Guardian, relic, daily-challenge, ads-adapter, install-prompt,
+special-combo, renderer/audio syntax and 27-level bot regression suite with Node:
 
 ```bash
 node tests/game.test.js
+node tests/seo.test.js
 ```
 
-The game also ships an in-browser self-test (`CQTest`, defined in
-`js/main.js`) and a dev-only headless harness (`dev/harness.js`) for running
-the engine suite without a browser.
+GitHub Actions runs both commands on every pull request to `main`. The Node suite also exercises `CQTest.run()` and the seeded bot; browser/device visual playtesting is a separate release check and is not implied by a passing headless suite.
 
 ### Debug panel (dev only)
 

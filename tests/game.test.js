@@ -46,6 +46,9 @@ function test(name, fn) {
   catch (err) { console.error(`FAIL ${name}\n${err.stack}`); process.exitCode = 1; }
 }
 function copyGrid(grid) { return JSON.parse(JSON.stringify(grid)); }
+function jsonEqual(actual, expected, message) {
+  assert.equal(JSON.stringify(actual), JSON.stringify(expected), message);
+}
 function adjacentPairs() {
   const pairs = [];
   for (let r = 0; r < E.ROWS; r++) for (let c = 0; c < E.COLS; c++) {
@@ -95,13 +98,15 @@ test('all 27 level layouts match blocker-objective counts and start playable', (
   LV.LEVELS.forEach((level) => {
     const chars = level.layout.join('');
     for (const obj of level.objectives.filter(x => x.type === 'clear')) {
-      const tiles = [...chars].filter(ch => ch === (obj.blocker === 'ice' ? 'I' : 'S')).length;
+      const matches = obj.blocker === 'ice' ? ['I'] : obj.blocker === 'obsidian' ? ['O'] : ['S', 'D'];
+      const tiles = [...chars].filter(ch => matches.includes(ch)).length;
       assert.equal(obj.count, tiles, `level ${level.id} ${obj.blocker}: target ${obj.count}, tiles ${tiles}`);
     }
     for (const seed of [101, 202, 303]) {
       const board = E.createBoard(level, seed + level.id * 1000);
       assert.equal(E.findMatches(board.grid).length, 0, `level ${level.id} initial match`);
       assert.equal(E.hasValidMove(board.grid), true, `level ${level.id} initial move`);
+      assert.ok(E.countValidMoves(board.grid) >= 2, `level ${level.id} starts with two valid swaps`);
       const hint = E.findHint(board.grid);
       assert.ok(hint && E.canSwap(board.grid, hint.a, hint.b), `level ${level.id} legal hint`);
       const check = E.trySwap(copyGrid(board.grid), hint.a, hint.b, E.makeRng(seed), E.makeCtx(level));
@@ -146,7 +151,7 @@ test('dead-board shuffle restores a legal move without moving blockers or losing
   assert.equal(E.findMatches(grid).length, 0);
   assert.equal(E.hasValidMove(grid), true);
   assert.equal(grid[3][2].s, 'bomb');
-  assert.deepEqual(JSON.parse(JSON.stringify(grid.map(row => row.map(cell => cell && cell.k === 'b' ? JSON.stringify(cell) : null)))), blockersBefore);
+  jsonEqual(JSON.parse(JSON.stringify(grid.map(row => row.map(cell => cell && cell.k === 'b' ? JSON.stringify(cell) : null)))), blockersBefore);
 });
 
 test('prism clears damage adjacent ice and special combinations damage blockers', () => {
@@ -261,7 +266,7 @@ test('debug runner is deterministic and reports attempts/wins/averages per level
   assert.ok(D, 'CQDev.debug present');
   const a = D.run(1, 10, 'greedy', 0);
   const b = D.run(1, 10, 'greedy', 0);
-  assert.deepEqual(a, b, 'identical inputs give identical stats');
+  jsonEqual(a, b, 'identical inputs give identical stats');
   assert.equal(a.attempts, 10);
   assert.ok(a.wins >= 0 && a.wins <= 10);
   assert.equal(typeof a.winRate, 'number');
@@ -286,7 +291,7 @@ test('save v2: migrates v1 saves with a backup copy and keeps all progress', () 
   assert.equal(d.best[1], 4200);
   assert.equal(d.lastLevel, 3);
   assert.equal(d.settings.sfx, false);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] }, 'v1 save gains default world state');
+  jsonEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] }, 'v1 save gains default world state');
   assert.equal(storage.get('crystal-quest-save-backup'), JSON.stringify(v1), 'backup holds the original v1 raw save');
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).v, 2, 'main key rewritten as v2');
   const again = Save.load();
@@ -301,17 +306,17 @@ test('save v2: corrupted storage falls back safely, corrupt world resets without
   const d = Save.load();
   assert.equal(d.v, 2);
   assert.equal(d.unlocked, 1);
-  assert.deepEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
+  jsonEqual(d.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
   assert.ok(!storage.has('crystal-quest-save-v1'), 'corrupt main save removed');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 5, stars: { '3': 1 }, best: {}, lastLevel: 4, settings: {}, world: 'garbage' }));
   const d2 = Save.load();
   assert.equal(d2.v, 2);
   assert.equal(d2.unlocked, 5, 'rest of the save survives a corrupt world field');
   assert.equal(d2.stars[3], 1);
-  assert.deepEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
+  jsonEqual(d2.world, { forest: { seen: [] }, relics: [], daily: { date: '', streak: 0, best: 0 }, story: [] });
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 2, world: { forest: { seen: [42, 'spark', null, 'spark'] } } }));
   const d3 = Save.load();
-  assert.deepEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
+  jsonEqual(d3.world.forest.seen, ['spark'], 'seen list sanitized to unique strings');
 });
 
 test('save v2: export/import round trip and rejection of invalid codes', () => {
@@ -331,7 +336,7 @@ test('save v2: export/import round trip and rejection of invalid codes', () => {
   assert.equal(Save.data.unlocked, 4);
   assert.equal(Save.data.stars[1], 2);
   assert.equal(Save.data.best[1], 5300);
-  assert.deepEqual(Save.data.world.forest.seen, ['spark']);
+  jsonEqual(Save.data.world.forest.seen, ['spark']);
   assert.equal(JSON.parse(storage.get('crystal-quest-save-v1')).unlocked, 4, 'import persists to storage');
   assert.equal(Save.importCode(''), false);
   assert.equal(Save.importCode('CQSAVE2-'), false);
@@ -345,7 +350,7 @@ test('save v2: export/import round trip and rejection of invalid codes', () => {
   assert.equal(Save.data.unlocked, 4, 'rejected import leaves current save untouched');
   const re = Save.load();
   assert.equal(re.unlocked, 4, 'imported progress survives reload');
-  assert.deepEqual(re.world.forest.seen, ['spark']);
+  jsonEqual(re.world.forest.seen, ['spark']);
 });
 
 test('world restoration: forest milestones unlock from stars, persist, and are seen exactly once', () => {
@@ -364,15 +369,15 @@ test('world restoration: forest milestones unlock from stars, persist, and are s
   assert.equal(reached[0].id, 'spark');
   assert.equal(Save.data.world.forest.seen.indexOf('spark'), -1, 'new milestone not seen yet');
   assert.equal(Save.markForestSeen(), true, 'viewing marks it seen and persists');
-  assert.deepEqual(Save.data.world.forest.seen, ['spark']);
+  jsonEqual(Save.data.world.forest.seen, ['spark']);
   assert.equal(Save.markForestSeen(), true, 'idempotent: no duplicate entry');
   assert.equal(Save.data.world.forest.seen.length, 1);
   const re = Save.load();
   assert.equal(re.stars[3], 3, 'stars persist');
-  assert.deepEqual(re.world.forest.seen, ['spark'], 'seen fragments persist across reload');
-  assert.deepEqual(W.newlyReached(0, 8).map(m => m.id), ['spark', 'saplings']);
-  assert.deepEqual(W.newlyReached(3, 8).map(m => m.id), ['saplings']);
-  assert.deepEqual(W.newlyReached(8, 8), []);
+  jsonEqual(re.world.forest.seen, ['spark'], 'seen fragments persist across reload');
+  jsonEqual(W.newlyReached(0, 8).map(m => m.id), ['spark', 'saplings']);
+  jsonEqual(W.newlyReached(3, 8).map(m => m.id), ['saplings']);
+  jsonEqual(W.newlyReached(8, 8), []);
   // a forest win that crosses a milestone announces restoration
   Save.data = Save.defaults();
   storage.clear();
@@ -475,14 +480,14 @@ test('relics: conditions, exact-once claiming, persistence, and win toasts', () 
   const RL = context.CQRelics;
   assert.ok(RL, 'CQRelics exposed');
   assert.equal(RL.list.length, 6, 'six original relics');
-  assert.deepEqual(RL.owned(), []);
-  assert.deepEqual(RL.claimNew(), [], 'nothing eligible at zero progress');
+  jsonEqual(RL.owned(), []);
+  jsonEqual(RL.claimNew(), [], 'nothing eligible at zero progress');
   Save.record(1, 5000, 3);
   const fresh = RL.claimNew();
   assert.equal(fresh.length, 1);
   assert.equal(fresh[0].id, 'ember-seed');
-  assert.deepEqual(Save.data.world.relics, ['ember-seed']);
-  assert.deepEqual(RL.claimNew(), [], 'second claim grants nothing');
+  jsonEqual(Save.data.world.relics, ['ember-seed']);
+  jsonEqual(RL.claimNew(), [], 'second claim grants nothing');
   assert.equal(Save.data.world.relics.length, 1, 'no duplicate entry');
   Save.record(2, 5000, 3); Save.record(3, 5000, 3); Save.record(4, 5000, 3); Save.record(5, 5000, 3);
   Save.data.stars[25] = 3; Save.data.stars[26] = 3;
@@ -511,16 +516,16 @@ test('relics: conditions, exact-once claiming, persistence, and win toasts', () 
   delete raw.world.relics;
   storage.set('crystal-quest-save-v1', JSON.stringify(raw));
   const re2 = Save.load();
-  assert.deepEqual(re2.world.relics, [], 'missing relics field defaults safely');
+  jsonEqual(re2.world.relics, [], 'missing relics field defaults safely');
   assert.ok(re2.stars[27] >= 1, 'other progress kept');
   const raw3 = JSON.parse(storage.get('crystal-quest-save-v1'));
   raw3.world.relics = 'junk';
   storage.set('crystal-quest-save-v1', JSON.stringify(raw3));
   const re3 = Save.load();
-  assert.deepEqual(re3.world.relics, [], 'corrupt relics field resets to empty');
+  jsonEqual(re3.world.relics, [], 'corrupt relics field resets to empty');
   assert.ok(re3.stars[27] >= 1, 'corrupt relics field does not lose other progress');
   Save.reset();
-  assert.deepEqual(Save.data.world.relics, []);
+  jsonEqual(Save.data.world.relics, []);
 });
 
 test('daily challenge: date-seeded templates, exact-once streak, clock-safe, solvable, b64 padding', () => {
@@ -531,7 +536,7 @@ test('daily challenge: date-seeded templates, exact-once streak, clock-safe, sol
   assert.ok(DY, 'CQDaily exposed');
   assert.equal(DY.TEMPLATES.length, 4, 'four rotating templates');
   assert.equal(DY.level('nonsense'), null, 'malformed date rejected');
-  assert.deepEqual(DY.level('2026-10-18'), DY.level('2026-10-18'), 'same date gives the same level');
+  jsonEqual(DY.level('2026-10-18'), DY.level('2026-10-18'), 'same date gives the same level');
   assert.equal(DY.level('2026-10-18').id, 'daily-2026-10-18');
   function shift(ds, n) { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
   const templateNames = new Set(DY.TEMPLATES.map((t) => t.name));
@@ -557,7 +562,7 @@ test('daily challenge: date-seeded templates, exact-once streak, clock-safe, sol
   let raw = JSON.parse(storage.get('crystal-quest-save-v1'));
   raw.world.daily = 'junk';
   storage.set('crystal-quest-save-v1', JSON.stringify(raw));
-  assert.deepEqual(Save.load().world.daily, { date: '', streak: 0, best: 0 }, 'corrupt daily field resets safely');
+  jsonEqual(Save.load().world.daily, { date: '', streak: 0, best: 0 }, 'corrupt daily field resets safely');
   raw = JSON.parse(storage.get('crystal-quest-save-v1'));
   raw.world.daily = { date: 42, streak: -5, best: 'x' };
   storage.set('crystal-quest-save-v1', JSON.stringify(raw));
@@ -800,13 +805,13 @@ test('story flow: pending beats are exact-once and the modal cycles with persist
   context.CQUI.openModal = om; context.CQUI.closeModal = cm;
   assert.equal(S.pending(lv, Save.data).length, 0, 'shown beats never pend again');
   const reloaded = Save.load();
-  assert.deepEqual(reloaded.world.story.slice().sort(), beats.map((b) => b.id).sort(), 'seen beats persist through reload');
+  jsonEqual(reloaded.world.story.slice().sort(), beats.map((b) => b.id).sort(), 'seen beats persist through reload');
   storage.set('crystal-quest-save-v1', JSON.stringify({ v: 2, unlocked: 3, stars: {}, best: {}, lastLevel: 1, settings: {}, world: { relics: ['a'], daily: { date: '', streak: 0, best: 0 }, story: [42, 'x', null, 'x'] } }));
   const junk = Save.load();
-  assert.deepEqual(junk.world.story, ['x'], 'story seen list sanitized to unique strings');
+  jsonEqual(junk.world.story, ['x'], 'story seen list sanitized to unique strings');
   const code = Save.exportCode();
   assert.ok(Save.importCode(code), 'export/import round trip works');
-  assert.deepEqual(Save.data.world.story, ['x'], 'import keeps the story seen list');
+  jsonEqual(Save.data.world.story, ['x'], 'import keeps the story seen list');
 });
 
 test('guardian two: level 20 is a valid, balanced Ember Warden encounter', () => {
@@ -842,7 +847,7 @@ test('2D polish: easing, palettes and renderer API surface are shipped', () => {
 
 test('PWA: update activation is controlled - installs wait for the page, controllerchange reloads', () => {
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v17';") >= 0, 'cache version bumped for this update');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v20';") >= 0, 'cache version bumped for this update');
   assert.equal(sw.split('self.skipWaiting()').length - 1, 1, 'skipWaiting lives only in the SKIP_WAITING message handler');
   assert.ok(sw.indexOf("e.data.type === 'SKIP_WAITING'") >= 0, 'a waiting worker installs only when the page asks');
   assert.ok(sw.indexOf('clients.claim') >= 0, 'activation still claims open clients');
@@ -867,7 +872,7 @@ test('UI polish: home progress, map regions, objective meters and combo feedback
   assert.ok(css.indexOf('.region-head') >= 0 && css.indexOf('.home-progress') >= 0 && css.indexOf('.obj-meter') >= 0 && css.indexOf('.btn-play') >= 0, 'polish styles shipped');
   assert.ok(ui.indexOf('updateHome') >= 0 && ui.indexOf('region-head') >= 0 && ui.indexOf('comboBanner') >= 0, 'ui wires home progress, region headers and combo feedback');
   assert.ok(ui.indexOf('var nb=$("win-newbest")') >= 0, 'win flow toggles the new-best badge');
-  assert.ok(sw.indexOf("var CACHE = 'cq-v17';") >= 0, 'cache bumped for the polish pass');
+  assert.ok(sw.indexOf("var CACHE = 'cq-v20';") >= 0, 'cache bumped for the polish pass');
 });
 
 test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and settings wiring (MOCKED)', () => {
@@ -892,7 +897,7 @@ test('GoGo Central notifications: fail-closed module, fcm/ sub-scope worker and 
   assert.equal(GN.config.swUrl, 'fcm/firebase-messaging-sw.js', 'FCM worker lives in its own subdirectory');
   assert.equal(GN.config.authMode, 'anonymous');
   const payload = GN.internals.buildRegisterPayload({ appId: 'crystal-quest' }, 'tok-abcdefghijklmnop', 'TestUA/1.0');
-  assert.deepEqual(JSON.parse(JSON.stringify(payload)), { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
+  jsonEqual(JSON.parse(JSON.stringify(payload)), { appId: 'crystal-quest', fcmToken: 'tok-abcdefghijklmnop', platform: 'web', userAgent: 'TestUA/1.0' });
   const pref = GN.internals.buildPreferencePayload(false);
   assert.equal(pref.enabled, false);
   assert.equal(pref.webPush, false);
@@ -951,6 +956,132 @@ test('SEO metadata stays concise and noscript links expose the GoGo product port
   for (const href of ['../', '../arrowout/', '../pikanews/', '../sarkari-sarthi/']) {
     assert.ok(page.includes('href="' + href + '"'), 'noscript should link to ' + href);
   }
+});
+
+
+test('phase 1: square matches forge a seeker crystal without overriding higher-priority shapes', () => {
+  const E=context.CQEngine;
+  const g=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r+c)%2,s:null})));
+  [[2,2],[2,3],[3,2],[3,3]].forEach(([r,c])=>g[r][c]={k:'g',g:4,s:null});
+  const groups=E.findMatches(g);
+  assert.ok(groups.some(x=>x.dir==='square'&&x.cells.length===4),'2x2 square detected');
+  assert.ok(E.planSpecials(groups,{r:2,c:2}).some(x=>x.special==='seeker'),'square forges seeker');
+  const five=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*3+c*2)%6,s:null})));
+  [[2,2],[2,3],[2,4],[2,5],[2,6]].forEach(([r,c])=>five[r][c]={k:'g',g:4,s:null});
+  assert.ok(E.findMatches(five).some(x=>x.dir==='h'&&x.len===5),'five-line remains detectable');
+  assert.ok(!E.planSpecials(E.findMatches(five),{r:2,c:2}).some(x=>x.special==='seeker'),'five-line takes priority over square');
+});
+test('phase 1: special combo matrix accepts seeker and preserves deterministic prism colour targeting', () => {
+  const E=context.CQEngine, a={r:3,c:3},b={r:3,c:4};
+  for(const pair of [['line-h','line-h'],['line-h','line-v'],['line-v','line-v'],['line-h','bomb'],['line-v','bomb'],['bomb','bomb'],['prism','line-h'],['prism','line-v'],['prism','bomb'],['prism','prism'],['seeker','line-h'],['seeker','line-v'],['seeker','bomb'],['seeker','prism'],['seeker','seeker']]){
+    const g=Array.from({length:8},()=>Array.from({length:8},()=>({k:'g',g:0,s:null})));
+    g[a.r][a.c]={k:'g',g:2,s:pair[0]};g[b.r][b.c]={k:'g',g:3,s:pair[1]};
+    const ctx=E.makeCtx({objectives:[{type:'score',target:1}],layout:Array(8).fill('........')});
+    const result=E.trySwap(g,a,b,E.makeRng(77),ctx);
+    assert.equal(result.ok,true,'combo accepted: '+pair.join('+'));
+    assert.ok(result.steps.some(x=>x.t==='clear'),'combo clears');
+  }
+});
+test('phase 1: blockers validate layered hp and locked crystals cannot be swapped', () => {
+  const E=context.CQEngine;
+  const level={layout:['........','........','........','........','........','........','........','........'],objectives:[]};
+  const g=E.createBoard(level,71).grid;
+  g[0][0]={k:'b',b:'obsidian',hp:3,layer:'reinforced'};
+  g[0][1]={k:'g',g:1,s:null,locked:true,lockHp:1};
+  assert.equal(E.validateBoard(g,level).ok,true);
+  assert.equal(E.canSwap(g,{r:0,c:1},{r:0,c:2}),false);
+  const before=JSON.stringify(g);
+  const lockedTry=E.trySwap(g,{r:0,c:1},{r:0,c:2},E.makeRng(4),E.makeCtx(level));
+  assert.equal(lockedTry.ok,false,'trySwap itself rejects a locked crystal');
+  assert.equal(JSON.stringify(g),before,'rejected locked swap leaves the board unchanged');
+});
+test('phase 1: hint engine returns a scored valid move and free shuffle removes deadlock', () => {
+  const E=context.CQEngine,level={layout:Array(8).fill('........'),objectives:[{type:'score',target:1}]};
+  const g=E.createBoard(level,991).grid;
+  const hint=E.findHint(g,E.makeRng(1),E.makeCtx(level));
+  assert.ok(hint&&hint.score>=10,'heuristic score is exposed');
+  assert.equal(E.hasValidMove(g),true);
+  const dead=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r*2+c*3)%6,s:null})));
+  E.shuffleBoard(dead,E.makeRng(19));
+  assert.equal(E.findMatches(dead).length,0,'shuffle leaves no pre-existing match');
+  assert.equal(E.hasValidMove(dead),true,'shuffle guarantees a valid move');
+  assert.ok(E.countValidMoves(dead)>=2,'shuffle guarantees at least two distinct playable swaps');
+});
+
+test('phase 1: caged crystals unlock without being consumed and layered blockers take their correct hits', () => {
+  const E=context.CQEngine, cageLevel=LV.get(9), cageBoard=E.createBoard(cageLevel,901);
+  const cages=[];
+  for(let r=0;r<E.ROWS;r++)for(let c=0;c<E.COLS;c++)if(cageBoard.grid[r][c]&&cageBoard.grid[r][c].locked)cages.push({r,c});
+  assert.equal(cages.length,2,'Hollow Crown introduces two caged crystals');
+  const cage=cages[0], ctx=E.makeCtx(cageLevel);
+  const expansion=E.expandClears(cageBoard.grid,[cage],null,ctx);
+  assert.equal(expansion.cleared.some(p=>p.r===cage.r&&p.c===cage.c),false,'the cage hit does not consume its gem');
+  assert.equal(cageBoard.grid[cage.r][cage.c].locked,false,'first blast contact opens the cage');
+  const resonanceGrid=Array.from({length:8},()=>Array.from({length:8},()=>({k:'g',g:2,s:null})));
+  resonanceGrid[0][1]={k:'g',g:2,s:null,locked:true,lockHp:1};
+  const tiles=Array.from({length:8},()=>Array(8).fill('n'));tiles[0][0]='v';tiles[0][1]='v';
+  const resonanceCtx=E.makeCtx({layout:Array(8).fill('........'),objectives:[]});
+  E.applyResonance(resonanceGrid,tiles,[{r:0,c:0,g:2}],resonanceCtx);
+  assert.equal(resonanceGrid[0][1].locked,false,'resonance contact opens a cage');
+  assert.equal(resonanceGrid[0][1].k,'g','resonance does not consume the caged gem');
+
+  const cracked=E.createBoard(LV.get(12),912).grid;
+  const crackedAt=cracked.flatMap((row,r)=>row.map((cell,c)=>cell&&cell.k==='b'&&cell.b==='stone'&&cell.hp===2?{r,c}:null)).find(Boolean);
+  assert.ok(crackedAt,'Shattered Span contains two-hit cracked stone');
+  const stoneCtx=E.makeCtx(LV.get(12));
+  E.damageBlockers(cracked,[],[crackedAt],stoneCtx);
+  assert.equal(cracked[crackedAt.r][crackedAt.c].hp,1,'first hit cracks but does not destroy');
+  E.damageBlockers(cracked,[],[crackedAt],stoneCtx);
+  assert.equal(cracked[crackedAt.r][crackedAt.c].k,'e','second hit destroys cracked stone');
+  assert.equal(stoneCtx.blockersCleared.stone,1);
+
+  const obsidian=E.createBoard(LV.get(14),914).grid;
+  const obsAt=obsidian.flatMap((row,r)=>row.map((cell,c)=>cell&&cell.k==='b'&&cell.b==='obsidian'?{r,c}:null)).find(Boolean);
+  assert.ok(obsAt,'Obsidian Ring contains reinforced blockers');
+  const obsCtx=E.makeCtx(LV.get(14));
+  E.damageBlockers(obsidian,[],[obsAt],obsCtx);
+  assert.equal(obsidian[obsAt.r][obsAt.c].hp,2);
+  E.damageBlockers(obsidian,[],[obsAt],obsCtx);
+  assert.equal(obsidian[obsAt.r][obsAt.c].hp,1);
+  E.damageBlockers(obsidian,[],[obsAt],obsCtx);
+  assert.equal(obsidian[obsAt.r][obsAt.c].k,'e','third hit destroys obsidian');
+  assert.equal(obsCtx.blockersCleared.obsidian,1);
+});
+
+test('phase 2: double Star Bomb performs a delayed second blast stage', () => {
+  const E=context.CQEngine, grid=Array.from({length:8},(_,r)=>Array.from({length:8},(_,c)=>({k:'g',g:(r+c)%6,s:null})));
+  grid[3][3]={k:'g',g:1,s:'bomb'};grid[3][4]={k:'g',g:2,s:'bomb'};
+  const ctx=E.makeCtx({layout:Array(8).fill('........'),objectives:[]});
+  const result=E.trySwap(grid,{r:3,c:3},{r:3,c:4},E.makeRng(45),ctx);
+  assert.equal(result.ok,true);
+  assert.ok(result.steps.some(step=>step.t==='delay'),'the aftershock has a visible delay step');
+  assert.ok(result.steps.some(step=>step.t==='clear'&&step.secondaryStage&&step.label==='NOVA AFTERSHOCK'),'the second blast actually clears the post-gravity board');
+});
+
+test('phase 2: renderer and audio include the new mechanics without adding dependencies', () => {
+  const renderSrc=fs.readFileSync(path.join(root,'js/render.js'),'utf8');
+  const audioSrc=fs.readFileSync(path.join(root,'js/audio.js'),'utf8');
+  const uiSrc=fs.readFileSync(path.join(root,'js/ui.js'),'utf8');
+  assert.doesNotThrow(()=>new Function(renderSrc),'renderer syntax');
+  assert.doesNotThrow(()=>new Function(audioSrc),'audio syntax');
+  assert.ok(renderSrc.includes('special==="seeker"'),'Seeker sprite exists');
+  assert.ok(renderSrc.includes('step.t==="delay"'),'delayed blast animation exists');
+  assert.ok(renderSrc.includes('kind==="obsidian"'),'obsidian has a dedicated sprite');
+  assert.ok(renderSrc.includes('d.cell.locked'),'caged gems have a lock overlay');
+  assert.ok(audioSrc.includes('case"seeker"')&&audioSrc.includes('case"nova"'),'original synthesized cues exist');
+  assert.ok(uiSrc.includes('E.findHint(this.grid,this.rng,this.ctx)'),'hints use the active objective context');
+});
+
+test('phase 3: seeded bot sweeps all 27 levels without dead-board or illegal-move failures', () => {
+  const bot=context.CQDev.bot;
+  const rows=LV.LEVELS.map(level=>bot.runStats(level,100,'greedy',0));
+  rows.forEach(row=>{
+    console.log('BOT_SWEEP L'+row.level+' '+row.name+': '+row.wins+'/'+row.attempts+' ('+row.winRate+'%), shuffles='+row.shuffles);
+    assert.ok(row.wins>=1,'level '+row.level+' is solvable by the seeded bot');
+    assert.equal(row.fails['dead-board']||0,0,'level '+row.level+' never deadlocks');
+    assert.equal(row.fails['illegal-move']||0,0,'level '+row.level+' never emits an illegal bot move');
+    if(row.level<=10)assert.ok(row.winRate>=80,'intro level '+row.level+' remains approachable: '+row.winRate+'%');
+  });
 });
 
 console.log(`\n${passed.length} regression groups passed.`);

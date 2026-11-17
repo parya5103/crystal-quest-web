@@ -18,7 +18,7 @@ function canSwap(grid, a, b) {
         var nr = r + (side === 0 ? -1 : 1);
         if (nr < 0 || nr >= ROWS) continue;
         var a = grid[r][c], b = grid[r][c + 1], d = grid[r][c + 2], n = grid[nr][c + 1];
-        if (!isGem(a) || !isGem(b) || !isGem(d) || !isGem(n)) continue;
+        if (!isGem(a) || !isGem(b) || !isGem(d) || !isGem(n) || a.locked || b.locked || d.locked || n.locked) continue;
         var old = [a.g, b.g, d.g, n.g];
         for (var color = 0; color < GEM_COUNT; color++) {
           for (var other = 0; other < GEM_COUNT; other++) {
@@ -60,7 +60,7 @@ function canSwap(grid, a, b) {
   }
   return plantMove(grid, rng);
 }
-var RESONANCE_MAX_DEPTH=8;function parseTiles(layout){for(var tiles=[],r=0;r<ROWS;r++){for(var row=[],line=layout&&layout[r]||"........",c=0;c<COLS;c++){var ch=line.charAt(c)||".";row.push(ch==="#"?"h":ch==="R"?"v":"n")}tiles.push(row)}return tiles}function hasVeins(tiles){if(!tiles)return!1;for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)if(tiles[r][c]==="v")return!0;return!1}function veinClusters(tiles){for(var seen={},clusters=[],r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){if(!tiles||tiles[r][c]!=="v"||seen[key(r,c)])continue;for(var nodes=[],queue=[{r:r,c:c}],head=0;head<queue.length;){var n=queue[head++];nodes.push(n),seen[key(n.r,n.c)]=1;var dirs=[{r:n.r-1,c:n.c},{r:n.r+1,c:n.c},{r:n.r,c:n.c-1},{r:n.r,c:n.c+1}];for(var i=0;i<dirs.length;i++){var d=dirs[i];inB(d.r,d.c)&&tiles[d.r][d.c]==="v"&&!seen[key(d.r,d.c)]&&(seen[key(d.r,d.c)]=1,queue.push(d))}}clusters.push({nodes:nodes})}return clusters}function applyResonance(grid,tiles,cleared,ctx){if(!tiles)return null;var i,sources=[],clearedSet={};for(i=0;i<(cleared||[]).length;i++){var p=cleared[i];inB(p.r,p.c)&&(clearedSet[key(p.r,p.c)]=1,tiles[p.r][p.c]==="v"&&sources.push({r:p.r,c:p.c}))}if(!sources.length)return null;var visited={},order=[],gems=[],blockerHits=[],queue=[],head=0;for(i=0;i<sources.length;i++)visited[key(sources[i].r,sources[i].c)]=1,queue.push({r:sources[i].r,c:sources[i].c,depth:0});while(head<queue.length){var n=queue[head++];order.push({r:n.r,c:n.c,depth:n.depth});var cell=grid[n.r][n.c];if(n.depth>0&&cell&&cell.k==="b"){blockerHits.push({r:n.r,c:n.c});continue}if(n.depth>0&&cell&&cell.k==="g"&&!clearedSet[key(n.r,n.c)])gems.push({r:n.r,c:n.c,g:cell.g,s:cell.s||null});if(n.depth>=RESONANCE_MAX_DEPTH-1)continue;var dirs=[{r:n.r-1,c:n.c},{r:n.r+1,c:n.c},{r:n.r,c:n.c-1},{r:n.r,c:n.c+1}];for(var j=0;j<dirs.length;j++){var d=dirs[j];inB(d.r,d.c)&&tiles[d.r][d.c]==="v"&&!visited[key(d.r,d.c)]&&(visited[key(d.r,d.c)]=1,queue.push({r:d.r,c:d.c,depth:n.depth+1}))}}for(var k2=0;k2<gems.length;k2++){var q2=gems[k2];grid[q2.r][q2.c]={k:"e"},ctx.collected[q2.g]=(ctx.collected[q2.g]||0)+1}var destroyedBlockers=[];if(blockerHits.length){var dmg=damageBlockers(grid,gems,blockerHits,ctx);destroyedBlockers=dmg.destroyed}var score=gems.length*30+(gems.length>1?(gems.length-1)*50:0);return ctx.score+=score,ctx.resonanceCleared=(ctx.resonanceCleared||0)+gems.length,{chain:gems.length,cleared:gems,damaged:blockerHits,destroyedBlockers:destroyedBlockers,order:order,score:score}}function validateBoard(grid,level){for(var layout=level&&level.layout,r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){var cell=grid[r][c];if(layout&&layout[r]&&(layout[r].charAt(c)==="#")){if(cell!==null)return{ok:!1,reason:"expected hole at "+r+","+c};continue}if(cell===null)return{ok:!1,reason:"unexpected hole at "+r+","+c};if(cell.k==="g"){if(typeof cell.g!=="number"||cell.g<0||cell.g>=GEM_COUNT)return{ok:!1,reason:"bad gem at "+r+","+c}}else if(cell.k==="b"){if(cell.b!=="stone"&&cell.b!=="ice")return{ok:!1,reason:"bad blocker at "+r+","+c};if(!(cell.hp>=1))return{ok:!1,reason:"bad hp at "+r+","+c}}else if(cell.k!=="e")return{ok:!1,reason:"bad kind at "+r+","+c}}return{ok:!0}}
+var RESONANCE_MAX_DEPTH=8;function parseTiles(layout){for(var tiles=[],r=0;r<ROWS;r++){for(var row=[],line=layout&&layout[r]||"........",c=0;c<COLS;c++){var ch=line.charAt(c)||".";row.push(ch==="#"?"h":ch==="R"?"v":"n")}tiles.push(row)}return tiles}function hasVeins(tiles){if(!tiles)return!1;for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)if(tiles[r][c]==="v")return!0;return!1}function veinClusters(tiles){for(var seen={},clusters=[],r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){if(!tiles||tiles[r][c]!=="v"||seen[key(r,c)])continue;for(var nodes=[],queue=[{r:r,c:c}],head=0;head<queue.length;){var n=queue[head++];nodes.push(n),seen[key(n.r,n.c)]=1;var dirs=[{r:n.r-1,c:n.c},{r:n.r+1,c:n.c},{r:n.r,c:n.c-1},{r:n.r,c:n.c+1}];for(var i=0;i<dirs.length;i++){var d=dirs[i];inB(d.r,d.c)&&tiles[d.r][d.c]==="v"&&!seen[key(d.r,d.c)]&&(seen[key(d.r,d.c)]=1,queue.push(d))}}clusters.push({nodes:nodes})}return clusters}function applyResonance(grid,tiles,cleared,ctx){if(!tiles)return null;var i,sources=[],clearedSet={};for(i=0;i<(cleared||[]).length;i++){var p=cleared[i];inB(p.r,p.c)&&(clearedSet[key(p.r,p.c)]=1,tiles[p.r][p.c]==="v"&&sources.push({r:p.r,c:p.c}))}if(!sources.length)return null;var visited={},order=[],gems=[],blockerHits=[],queue=[],head=0;for(i=0;i<sources.length;i++)visited[key(sources[i].r,sources[i].c)]=1,queue.push({r:sources[i].r,c:sources[i].c,depth:0});while(head<queue.length){var n=queue[head++];order.push({r:n.r,c:n.c,depth:n.depth});var cell=grid[n.r][n.c];if(n.depth>0&&cell&&cell.k==="b"){blockerHits.push({r:n.r,c:n.c});continue}if(n.depth>0&&cell&&cell.k==="g"&&!clearedSet[key(n.r,n.c)]){if(cell.locked){cell.locked=false;cell.lockHp=0}else gems.push({r:n.r,c:n.c,g:cell.g,s:cell.s||null})}if(n.depth>=RESONANCE_MAX_DEPTH-1)continue;var dirs=[{r:n.r-1,c:n.c},{r:n.r+1,c:n.c},{r:n.r,c:n.c-1},{r:n.r,c:n.c+1}];for(var j=0;j<dirs.length;j++){var d=dirs[j];inB(d.r,d.c)&&tiles[d.r][d.c]==="v"&&!visited[key(d.r,d.c)]&&(visited[key(d.r,d.c)]=1,queue.push({r:d.r,c:d.c,depth:n.depth+1}))}}for(var k2=0;k2<gems.length;k2++){var q2=gems[k2];grid[q2.r][q2.c]={k:"e"},ctx.collected[q2.g]=(ctx.collected[q2.g]||0)+1}var destroyedBlockers=[];if(blockerHits.length){var dmg=damageBlockers(grid,gems,blockerHits,ctx);destroyedBlockers=dmg.destroyed}var score=gems.length*30+(gems.length>1?(gems.length-1)*50:0);return ctx.score+=score,ctx.resonanceCleared=(ctx.resonanceCleared||0)+gems.length,{chain:gems.length,cleared:gems,damaged:blockerHits,destroyedBlockers:destroyedBlockers,order:order,score:score}}function validateBoard(grid,level){for(var layout=level&&level.layout,r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){var cell=grid[r][c];if(layout&&layout[r]&&(layout[r].charAt(c)==="#")){if(cell!==null)return{ok:!1,reason:"expected hole at "+r+","+c};continue}if(cell===null)return{ok:!1,reason:"unexpected hole at "+r+","+c};if(cell.k==="g"){if(typeof cell.g!=="number"||cell.g<0||cell.g>=GEM_COUNT)return{ok:!1,reason:"bad gem at "+r+","+c}}else if(cell.k==="b"){if(cell.b!=="stone"&&cell.b!=="ice")return{ok:!1,reason:"bad blocker at "+r+","+c};if(!(cell.hp>=1))return{ok:!1,reason:"bad hp at "+r+","+c}}else if(cell.k!=="e")return{ok:!1,reason:"bad kind at "+r+","+c}}return{ok:!0}}
 function guardianAdvance(ctx,cleared){var gu=ctx&&ctx.guardian;if(!gu||gu.idx>=gu.sequence.length)return null;for(var i=0;i<(cleared||[]).length;i++){var p=cleared[i];if(p&&p.g===gu.sequence[gu.idx]){gu.idx++;return{hit:!0,expected:gu.sequence[gu.idx-1],idx:gu.idx,hp:gu.sequence.length-gu.idx}}}return null}
 function damageBlockers(grid, cleared, directHits, ctx) {
   var hits = {};
@@ -70,18 +70,19 @@ function damageBlockers(grid, cleared, directHits, ctx) {
     });
   });
   (directHits || []).forEach(function (q) { if (inB(q.r, q.c)) hits[key(q.r, q.c)] = q; });
-  var destroyed = [];
+  var destroyed = [], damaged = [];
   Object.keys(hits).forEach(function (k) {
     var q = hits[k], cell = grid[q.r][q.c];
     if (!isBlocker(cell)) return;
     cell.hp = Math.max(0, (cell.hp || 1) - 1);
+    if (cell.hp > 0) damaged.push({ r: q.r, c: q.c, b: cell.b, hp: cell.hp });
     if (cell.hp <= 0) {
       grid[q.r][q.c] = { k: "e" };
       destroyed.push({ r: q.r, c: q.c, b: cell.b });
       ctx.blockersCleared[cell.b] = (ctx.blockersCleared[cell.b] || 0) + 1;
     }
   });
-  return { destroyed: destroyed, score: destroyed.length * 100 };
+  return { destroyed: destroyed, damaged: damaged, score: destroyed.length * 100 };
 }
 function resolveBoard(grid, rng, ctx) {
   var steps = [], cascade = 0, guard = 0;
@@ -116,7 +117,7 @@ function resolveBoard(grid, rng, ctx) {
         forged.push({ r: pl.r, c: pl.c, s: pl.special, g: pl.gem });
       }
     });
-    steps.push({ t: "clear", cleared: cleared, blockers: damage.destroyed.concat(reso ? reso.destroyedBlockers : []), forged: forged, activated: expanded.activated, score: gained + (reso ? reso.score : 0), combo: cascade, mult: mult, guardian: gadv, resonance: reso });
+    steps.push({ t: "clear", cleared: cleared, blockers: damage.destroyed.concat(reso ? reso.destroyedBlockers : []), damagedBlockers: damage.damaged, forged: forged, activated: expanded.activated, score: gained + (reso ? reso.score : 0), combo: cascade, mult: mult, guardian: gadv, resonance: reso });
     var grav = applyGravity(grid, rng);
     steps.push({ t: "fall", moves: grav.moves, spawns: grav.spawns });
   }
@@ -125,7 +126,7 @@ function resolveBoard(grid, rng, ctx) {
   if (!inB(a.r, a.c) || !inB(b.r, b.c)) return { ok: false, reason: "out-of-bounds" };
   if (!areAdjacent(a, b)) return { ok: false, reason: "not-adjacent" };
   var ca = grid[a.r][a.c], cb = grid[b.r][b.c];
-  if (!isGem(ca) || !isGem(cb)) return { ok: false, reason: "not-swappable" };
+  if (!isGem(ca) || !isGem(cb) || ca.locked || cb.locked) return { ok: false, reason: "not-swappable" };
   var steps = [];
   swapCells(grid, a, b);
   steps.push({ t: "swap", a: a, b: b });
@@ -207,4 +208,334 @@ function resolveBoard(grid, rng, ctx) {
   var grav = applyGravity(grid, rng || ctx.rng || makeRng(1));
   steps.push({ t: "fall", moves: grav.moves, spawns: grav.spawns });
   return steps;
-}function makeCtx(level){var gseq=level&&level.guardian&&level.guardian.sequence;return{score:0,collected:[0,0,0,0,0,0],blockersCleared:{stone:0,ice:0},preferred:null,prismColor:null,rng:null,level,resonanceCleared:0,guardian:gseq?{sequence:gseq.slice(),idx:0}:null,tiles:level&&level.layout&&level.layout.join("").indexOf("R")>=0?parseTiles(level.layout):null}}function objectiveProgress(level,ctx){return level.objectives.map(function(o){if(o.type==="score")return{type:"score",done:ctx.score>=o.target,current:Math.min(ctx.score,o.target),target:o.target};if(o.type==="collect"){var cur=ctx.collected[o.gem]||0;return{type:"collect",gem:o.gem,done:cur>=o.count,current:Math.min(cur,o.count),target:o.count}}if(o.type==="clear"){var c2=ctx.blockersCleared[o.blocker]||0;return{type:"clear",blocker:o.blocker,done:c2>=o.count,current:Math.min(c2,o.count),target:o.count}}if(o.type==="resonance"){var rc=ctx.resonanceCleared||0;return{type:"resonance",done:rc>=o.count,current:Math.min(rc,o.count),target:o.count}}if(o.type==="guardian"){var gu=ctx.guardian,gs=gu?gu.sequence:[];return{type:"guardian",done:!!gu&&gu.idx>=gs.length,current:gu?Math.min(gu.idx,gs.length):0,target:gs.length,expected:gu&&gu.idx<gs.length?gs[gu.idx]:null}}return{type:"unknown",done:!0,current:0,target:0}})}function objectivesMet(level,ctx){return objectiveProgress(level,ctx).every(function(p){return p.done})}function starsFor(level,ctx){var s=level.stars;return ctx.score>=s[2]?3:ctx.score>=s[1]?2:ctx.score>=s[0]?1:0}global.CQEngine={ROWS,COLS,GEM_COUNT,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
+}function makeCtx(level){var gseq=level&&level.guardian&&level.guardian.sequence;return{score:0,collected:[0,0,0,0,0,0],blockersCleared:{stone:0,ice:0},preferred:null,prismColor:null,rng:null,level,resonanceCleared:0,guardian:gseq?{sequence:gseq.slice(),idx:0}:null,tiles:level&&level.layout&&level.layout.join("").indexOf("R")>=0?parseTiles(level.layout):null}}function objectiveProgress(level,ctx){return level.objectives.map(function(o){if(o.type==="score")return{type:"score",done:ctx.score>=o.target,current:Math.min(ctx.score,o.target),target:o.target};if(o.type==="collect"){var cur=ctx.collected[o.gem]||0;return{type:"collect",gem:o.gem,done:cur>=o.count,current:Math.min(cur,o.count),target:o.count}}if(o.type==="clear"){var c2=ctx.blockersCleared[o.blocker]||0;return{type:"clear",blocker:o.blocker,done:c2>=o.count,current:Math.min(c2,o.count),target:o.count}}if(o.type==="resonance"){var rc=ctx.resonanceCleared||0;return{type:"resonance",done:rc>=o.count,current:Math.min(rc,o.count),target:o.count}}if(o.type==="guardian"){var gu=ctx.guardian,gs=gu?gu.sequence:[];return{type:"guardian",done:!!gu&&gu.idx>=gs.length,current:gu?Math.min(gu.idx,gs.length):0,target:gs.length,expected:gu&&gu.idx<gs.length?gs[gu.idx]:null}}return{type:"unknown",done:!0,current:0,target:0}})}function objectivesMet(level,ctx){return objectiveProgress(level,ctx).every(function(p){return p.done})}function starsFor(level,ctx){var s=level.stars;return ctx.score>=s[2]?3:ctx.score>=s[1]?2:ctx.score>=s[0]?1:0}
+/* Phase 1 deterministic match-3 extensions. Existing public APIs and save data remain compatible. */
+function cloneCell(cell){
+  if(cell==null)return null;
+  var o={k:cell.k};
+  ["g","s","b","hp","locked","lockHp","layer"].forEach(function(k){if(cell[k]!==void 0)o[k]=cell[k]});
+  return o;
+}
+function parseLayout(layout){
+  var grid=[];
+  for(var r=0;r<ROWS;r++){
+    var row=[],line=layout&&layout[r]||"........";
+    for(var c=0;c<COLS;c++){
+      var ch=line.charAt(c)||".";
+      if(ch==="#")row.push(null);
+      else if(ch==="S")row.push({k:"b",b:"stone",hp:1});
+      else if(ch==="D")row.push({k:"b",b:"stone",hp:2,layer:"cracked"});
+      else if(ch==="O")row.push({k:"b",b:"obsidian",hp:3,layer:"reinforced"});
+      else if(ch==="I")row.push({k:"b",b:"ice",hp:2,layer:"frost"});
+      else if(ch==="C")row.push({k:"g",g:-1,s:null,locked:true,lockHp:1});
+      else row.push({k:"e"});
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+function findMatches(grid){
+  var runs=[],r,c,run;
+  for(r=0;r<ROWS;r++){
+    run=1;
+    for(c=1;c<=COLS;c++){
+      var cur=c<COLS?grid[r][c]:null,prev=grid[r][c-1];
+      if(c<COLS&&isGem(cur)&&isGem(prev)&&cur.g===prev.g)run++;
+      else{
+        if(run>=3&&isGem(prev)){
+          var cells=[];for(var k=c-run;k<c;k++)cells.push({r:r,c:k});
+          runs.push({cells:cells,dir:"h",len:run,gem:prev.g});
+        }
+        run=1;
+      }
+    }
+  }
+  for(c=0;c<COLS;c++){
+    run=1;
+    for(r=1;r<=ROWS;r++){
+      var cur2=r<ROWS?grid[r][c]:null,prev2=grid[r-1][c];
+      if(r<ROWS&&isGem(cur2)&&isGem(prev2)&&cur2.g===prev2.g)run++;
+      else{
+        if(run>=3&&isGem(prev2)){
+          var cells2=[];for(var k2=r-run;k2<r;k2++)cells2.push({r:k2,c:c});
+          runs.push({cells:cells2,dir:"v",len:run,gem:prev2.g});
+        }
+        run=1;
+      }
+    }
+  }
+  /* Preserve line/L/T priority; square plans are represented as a dedicated 2x2 group. */
+  var occupied={};
+  runs.forEach(function(g){g.cells.forEach(function(p){occupied[key(p.r,p.c)]=1})});
+  for(r=0;r<ROWS-1;r++)for(c=0;c<COLS-1;c++){
+    var a=grid[r][c],b=grid[r][c+1],d=grid[r+1][c],e=grid[r+1][c+1];
+    if(!isGem(a)||!isGem(b)||!isGem(d)||!isGem(e)||a.g!==b.g||a.g!==d.g||a.g!==e.g)continue;
+    var sq=[{r:r,c:c},{r:r,c:c+1},{r:r+1,c:c},{r:r+1,c:c+1}];
+    if(sq.some(function(p){return occupied[key(p.r,p.c)]}))continue;
+    runs.push({cells:sq,dir:"square",len:4,gem:a.g});
+  }
+  return runs;
+}
+function planSpecials(groups,preferred){
+  var byCell={},plans=[],used={};
+  groups.forEach(function(grp){
+    if(grp.dir==="square")return;
+    grp.cells.forEach(function(p){
+      var k=key(p.r,p.c);byCell[k]||(byCell[k]={r:p.r,c:p.c,h:null,v:null});
+      grp.dir==="h"?byCell[k].h=grp:byCell[k].v=grp;
+    });
+  });
+  Object.keys(byCell).forEach(function(k){
+    var e=byCell[k];
+    if(e.h&&e.v&&!used[k]){used[k]=1;plans.push({r:e.r,c:e.c,special:"bomb",gem:e.h.gem,priority:5})}
+  });
+  groups.forEach(function(grp){
+    if(grp.dir==="square")return;
+    if(grp.len>=5){var t=pickTarget(grp,preferred,used);if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:"prism",gem:grp.gem,priority:4})}}
+  });
+  groups.forEach(function(grp){
+    if(grp.dir==="square"||grp.len!==4)return;
+    var t=pickTarget(grp,preferred,used);
+    if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:grp.dir==="h"?"line-h":"line-v",gem:grp.gem,priority:3})}
+  });
+  groups.forEach(function(grp){
+    if(grp.dir!=="square")return;
+    var t=preferred&&grp.cells.find(function(p){return p.r===preferred.r&&p.c===preferred.c&&!used[key(p.r,p.c)]});
+    if(!t)t=grp.cells.find(function(p){return !used[key(p.r,p.c)]});
+    if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:"seeker",gem:grp.gem,priority:2})}
+  });
+  return plans;
+}
+function supportedSpecial(s){return s==="prism"||s==="bomb"||s==="line-h"||s==="line-v"||s==="seeker"}
+function canSwap(grid,a,b){
+  if(!inB(a.r,a.c)||!inB(b.r,b.c)||!areAdjacent(a,b))return false;
+  var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
+  if(!isGem(ca)||!isGem(cb)||ca.locked||cb.locked)return false;
+  if((ca.s==="prism"&&!cb.s)||(cb.s==="prism"&&!ca.s))return true;
+  if(ca.s&&cb.s&&supportedSpecial(ca.s)&&supportedSpecial(cb.s))return true;
+  swapCells(grid,a,b);var ok=findMatches(grid).length>0;swapCells(grid,a,b);return ok;
+}
+function seekerTarget(grid,ctx,excluded){
+  excluded=excluded||{};
+  function available(p){return p&&!excluded[key(p.r,p.c)]}
+  var r,c,cell,candidates=[];
+  if(ctx&&ctx.guardian&&ctx.guardian.idx<ctx.guardian.sequence.length){
+    var wanted=ctx.guardian.sequence[ctx.guardian.idx];
+    for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&cell.g===wanted&&!cell.locked&&!excluded[key(r,c)])candidates.push({r:r,c:c,rank:0})}
+    if(candidates.length)return candidates[0];
+  }
+  if(ctx&&ctx.tiles)for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(ctx.tiles[r][c]==="v"&&isGem(grid[r][c])&&!grid[r][c].locked&&!excluded[key(r,c)])return{r:r,c:c,rank:1};
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isBlocker(cell)&&!excluded[key(r,c)])return{r:r,c:c,rank:2}}
+  var wantedColors=[];
+  if(ctx&&ctx.level&&ctx.level.objectives)ctx.level.objectives.forEach(function(o){if(o.type==="collect")wantedColors.push(o.gem)});
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&!cell.locked&&wantedColors.indexOf(cell.g)>=0&&!excluded[key(r,c)])return{r:r,c:c,rank:3}}
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(isGem(grid[r][c])&&!grid[r][c].locked&&!excluded[key(r,c)])return{r:r,c:c,rank:4};
+  return null;
+}
+function specialTargets(grid,r,c,special,prismColor,ctx){
+  var out=[],i;
+  if(special==="line-h")for(i=0;i<COLS;i++)out.push({r:r,c:i});
+  else if(special==="line-v")for(i=0;i<ROWS;i++)out.push({r:i,c:c});
+  else if(special==="bomb")for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++)inB(r+dr,c+dc)&&out.push({r:r+dr,c:c+dc});
+  else if(special==="prism"){var color=prismColor==null?mostCommonGem(grid):prismColor;for(var rr=0;rr<ROWS;rr++)for(var cc=0;cc<COLS;cc++){var cell=grid[rr][cc];if(isGem(cell)&&cell.g===color)out.push({r:rr,c:cc})}}
+  else if(special==="seeker"){var target=seekerTarget(grid,ctx);if(target)out.push(target)}
+  return out;
+}
+function findHint(grid,rng,ctx){
+  var dirs=[{dr:0,dc:1},{dr:1,dc:0}],moves=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)for(var d=0;d<2;d++){
+    var b={r:r+dirs[d].dr,c:c+dirs[d].dc};if(!inB(b.r,b.c)||!canSwap(grid,{r:r,c:c},b))continue;
+    var ca=grid[r][c],cb=grid[b.r][b.c],score=10,copy=cloneGrid(grid);swapCells(copy,{r:r,c:c},b);
+    if(ca.s&&cb.s)score=90;
+    else if(ca.s==="prism"||cb.s==="prism")score=90;
+    else{
+      var groups=findMatches(copy),plans=planSpecials(groups,b);
+      if(plans.some(function(p){return p.special==="prism"}))score=100;
+      else if(plans.length)score=60;
+      else if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))score=75;
+      else if(groups.length)score=10;
+    }
+    moves.push({a:{r:r,c:c},b:b,score:score});
+  }
+  if(!moves.length)return null;
+  moves.sort(function(a,b){return b.score-a.score});
+  var best=moves.filter(function(m){return m.score===moves[0].score});
+  return rng?best[Math.floor(rng()*best.length)]:best[0];
+}
+function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
+  var sa=ca.s,sb=cb.s,seeds=[{r:a.r,c:a.c},{r:b.r,c:b.c}],label=null,secondary=[];
+  function addRow(r){if(r>=0&&r<ROWS)for(var i=0;i<COLS;i++)seeds.push({r:r,c:i})}
+  function addCol(c){if(c>=0&&c<COLS)for(var i=0;i<ROWS;i++)seeds.push({r:i,c:c})}
+  function addBox(r,c,rad){for(var dr=-rad;dr<=rad;dr++)for(var dc=-rad;dc<=rad;dc++)if(inB(r+dr,c+dc))seeds.push({r:r+dr,c:c+dc})}
+  function line(s){return s==="line-h"||s==="line-v"}
+  if(sa==="prism"&&sb==="prism"){
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)seeds.push({r:r,c:c});
+    label="TOTAL ECLIPSE";
+  }else if(sa==="prism"||sb==="prism"){
+    var other=sa==="prism"?cb:ca,color=other.g;
+    for(var rr=0;rr<ROWS;rr++)for(var cc=0;cc<COLS;cc++){
+      var cell=grid[rr][cc];if(!isGem(cell)||cell.g!==color)continue;
+      if(other.s==="bomb"){grid[rr][cc].s="bomb";addBox(rr,cc,1)}
+      else{grid[rr][cc].s="line-"+(rng&&rng()<0.5?"h":"v");addRow(rr);addCol(cc)}
+      seeds.push({r:rr,c:cc});
+    }
+    label=other.s==="bomb"?"PRISM NOVA":"PRISM SURGE";
+  }else if(line(sa)&&line(sb)){
+    addRow(a.r);addCol(a.c);label="CROSS BEAM";
+  }else if((line(sa)&&sb==="bomb")||(sa==="bomb"&&line(sb))){
+    var lp=line(sa)?a:b;for(var d=-1;d<=1;d++){addRow(lp.r+d);addCol(lp.c+d)}label="QUAKE";
+  }else if(sa==="bomb"&&sb==="bomb"){
+    addBox(a.r,a.c,2);addBox(b.r,b.c,2);
+    secondary.push({t:"delayed-blast",center:{r:a.r,c:a.c},radius:2,delay:180});
+    secondary.push({t:"delayed-blast",center:{r:b.r,c:b.c},radius:2,delay:180});
+    label="NOVA BLAST";
+  }else if(sa==="seeker"||sb==="seeker"){
+    var seekPos=sa==="seeker"?a:b,otherS=sa==="seeker"?sb:sa,target=seekerTarget(grid,ctx);
+    if(target){seeds.push(target);if(line(otherS)){addRow(target.r);addCol(target.c)}else if(otherS==="bomb")addBox(target.r,target.c,1);else if(otherS==="prism"){var col=grid[target.r][target.c].g;for(var sr=0;sr<ROWS;sr++)for(var sc=0;sc<COLS;sc++)if(isGem(grid[sr][sc])&&grid[sr][sc].g===col)seeds.push({r:sr,c:sc})}}
+    if(sa==="seeker"&&sb==="seeker"){var excluded={};target&&(excluded[key(target.r,target.c)]=1);var t2=seekerTarget(grid,ctx,excluded);if(t2)seeds.push(t2)}
+    label="SEEKER LINK";
+  }else return null;
+  var exp=expandClears(grid,seeds,null,ctx),gained=0;
+  exp.cleared.forEach(function(p){gained+=60;ctx.collected[p.g]=(ctx.collected[p.g]||0)+1});
+  gained=Math.round(gained*1.5);
+  exp.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
+  var damage=damageBlockers(grid,exp.cleared,exp.blockers,ctx);gained+=damage.score;ctx.score+=gained;
+  var gadv=guardianAdvance(ctx,exp.cleared),reso=ctx.tiles?applyResonance(grid,ctx.tiles,exp.cleared,ctx):null;
+  var steps=[{t:"clear",cleared:exp.cleared,blockers:damage.destroyed.concat(reso?reso.destroyedBlockers:[]),damagedBlockers:damage.damaged,forged:[],activated:exp.activated,score:gained+(reso?reso.score:0),combo:1,mult:1.5,label:label,guardian:gadv,resonance:reso,secondary:secondary}];
+  var grav=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav.moves,spawns:grav.spawns});
+  if(secondary.length){
+    steps.push({t:"delay",ms:180,centers:secondary.map(function(x){return x.center})});
+    var secondSeeds=[];
+    secondary.forEach(function(blast){for(var dr=-blast.radius;dr<=blast.radius;dr++)for(var dc=-blast.radius;dc<=blast.radius;dc++)if(inB(blast.center.r+dr,blast.center.c+dc))secondSeeds.push({r:blast.center.r+dr,c:blast.center.c+dc})});
+    var exp2=expandClears(grid,secondSeeds,null,ctx),gained2=0;
+    exp2.cleared.forEach(function(p){gained2+=60;ctx.collected[p.g]=(ctx.collected[p.g]||0)+1});
+    gained2=Math.round(gained2*1.5);
+    exp2.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
+    var damage2=damageBlockers(grid,exp2.cleared,exp2.blockers,ctx);gained2+=damage2.score;ctx.score+=gained2;
+    var guardian2=guardianAdvance(ctx,exp2.cleared),resonance2=ctx.tiles?applyResonance(grid,ctx.tiles,exp2.cleared,ctx):null;
+    steps.push({t:"clear",cleared:exp2.cleared,blockers:damage2.destroyed.concat(resonance2?resonance2.destroyedBlockers:[]),damagedBlockers:damage2.damaged,forged:[],activated:exp2.activated,score:gained2+(resonance2?resonance2.score:0),combo:1,mult:1.5,label:"NOVA AFTERSHOCK",secondaryStage:true,guardian:guardian2,resonance:resonance2});
+    var grav2=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav2.moves,spawns:grav2.spawns});
+    var cascades=resolveBoard(grid,rng||ctx.rng||makeRng(1),ctx);steps=steps.concat(cascades.steps);
+  }
+  if(sa==="prism"&&sb==="prism")steps[0].boardWipe=true;
+  return steps;
+}
+function expandClears(grid,seeds,prismColor,ctx){
+  var seen={},cleared=[],blockers=[],activated=[],queue=seeds.slice();
+  while(queue.length){
+    var p=queue.shift();if(!inB(p.r,p.c))continue;var k=key(p.r,p.c);if(seen[k])continue;seen[k]=1;
+    var cell=grid[p.r][p.c];if(!cell)continue;
+    if(isBlocker(cell)){blockers.push({r:p.r,c:p.c});continue}
+    if(!isGem(cell))continue;
+    if(cell.locked){cell.locked=false;cell.lockHp=0;continue}
+    cleared.push({r:p.r,c:p.c,g:cell.g,s:cell.s||null});
+    if(cell.s){activated.push({r:p.r,c:p.c,s:cell.s});specialTargets(grid,p.r,p.c,cell.s,prismColor,ctx).forEach(function(q){queue.push(q)})}
+  }
+  return{cleared:cleared,blockers:blockers,activated:activated};
+}
+function makeCtx(level){
+  var gseq=level&&level.guardian&&level.guardian.sequence;
+  return{score:0,collected:[0,0,0,0,0,0],blockersCleared:{stone:0,ice:0,obsidian:0},preferred:null,prismColor:null,rng:null,level:level,resonanceCleared:0,guardian:gseq?{sequence:gseq.slice(),idx:0}:null,tiles:level&&level.layout&&level.layout.join("").indexOf("R")>=0?parseTiles(level.layout):null,cascadeDepth:0};
+}
+function validateBoard(grid,level){
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var cell=grid[r][c],ch=level&&level.layout&&level.layout[r]?level.layout[r].charAt(c):".";
+    if(ch==="#"&&cell!==null)return{ok:false,reason:"expected hole at "+r+","+c};
+    if(ch!=="#"&&cell===null)return{ok:false,reason:"unexpected hole at "+r+","+c};
+    if(isGem(cell)){if(typeof cell.g!=="number"||cell.g<0||cell.g>=GEM_COUNT)return{ok:false,reason:"bad gem at "+r+","+c};if(cell.locked&&!(cell.lockHp>=1))return{ok:false,reason:"bad cage at "+r+","+c}}
+    else if(isBlocker(cell)){if(!["stone","ice","obsidian"].includes(cell.b)||!(cell.hp>=1&&cell.hp<=3))return{ok:false,reason:"bad blocker at "+r+","+c}}
+    else if(cell&&cell.k!=="e")return{ok:false,reason:"bad kind at "+r+","+c};
+  }
+  return{ok:true};
+}
+function countValidMoves(grid){
+  var count=0;
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    if(c+1<COLS&&canSwap(grid,{r:r,c:c},{r:r,c:c+1}))count++;
+    if(r+1<ROWS&&canSwap(grid,{r:r,c:c},{r:r+1,c:c}))count++;
+  }
+  return count;
+}
+function hasValidMove(grid){return countValidMoves(grid)>0}
+function fillNoMatch(grid,rng){
+  rng=rng||Math.random;
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var cell=grid[r][c],lockedCell=!!(cell&&cell.k==="g"&&cell.locked&&cell.g<0);
+    if(!lockedCell&&(!cell||cell.k!=="e"))continue;
+    var banned={};
+    if(c>=2&&isGem(grid[r][c-1])&&isGem(grid[r][c-2])&&grid[r][c-1].g===grid[r][c-2].g)banned[grid[r][c-1].g]=1;
+    if(r>=2&&isGem(grid[r-1][c])&&isGem(grid[r-2][c])&&grid[r-1][c].g===grid[r-2][c].g)banned[grid[r-1][c].g]=1;
+    if(r>0&&c>0){
+      var ul=grid[r-1][c-1],up=grid[r-1][c],left=grid[r][c-1];
+      if(isGem(ul)&&isGem(up)&&isGem(left)&&ul.g===up.g&&ul.g===left.g)banned[ul.g]=1;
+    }
+    var choices=[];
+    for(var color=0;color<GEM_COUNT;color++)if(!banned[color])choices.push(color);
+    var pick=choices.length?choices[Math.floor(rng()*choices.length)]:Math.floor(rng()*GEM_COUNT);
+    if(lockedCell){cell.g=pick;cell.s=null;cell.lockHp=Math.max(1,cell.lockHp||1)}else grid[r][c]={k:"g",g:pick,s:null};
+  }
+}
+function plantSecondMove(grid,rng){
+  var originalHint=findHint(grid,rng),originalKey=originalHint?key(originalHint.a.r,originalHint.a.c)+"-"+key(originalHint.b.r,originalHint.b.c):"";
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS-2;c++)for(var side=0;side<2;side++){
+    var nr=r+(side===0?-1:1);if(nr<0||nr>=ROWS)continue;
+    var points=[{r:r,c:c},{r:r,c:c+1},{r:r,c:c+2},{r:nr,c:c+1}];
+    var a=grid[r][c],b=grid[r][c+1],d=grid[r][c+2],n=grid[nr][c+1];
+    if(!isGem(a)||!isGem(b)||!isGem(d)||!isGem(n)||a.locked||b.locked||d.locked||n.locked)continue;
+    var old=[a.g,b.g,d.g,n.g];
+    for(var color=0;color<GEM_COUNT;color++)for(var other=0;other<GEM_COUNT;other++){
+      if(color===other)continue;
+      a.g=color;b.g=other;d.g=color;n.g=color;
+      if(findMatches(grid).length===0&&countValidMoves(grid)>=2){
+        var h=findHint(grid,rng),hk=h?key(h.a.r,h.a.c)+"-"+key(h.b.r,h.b.c):"";
+        if(hk!==originalKey)return true;
+      }
+    }
+    a.g=old[0];b.g=old[1];d.g=old[2];n.g=old[3];
+  }
+  return false;
+}
+function shuffleBoard(grid,rng){
+  rng=rng||Math.random;
+  var positions=[],specials=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var cell=grid[r][c];
+    if(isGem(cell)&&!cell.locked){positions.push({r:r,c:c});if(cell.s)specials.push({r:r,c:c,s:cell.s})}
+  }
+  if(positions.length<4)return false;
+  for(var attempt=0;attempt<500;attempt++){
+    var vals=positions.map(function(p){return grid[p.r][p.c].g});
+    for(var i=vals.length-1;i>0;i--){var j=Math.floor(rng()*(i+1)),t=vals[i];vals[i]=vals[j];vals[j]=t}
+    positions.forEach(function(p,k){grid[p.r][p.c].g=vals[k]});
+    if(findMatches(grid).length===0&&countValidMoves(grid)>=2)return true;
+  }
+  for(var attempt2=0;attempt2<300;attempt2++){
+    positions.forEach(function(p){grid[p.r][p.c]={k:"e"}});
+    fillNoMatch(grid,rng);
+    specials.forEach(function(sp){if(isGem(grid[sp.r][sp.c]))grid[sp.r][sp.c].s=sp.s});
+    if(findMatches(grid).length===0&&countValidMoves(grid)>=2)return true;
+  }
+  if(plantMove(grid,rng)&&countValidMoves(grid)>=2)return true;
+  if(plantSecondMove(grid,rng)&&countValidMoves(grid)>=2)return true;
+  return countValidMoves(grid)>0;
+}
+function hintScore(grid,a,b,ctx){
+  var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
+  if(ca.s&&cb.s)return 90;
+  var copy=cloneGrid(grid);swapCells(copy,a,b);
+  var groups=findMatches(copy),plans=planSpecials(groups,b);
+  if(plans.some(function(p){return p.special==="prism"}))return 100;
+  if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))return 75;
+  if(groups.some(function(g){return g.cells.some(function(p){return isBlocker(grid[p.r][p.c])})}))return 75;
+  if(plans.length)return 60;
+  return groups.length?10:0;
+}
+
+function createBoard(level,seed){
+  var rng=makeRng(seed||Date.now()&2147483647),grid,guard=0;
+  do{grid=parseLayout(level.layout);fillNoMatch(grid,rng);guard++}while(countValidMoves(grid)<2&&guard<30);
+  if(countValidMoves(grid)<2)shuffleBoard(grid,rng);
+  return{grid:grid,rng:rng};
+}
+
+global.CQEngine={ROWS,COLS,GEM_COUNT,countValidMoves,damageBlockers,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
