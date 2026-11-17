@@ -990,6 +990,10 @@ test('phase 1: blockers validate layered hp and locked crystals cannot be swappe
   g[0][1]={k:'g',g:1,s:null,locked:true,lockHp:1};
   assert.equal(E.validateBoard(g,level).ok,true);
   assert.equal(E.canSwap(g,{r:0,c:1},{r:0,c:2}),false);
+  const before=JSON.stringify(g);
+  const lockedTry=E.trySwap(g,{r:0,c:1},{r:0,c:2},E.makeRng(4),E.makeCtx(level));
+  assert.equal(lockedTry.ok,false,'trySwap itself rejects a locked crystal');
+  assert.equal(JSON.stringify(g),before,'rejected locked swap leaves the board unchanged');
 });
 test('phase 1: hint engine returns a scored valid move and free shuffle removes deadlock', () => {
   const E=context.CQEngine,level={layout:Array(8).fill('........'),objectives:[{type:'score',target:1}]};
@@ -1013,6 +1017,13 @@ test('phase 1: caged crystals unlock without being consumed and layered blockers
   const expansion=E.expandClears(cageBoard.grid,[cage],null,ctx);
   assert.equal(expansion.cleared.some(p=>p.r===cage.r&&p.c===cage.c),false,'the cage hit does not consume its gem');
   assert.equal(cageBoard.grid[cage.r][cage.c].locked,false,'first blast contact opens the cage');
+  const resonanceGrid=Array.from({length:8},()=>Array.from({length:8},()=>({k:'g',g:2,s:null})));
+  resonanceGrid[0][1]={k:'g',g:2,s:null,locked:true,lockHp:1};
+  const tiles=Array.from({length:8},()=>Array(8).fill('n'));tiles[0][0]='v';tiles[0][1]='v';
+  const resonanceCtx=E.makeCtx({layout:Array(8).fill('........'),objectives:[]});
+  E.applyResonance(resonanceGrid,tiles,[{r:0,c:0,g:2}],resonanceCtx);
+  assert.equal(resonanceGrid[0][1].locked,false,'resonance contact opens a cage');
+  assert.equal(resonanceGrid[0][1].k,'g','resonance does not consume the caged gem');
 
   const cracked=E.createBoard(LV.get(12),912).grid;
   const crackedAt=cracked.flatMap((row,r)=>row.map((cell,c)=>cell&&cell.k==='b'&&cell.b==='stone'&&cell.hp===2?{r,c}:null)).find(Boolean);
