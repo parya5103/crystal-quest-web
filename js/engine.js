@@ -402,6 +402,20 @@ function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
   var gadv=guardianAdvance(ctx,exp.cleared),reso=ctx.tiles?applyResonance(grid,ctx.tiles,exp.cleared,ctx):null;
   var steps=[{t:"clear",cleared:exp.cleared,blockers:damage.destroyed.concat(reso?reso.destroyedBlockers:[]),forged:[],activated:exp.activated,score:gained+(reso?reso.score:0),combo:1,mult:1.5,label:label,guardian:gadv,resonance:reso,secondary:secondary}];
   var grav=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav.moves,spawns:grav.spawns});
+  if(secondary.length){
+    steps.push({t:"delay",ms:180,centers:secondary.map(function(x){return x.center})});
+    var secondSeeds=[];
+    secondary.forEach(function(blast){for(var dr=-blast.radius;dr<=blast.radius;dr++)for(var dc=-blast.radius;dc<=blast.radius;dc++)if(inB(blast.center.r+dr,blast.center.c+dc))secondSeeds.push({r:blast.center.r+dr,c:blast.center.c+dc})});
+    var exp2=expandClears(grid,secondSeeds,null,ctx),gained2=0;
+    exp2.cleared.forEach(function(p){gained2+=60;ctx.collected[p.g]=(ctx.collected[p.g]||0)+1});
+    gained2=Math.round(gained2*1.5);
+    exp2.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
+    var damage2=damageBlockers(grid,exp2.cleared,exp2.blockers,ctx);gained2+=damage2.score;ctx.score+=gained2;
+    var guardian2=guardianAdvance(ctx,exp2.cleared),resonance2=ctx.tiles?applyResonance(grid,ctx.tiles,exp2.cleared,ctx):null;
+    steps.push({t:"clear",cleared:exp2.cleared,blockers:damage2.destroyed.concat(resonance2?resonance2.destroyedBlockers:[]),forged:[],activated:exp2.activated,score:gained2+(resonance2?resonance2.score:0),combo:1,mult:1.5,label:"NOVA AFTERSHOCK",secondaryStage:true,guardian:guardian2,resonance:resonance2});
+    var grav2=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav2.moves,spawns:grav2.spawns});
+    var cascades=resolveBoard(grid,rng||ctx.rng||makeRng(1),ctx);steps=steps.concat(cascades.steps);
+  }
   if(sa==="prism"&&sb==="prism")steps[0].boardWipe=true;
   return steps;
 }
