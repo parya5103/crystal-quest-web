@@ -207,4 +207,253 @@ function resolveBoard(grid, rng, ctx) {
   var grav = applyGravity(grid, rng || ctx.rng || makeRng(1));
   steps.push({ t: "fall", moves: grav.moves, spawns: grav.spawns });
   return steps;
-}function makeCtx(level){var gseq=level&&level.guardian&&level.guardian.sequence;return{score:0,collected:[0,0,0,0,0,0],blockersCleared:{stone:0,ice:0},preferred:null,prismColor:null,rng:null,level,resonanceCleared:0,guardian:gseq?{sequence:gseq.slice(),idx:0}:null,tiles:level&&level.layout&&level.layout.join("").indexOf("R")>=0?parseTiles(level.layout):null}}function objectiveProgress(level,ctx){return level.objectives.map(function(o){if(o.type==="score")return{type:"score",done:ctx.score>=o.target,current:Math.min(ctx.score,o.target),target:o.target};if(o.type==="collect"){var cur=ctx.collected[o.gem]||0;return{type:"collect",gem:o.gem,done:cur>=o.count,current:Math.min(cur,o.count),target:o.count}}if(o.type==="clear"){var c2=ctx.blockersCleared[o.blocker]||0;return{type:"clear",blocker:o.blocker,done:c2>=o.count,current:Math.min(c2,o.count),target:o.count}}if(o.type==="resonance"){var rc=ctx.resonanceCleared||0;return{type:"resonance",done:rc>=o.count,current:Math.min(rc,o.count),target:o.count}}if(o.type==="guardian"){var gu=ctx.guardian,gs=gu?gu.sequence:[];return{type:"guardian",done:!!gu&&gu.idx>=gs.length,current:gu?Math.min(gu.idx,gs.length):0,target:gs.length,expected:gu&&gu.idx<gs.length?gs[gu.idx]:null}}return{type:"unknown",done:!0,current:0,target:0}})}function objectivesMet(level,ctx){return objectiveProgress(level,ctx).every(function(p){return p.done})}function starsFor(level,ctx){var s=level.stars;return ctx.score>=s[2]?3:ctx.score>=s[1]?2:ctx.score>=s[0]?1:0}global.CQEngine={ROWS,COLS,GEM_COUNT,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
+}function makeCtx(level){var gseq=level&&level.guardian&&level.guardian.sequence;return{score:0,collected:[0,0,0,0,0,0],blockersCleared:{stone:0,ice:0},preferred:null,prismColor:null,rng:null,level,resonanceCleared:0,guardian:gseq?{sequence:gseq.slice(),idx:0}:null,tiles:level&&level.layout&&level.layout.join("").indexOf("R")>=0?parseTiles(level.layout):null}}function objectiveProgress(level,ctx){return level.objectives.map(function(o){if(o.type==="score")return{type:"score",done:ctx.score>=o.target,current:Math.min(ctx.score,o.target),target:o.target};if(o.type==="collect"){var cur=ctx.collected[o.gem]||0;return{type:"collect",gem:o.gem,done:cur>=o.count,current:Math.min(cur,o.count),target:o.count}}if(o.type==="clear"){var c2=ctx.blockersCleared[o.blocker]||0;return{type:"clear",blocker:o.blocker,done:c2>=o.count,current:Math.min(c2,o.count),target:o.count}}if(o.type==="resonance"){var rc=ctx.resonanceCleared||0;return{type:"resonance",done:rc>=o.count,current:Math.min(rc,o.count),target:o.count}}if(o.type==="guardian"){var gu=ctx.guardian,gs=gu?gu.sequence:[];return{type:"guardian",done:!!gu&&gu.idx>=gs.length,current:gu?Math.min(gu.idx,gs.length):0,target:gs.length,expected:gu&&gu.idx<gs.length?gs[gu.idx]:null}}return{type:"unknown",done:!0,current:0,target:0}})}function objectivesMet(level,ctx){return objectiveProgress(level,ctx).every(function(p){return p.done})}function starsFor(level,ctx){var s=level.stars;return ctx.score>=s[2]?3:ctx.score>=s[1]?2:ctx.score>=s[0]?1:0}
+/* Phase 1 deterministic match-3 extensions. Existing public APIs and save data remain compatible. */
+function cloneCell(cell){
+  if(cell==null)return null;
+  var o={k:cell.k};
+  ["g","s","b","hp","locked","lockHp","layer"].forEach(function(k){if(cell[k]!==void 0)o[k]=cell[k]});
+  return o;
+}
+function parseLayout(layout){
+  var grid=[];
+  for(var r=0;r<ROWS;r++){
+    var row=[],line=layout&&layout[r]||"........";
+    for(var c=0;c<COLS;c++){
+      var ch=line.charAt(c)||".";
+      if(ch==="#")row.push(null);
+      else if(ch==="S")row.push({k:"b",b:"stone",hp:1});
+      else if(ch==="D")row.push({k:"b",b:"stone",hp:2,layer:"cracked"});
+      else if(ch==="O")row.push({k:"b",b:"obsidian",hp:3,layer:"reinforced"});
+      else if(ch==="I")row.push({k:"b",b:"ice",hp:2,layer:"frost"});
+      else if(ch==="C")row.push({k:"g",g:0,s:null,locked:true,lockHp:1});
+      else row.push({k:"e"});
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+function findMatches(grid){
+  var runs=[],r,c,run;
+  for(r=0;r<ROWS;r++){
+    run=1;
+    for(c=1;c<=COLS;c++){
+      var cur=c<COLS?grid[r][c]:null,prev=grid[r][c-1];
+      if(c<COLS&&isGem(cur)&&isGem(prev)&&cur.g===prev.g)run++;
+      else{
+        if(run>=3&&isGem(prev)){
+          var cells=[];for(var k=c-run;k<c;k++)cells.push({r:r,c:k});
+          runs.push({cells:cells,dir:"h",len:run,gem:prev.g});
+        }
+        run=1;
+      }
+    }
+  }
+  for(c=0;c<COLS;c++){
+    run=1;
+    for(r=1;r<=ROWS;r++){
+      var cur2=r<ROWS?grid[r][c]:null,prev2=grid[r-1][c];
+      if(r<ROWS&&isGem(cur2)&&isGem(prev2)&&cur2.g===prev2.g)run++;
+      else{
+        if(run>=3&&isGem(prev2)){
+          var cells2=[];for(var k2=r-run;k2<r;k2++)cells2.push({r:k2,c:c});
+          runs.push({cells:cells2,dir:"v",len:run,gem:prev2.g});
+        }
+        run=1;
+      }
+    }
+  }
+  /* Preserve line/L/T priority; square plans are represented as a dedicated 2x2 group. */
+  var occupied={};
+  runs.forEach(function(g){g.cells.forEach(function(p){occupied[key(p.r,p.c)]=1})});
+  for(r=0;r<ROWS-1;r++)for(c=0;c<COLS-1;c++){
+    var a=grid[r][c],b=grid[r][c+1],d=grid[r+1][c],e=grid[r+1][c+1];
+    if(!isGem(a)||!isGem(b)||!isGem(d)||!isGem(e)||a.g!==b.g||a.g!==d.g||a.g!==e.g)continue;
+    var sq=[{r:r,c:c},{r:r,c:c+1},{r:r+1,c:c},{r:r+1,c:c+1}];
+    if(sq.some(function(p){return occupied[key(p.r,p.c)]}))continue;
+    runs.push({cells:sq,dir:"square",len:4,gem:a.g});
+  }
+  return runs;
+}
+function planSpecials(groups,preferred){
+  var byCell={},plans=[],used={};
+  groups.forEach(function(grp){
+    if(grp.dir==="square")return;
+    grp.cells.forEach(function(p){
+      var k=key(p.r,p.c);byCell[k]||(byCell[k]={r:p.r,c:p.c,h:null,v:null});
+      grp.dir==="h"?byCell[k].h=grp:byCell[k].v=grp;
+    });
+  });
+  Object.keys(byCell).forEach(function(k){
+    var e=byCell[k];
+    if(e.h&&e.v&&!used[k]){used[k]=1;plans.push({r:e.r,c:e.c,special:"bomb",gem:e.h.gem,priority:5})}
+  });
+  groups.forEach(function(grp){
+    if(grp.dir==="square")return;
+    if(grp.len>=5){var t=pickTarget(grp,preferred,used);if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:"prism",gem:grp.gem,priority:4})}}
+  });
+  groups.forEach(function(grp){
+    if(grp.dir==="square"||grp.len!==4)return;
+    var t=pickTarget(grp,preferred,used);
+    if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:grp.dir==="h"?"line-h":"line-v",gem:grp.gem,priority:3})}
+  });
+  groups.forEach(function(grp){
+    if(grp.dir!=="square")return;
+    var t=preferred&&grp.cells.find(function(p){return p.r===preferred.r&&p.c===preferred.c&&!used[key(p.r,p.c)]});
+    if(!t)t=grp.cells.find(function(p){return !used[key(p.r,p.c)]});
+    if(t){used[key(t.r,t.c)]=1;plans.push({r:t.r,c:t.c,special:"seeker",gem:grp.gem,priority:2})}
+  });
+  return plans;
+}
+function supportedSpecial(s){return s==="prism"||s==="bomb"||s==="line-h"||s==="line-v"||s==="seeker"}
+function canSwap(grid,a,b){
+  if(!inB(a.r,a.c)||!inB(b.r,b.c)||!areAdjacent(a,b))return false;
+  var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
+  if(!isGem(ca)||!isGem(cb)||ca.locked||cb.locked)return false;
+  if((ca.s==="prism"&&!cb.s)||(cb.s==="prism"&&!ca.s))return true;
+  if(ca.s&&cb.s&&supportedSpecial(ca.s)&&supportedSpecial(cb.s))return true;
+  swapCells(grid,a,b);var ok=findMatches(grid).length>0;swapCells(grid,a,b);return ok;
+}
+function seekerTarget(grid,ctx){
+  var candidates=[],r,c,cell;
+  if(ctx&&ctx.guardian&&ctx.guardian.idx<ctx.guardian.sequence.length){
+    var wanted=ctx.guardian.sequence[ctx.guardian.idx];
+    for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&cell.g===wanted)candidates.push({r:r,c:c,rank:0})}
+    if(candidates.length)return candidates[0];
+  }
+  if(ctx&&ctx.tiles)for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(ctx.tiles[r][c]==="v"&&isGem(grid[r][c]))return{r:r,c:c,rank:1};
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isBlocker(cell))return{r:r,c:c,rank:2}}
+  var wantedColors=[];
+  if(ctx&&ctx.level)ctx.level.objectives.forEach(function(o){if(o.type==="collect")wantedColors.push(o.gem)});
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++){cell=grid[r][c];if(isGem(cell)&&wantedColors.indexOf(cell.g)>=0)return{r:r,c:c,rank:3}}
+  for(r=0;r<ROWS;r++)for(c=0;c<COLS;c++)if(isGem(grid[r][c]))return{r:r,c:c,rank:4};
+  return null;
+}
+function specialTargets(grid,r,c,special,prismColor,ctx){
+  var out=[],i;
+  if(special==="line-h")for(i=0;i<COLS;i++)out.push({r:r,c:i});
+  else if(special==="line-v")for(i=0;i<ROWS;i++)out.push({r:i,c:c});
+  else if(special==="bomb")for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++)inB(r+dr,c+dc)&&out.push({r:r+dr,c:c+dc});
+  else if(special==="prism"){var color=prismColor==null?mostCommonGem(grid):prismColor;for(var rr=0;rr<ROWS;rr++)for(var cc=0;cc<COLS;cc++){var cell=grid[rr][cc];if(isGem(cell)&&cell.g===color)out.push({r:rr,c:cc})}}
+  else if(special==="seeker"){var target=seekerTarget(grid,ctx);if(target)out.push(target)}
+  return out;
+}
+function findHint(grid,rng,ctx){
+  var dirs=[{dr:0,dc:1},{dr:1,dc:0}],moves=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)for(var d=0;d<2;d++){
+    var b={r:r+dirs[d].dr,c:c+dirs[d].dc};if(!inB(b.r,b.c)||!canSwap(grid,{r:r,c:c},b))continue;
+    var ca=grid[r][c],cb=grid[b.r][b.c],score=10,copy=cloneGrid(grid);swapCells(copy,{r:r,c:c},b);
+    if(ca.s&&cb.s)score=90;
+    else if(ca.s==="prism"||cb.s==="prism")score=90;
+    else{
+      var groups=findMatches(copy),plans=planSpecials(groups,b);
+      if(plans.some(function(p){return p.special==="prism"}))score=100;
+      else if(plans.length)score=60;
+      else if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))score=75;
+      else if(groups.length)score=10;
+    }
+    moves.push({a:{r:r,c:c},b:b,score:score});
+  }
+  if(!moves.length)return null;
+  moves.sort(function(a,b){return b.score-a.score});
+  var best=moves.filter(function(m){return m.score===moves[0].score});
+  return rng?best[Math.floor(rng()*best.length)]:best[0];
+}
+function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
+  var sa=ca.s,sb=cb.s,seeds=[{r:a.r,c:a.c},{r:b.r,c:b.c}],label=null,secondary=[];
+  function addRow(r){if(r>=0&&r<ROWS)for(var i=0;i<COLS;i++)seeds.push({r:r,c:i})}
+  function addCol(c){if(c>=0&&c<COLS)for(var i=0;i<ROWS;i++)seeds.push({r:i,c:c})}
+  function addBox(r,c,rad){for(var dr=-rad;dr<=rad;dr++)for(var dc=-rad;dc<=rad;dc++)if(inB(r+dr,c+dc))seeds.push({r:r+dr,c:c+dc})}
+  function line(s){return s==="line-h"||s==="line-v"}
+  if(sa==="prism"&&sb==="prism"){
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)seeds.push({r:r,c:c});
+    label="TOTAL ECLIPSE";
+  }else if(sa==="prism"||sb==="prism"){
+    var other=sa==="prism"?cb:ca,color=other.g;
+    for(var rr=0;rr<ROWS;rr++)for(var cc=0;cc<COLS;cc++){
+      var cell=grid[rr][cc];if(!isGem(cell)||cell.g!==color)continue;
+      if(other.s==="bomb"){grid[rr][cc].s="bomb";addBox(rr,cc,1)}
+      else{grid[rr][cc].s="line-"+(rng&&rng()<0.5?"h":"v");addRow(rr);addCol(cc)}
+      seeds.push({r:rr,c:cc});
+    }
+    label=other.s==="bomb"?"PRISM NOVA":"PRISM SURGE";
+  }else if(line(sa)&&line(sb)){
+    addRow(a.r);addCol(a.c);label="CROSS BEAM";
+  }else if((line(sa)&&sb==="bomb")||(sa==="bomb"&&line(sb))){
+    var lp=line(sa)?a:b;for(var d=-1;d<=1;d++){addRow(lp.r+d);addCol(lp.c+d)}label="QUAKE";
+  }else if(sa==="bomb"&&sb==="bomb"){
+    addBox(a.r,a.c,2);addBox(b.r,b.c,2);
+    secondary.push({t:"delayed-blast",center:{r:a.r,c:a.c},radius:2,delay:180});
+    secondary.push({t:"delayed-blast",center:{r:b.r,c:b.c},radius:2,delay:180});
+    label="NOVA BLAST";
+  }else return null;
+  var exp=expandClears(grid,seeds,null),gained=0;
+  exp.cleared.forEach(function(p){gained+=60;ctx.collected[p.g]=(ctx.collected[p.g]||0)+1});
+  gained=Math.round(gained*1.5);
+  exp.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
+  var damage=damageBlockers(grid,exp.cleared,exp.blockers,ctx);gained+=damage.score;ctx.score+=gained;
+  var gadv=guardianAdvance(ctx,exp.cleared),reso=ctx.tiles?applyResonance(grid,ctx.tiles,exp.cleared,ctx):null;
+  var steps=[{t:"clear",cleared:exp.cleared,blockers:damage.destroyed.concat(reso?reso.destroyedBlockers:[]),forged:[],activated:exp.activated,score:gained+(reso?reso.score:0),combo:1,mult:1.5,label:label,guardian:gadv,resonance:reso,secondary:secondary}];
+  var grav=applyGravity(grid,rng||ctx.rng||makeRng(1));steps.push({t:"fall",moves:grav.moves,spawns:grav.spawns});
+  if(sa==="prism"&&sb==="prism")steps[0].boardWipe=true;
+  return steps;
+}
+function expandClears(grid,seeds,prismColor,ctx){
+  var seen={},cleared=[],blockers=[],activated=[],queue=seeds.slice();
+  while(queue.length){
+    var p=queue.shift();if(!inB(p.r,p.c))continue;var k=key(p.r,p.c);if(seen[k])continue;seen[k]=1;
+    var cell=grid[p.r][p.c];if(!cell)continue;
+    if(isBlocker(cell)){blockers.push({r:p.r,c:p.c});continue}
+    if(!isGem(cell))continue;
+    if(cell.locked){cell.locked=false;cell.lockHp=0;continue}
+    cleared.push({r:p.r,c:p.c,g:cell.g,s:cell.s||null});
+    if(cell.s){activated.push({r:p.r,c:p.c,s:cell.s});specialTargets(grid,p.r,p.c,cell.s,prismColor,ctx).forEach(function(q){queue.push(q)})}
+  }
+  return{cleared:cleared,blockers:blockers,activated:activated};
+}
+function makeCtx(level){
+  var gseq=level&&level.guardian&&level.guardian.sequence;
+  return{score:0,collected:[0,0,0,0,0,0],blockersCleared:{stone:0,ice:0,obsidian:0},preferred:null,prismColor:null,rng:null,level:level,resonanceCleared:0,guardian:gseq?{sequence:gseq.slice(),idx:0}:null,tiles:level&&level.layout&&level.layout.join("").indexOf("R")>=0?parseTiles(level.layout):null,cascadeDepth:0};
+}
+function validateBoard(grid,level){
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+    var cell=grid[r][c],ch=level&&level.layout&&level.layout[r]?level.layout[r].charAt(c):".";
+    if(ch==="#"&&cell!==null)return{ok:false,reason:"expected hole at "+r+","+c};
+    if(ch!=="#"&&cell===null)return{ok:false,reason:"unexpected hole at "+r+","+c};
+    if(isGem(cell)){if(typeof cell.g!=="number"||cell.g<0||cell.g>=GEM_COUNT)return{ok:false,reason:"bad gem at "+r+","+c};if(cell.locked&&!(cell.lockHp>=1))return{ok:false,reason:"bad cage at "+r+","+c}}
+    else if(isBlocker(cell)){if(!["stone","ice","obsidian"].includes(cell.b)||!(cell.hp>=1&&cell.hp<=3))return{ok:false,reason:"bad blocker at "+r+","+c}}
+    else if(cell&&cell.k!=="e")return{ok:false,reason:"bad kind at "+r+","+c};
+  }
+  return{ok:true};
+}
+function shuffleBoard(grid,rng){
+  rng=rng||Math.random;var positions=[],specials=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){var cell=grid[r][c];if(isGem(cell)&&!cell.locked){positions.push({r:r,c:c});if(cell.s)specials.push({r:r,c:c,s:cell.s})}}
+  if(positions.length<2)return false;
+  for(var attempt=0;attempt<500;attempt++){
+    var vals=positions.map(function(p){return grid[p.r][p.c].g});
+    for(var i=vals.length-1;i>0;i--){var j=Math.floor(rng()*(i+1)),t=vals[i];vals[i]=vals[j];vals[j]=t}
+    positions.forEach(function(p,k){grid[p.r][p.c].g=vals[k]});
+    if(findMatches(grid).length===0&&hasValidMove(grid))return true;
+  }
+  for(var attempt2=0;attempt2<300;attempt2++){
+    positions.forEach(function(p){grid[p.r][p.c]={k:"e"}});
+    fillNoMatch(grid,rng);
+    specials.forEach(function(sp){if(isGem(grid[sp.r][sp.c]))grid[sp.r][sp.c].s=sp.s});
+    if(findMatches(grid).length===0&&hasValidMove(grid))return true;
+  }
+  return plantMove(grid,rng);
+}
+function hintScore(grid,a,b,ctx){
+  var ca=grid[a.r][a.c],cb=grid[b.r][b.c];
+  if(ca.s&&cb.s)return 90;
+  var copy=cloneGrid(grid);swapCells(copy,a,b);
+  var groups=findMatches(copy),plans=planSpecials(groups,b);
+  if(plans.some(function(p){return p.special==="prism"}))return 100;
+  if(ctx&&ctx.tiles&&groups.some(function(g){return g.cells.some(function(p){return ctx.tiles[p.r][p.c]==="v"})}))return 75;
+  if(groups.some(function(g){return g.cells.some(function(p){return isBlocker(grid[p.r][p.c])})}))return 75;
+  if(plans.length)return 60;
+  return groups.length?10:0;
+}
+
+global.CQEngine={ROWS,COLS,GEM_COUNT,makeRng,createBoard,cloneGrid,findMatches,planSpecials,expandClears,applyGravity,canSwap,areAdjacent,findHint,hasValidMove,shuffleBoard,resolveBoard,trySwap,makeCtx,objectiveProgress,objectivesMet,starsFor,mostCommonGem,isGem,isBlocker,parseTiles,hasVeins,veinClusters,applyResonance,validateBoard,guardianAdvance,RESONANCE_MAX_DEPTH}})(window);
