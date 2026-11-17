@@ -386,8 +386,13 @@ function resolveSpecialCombo(grid,a,b,ca,cb,ctx,rng){
     secondary.push({t:"delayed-blast",center:{r:a.r,c:a.c},radius:2,delay:180});
     secondary.push({t:"delayed-blast",center:{r:b.r,c:b.c},radius:2,delay:180});
     label="NOVA BLAST";
+  }else if(sa==="seeker"||sb==="seeker"){
+    var seekPos=sa==="seeker"?a:b,otherS=sa==="seeker"?sb:sa,target=seekerTarget(grid,ctx);
+    if(target){seeds.push(target);if(line(otherS)){addRow(target.r);addCol(target.c)}else if(otherS==="bomb")addBox(target.r,target.c,1);else if(otherS==="prism"){var col=grid[target.r][target.c].g;for(var sr=0;sr<ROWS;sr++)for(var sc=0;sc<COLS;sc++)if(isGem(grid[sr][sc])&&grid[sr][sc].g===col)seeds.push({r:sr,c:sc})}}
+    if(sa==="seeker"&&sb==="seeker"){var t2=seekerTarget(grid,ctx);if(t2)seeds.push(t2)}
+    label="SEEKER LINK";
   }else return null;
-  var exp=expandClears(grid,seeds,null),gained=0;
+  var exp=expandClears(grid,seeds,null,ctx),gained=0;
   exp.cleared.forEach(function(p){gained+=60;ctx.collected[p.g]=(ctx.collected[p.g]||0)+1});
   gained=Math.round(gained*1.5);
   exp.cleared.forEach(function(p){grid[p.r][p.c]={k:"e"}});
