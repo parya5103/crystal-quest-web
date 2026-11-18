@@ -22,7 +22,7 @@ Package ID: `in.gogocompany.crystalquest`. Keep stable after first Play Console 
 The 27-level native progression is not yet a full port of the browser game. Blockers (stone/ice/obsidian/cages), special gem types and combinations, collect/clear/resonance objectives, Guardian sequences, Relics, story triggers, daily challenge, booster economy, guardian encounters, resonance mechanics, and complete browser import/export UX still need implementation and compatibility tests against `js/levels.js` and `js/engine.js`. Do not mark campaign parity complete until these are implemented and tested.
 
 ## Build
-JDK 17, Gradle 9.5.0, AGP 9.3.1, Kotlin 2.4.21, KSP 2.3.12, Android SDK Platform 36 and Build Tools 36.0.0.
+JDK 17, Gradle 9.5.0, AGP 9.3.1, Kotlin 2.4.21, KSP 2.3.12, Android SDK Platform 37 and Build Tools 36.0.0.
 
 From the repository root, generate the campaign asset first:
 `node scripts/generate-native-levels.cjs`
