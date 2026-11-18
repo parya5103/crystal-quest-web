@@ -12,6 +12,12 @@ int main() {
  palette.set(1,1,Gem::Violet); palette.set(2,1,Gem::Solar);
  REQUIRE(palette.at(2,1)==Gem::Solar);
 
+ Board palette(3,3);
+ palette.set(0,0,Gem::Amber); palette.set(1,0,Gem::Aqua);
+ palette.set(2,0,Gem::Rose); palette.set(0,1,Gem::Verdant);
+ palette.set(1,1,Gem::Violet); palette.set(2,1,Gem::Solar);
+ REQUIRE(palette.at(2,1)==Gem::Solar);
+
  Board b(5,5);
  b.set(0,0,Gem::Red); b.set(1,0,Gem::Red); b.set(2,0,Gem::Red);
  REQUIRE(findMatches(b).size()==3);
@@ -42,5 +48,18 @@ int main() {
  rejected=false;
  try { (void)findMatches(malformed); } catch(const std::invalid_argument&) { rejected=true; }
  REQUIRE(rejected);
+
+ Board cascadeA(5,5), cascadeB(5,5);
+ for(int y=0;y<5;++y) for(int x=0;x<5;++x) {
+  const auto gem=static_cast<Gem>(1+((x+2*y)%6));
+  cascadeA.set(x,y,gem); cascadeB.set(x,y,gem);
+ }
+ cascadeA.set(0,0,Gem::Red); cascadeA.set(1,0,Gem::Red); cascadeA.set(2,0,Gem::Red);
+ cascadeB.set(0,0,Gem::Red); cascadeB.set(1,0,Gem::Red); cascadeB.set(2,0,Gem::Red);
+ const auto resolvedA=resolveCascades(cascadeA,123456u);
+ const auto resolvedB=resolveCascades(cascadeB,123456u);
+ REQUIRE(resolvedA.cleared>=3 && resolvedA.cascades>=1 && resolvedA.stable);
+ REQUIRE(cascadeA.cells==cascadeB.cells);
+ REQUIRE(resolvedA.cleared==resolvedB.cleared && resolvedA.cascades==resolvedB.cascades);
  return EXIT_SUCCESS;
 }
