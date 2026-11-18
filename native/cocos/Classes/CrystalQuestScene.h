@@ -18,6 +18,10 @@ private:
  std::optional<gogo::crystal::Cell> selected_;
  cocos2d::Label* status_=nullptr;
  cocos2d::Label* moves_=nullptr;
- int movesLeft_=24;
+ cocos2d::Label* scoreLabel_=nullptr;
+ int movesLeft_=13;
+ int score_=0;
+ int scoreTarget_=4200;
+ bool finished_=false;
  std::uint32_t turnSeed_=0xC0FFEEu;
 };
