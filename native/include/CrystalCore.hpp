@@ -71,4 +71,35 @@ inline int clearMatches(Board& b) {
  for(const auto& c:matches) b.set(c.x,c.y,Gem::Empty);
  return static_cast<int>(matches.size());
 }
+
+struct CascadeResult { int cleared=0; int cascades=0; bool stable=true; };
+inline CascadeResult resolveCascades(Board& b,std::uint32_t seed) {
+ if(!b.valid()) throw std::invalid_argument("invalid board storage");
+ CascadeResult result;
+ if(seed==0) seed=0x9e3779b9u;
+ auto next=[&seed]() { seed^=seed<<13; seed^=seed>>17; seed^=seed<<5; return seed; };
+ for(int pass=0;pass<64;++pass) {
+  const int count=clearMatches(b);
+  if(count==0) return result;
+  result.cleared+=count;
+  ++result.cascades;
+  for(int x=0;x<b.width;++x) {
+   int write=b.height-1;
+   for(int read=b.height-1;read>=0;--read) {
+    const Gem gem=b.at(x,read);
+    if(gem!=Gem::Empty) {
+     if(write!=read) { b.set(x,write,gem); b.set(x,read,Gem::Empty); }
+     --write;
+    }
+   }
+   while(write>=0) {
+    const auto colour=static_cast<std::uint8_t>(1u+(next()%6u));
+    b.set(x,write,static_cast<Gem>(colour));
+    --write;
+   }
+  }
+ }
+ result.stable=findMatches(b).empty();
+ return result;
+}
 } // namespace gogo::crystal
