@@ -17,5 +17,6 @@ import kotlinx.coroutines.launch
  private val engine=Match3Engine()
  private val _uiState=MutableStateFlow(engine.newGame())
  val uiState=_uiState.asStateFlow()
- fun onEvent(event:CrystalUiEvent){when(event){is CrystalUiEvent.TapCell->_uiState.update{engine.tap(it,event.cell,it.score xor(it.movesRemaining*31))};CrystalUiEvent.Restart->_uiState.value=engine.newGame()};viewModelScope.launch(ioDispatcher){val state=_uiState.value;try{repository.save(state.level,state.score,state.movesRemaining)}catch(cancelled:CancellationException){throw cancelled}catch(error:Exception){_uiState.update{it.copy(message="Progress save failed: ${error.message ?: "unknown error"}")}}}}
+ init{viewModelScope.launch(ioDispatcher){try{repository.load()?.let{_uiState.value=it}}catch(cancelled:CancellationException){throw cancelled}catch(error:Exception){_uiState.update{it.copy(message="Could not restore saved game: ${error.message?: "unknown error"}")}}}}
+ fun onEvent(event:CrystalUiEvent){when(event){is CrystalUiEvent.TapCell->_uiState.update{engine.tap(it,event.cell,it.score xor (it.movesRemaining*31))};CrystalUiEvent.Restart->_uiState.value=engine.newGame()};viewModelScope.launch(ioDispatcher){val state=_uiState.value;try{repository.save(state)}catch(cancelled:CancellationException){throw cancelled}catch(error:Exception){_uiState.update{it.copy(message="Progress save failed: ${error.message?: "unknown error"}")}}}}
 }
