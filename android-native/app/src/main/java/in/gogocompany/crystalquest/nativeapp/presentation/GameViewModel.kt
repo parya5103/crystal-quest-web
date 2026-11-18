@@ -1,10 +1,10 @@
-package in.gogocompany.crystalquest.nativeapp.presentation
+package `in`.gogocompany.crystalquest.nativeapp.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import in.gogocompany.crystalquest.nativeapp.data.GameRepository
-import in.gogocompany.crystalquest.nativeapp.di.IoDispatcher
-import in.gogocompany.crystalquest.nativeapp.domain.engine.Match3Engine
-import in.gogocompany.crystalquest.nativeapp.domain.model.*
+import `in`.gogocompany.crystalquest.nativeapp.data.GameRepository
+import `in`.gogocompany.crystalquest.nativeapp.di.IoDispatcher
+import `in`.gogocompany.crystalquest.nativeapp.domain.engine.Match3Engine
+import `in`.gogocompany.crystalquest.nativeapp.domain.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
