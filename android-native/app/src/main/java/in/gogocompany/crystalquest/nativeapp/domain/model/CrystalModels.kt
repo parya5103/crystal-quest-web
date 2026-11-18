@@ -34,5 +34,5 @@ data class CrystalGameState(
 sealed interface CrystalUiEvent{
  data class TapCell(val cell:Cell):CrystalUiEvent
  data object Restart:CrystalUiEvent
- data object Continue:CrystalUiEvent;data object DailyChallenge:CrystalUiEvent
+ data object Continue:CrystalUiEvent;data class SelectLevel(val level:Int):CrystalUiEvent;data object DailyChallenge:CrystalUiEvent
 }
