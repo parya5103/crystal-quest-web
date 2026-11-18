@@ -130,6 +130,6 @@ void CrystalQuestScene::redraw() {
   draw->drawSolidCircle(center,cellSize_*.34f,0,28,colours[gemIndex]);
   if(selected_&&selected_->x==x&&selected_->y==y) draw->drawCircle(center,cellSize_*.39f,0,32,true,Color4F::WHITE);
  }
- draw->setTag(900); draw->setOpacity(0); addChild(draw,1);
- draw->runAction(FadeTo::create(.12f,255));
+ draw->setTag(900); draw->setScale(.985f); addChild(draw,1);
+ draw->runAction(ScaleTo::create(.12f,1.0f));
 }
