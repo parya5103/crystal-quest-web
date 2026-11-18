@@ -857,7 +857,7 @@ test('PWA: update activation is controlled - installs wait for the page, control
   assert.ok(html.indexOf('controllerchange') >= 0, 'page reloads when the new worker takes over');
   assert.ok(html.indexOf('cqReloading') >= 0, 'reload guard prevents update loops');
   assert.ok(html.indexOf('Progress is stored only in this browser') >= 0, 'privacy note shipped');
-  assert.ok(html.indexOf('labelled advertisement appears on the main menu') >= 0, 'ads stance documented for players');
+  assert.ok(html.indexOf('Advertisements are currently disabled') >= 0, 'current ad stance documented accurately for players');
 });
 
 test('UI polish: home progress, map regions, objective meters and combo feedback are shipped', () => {
