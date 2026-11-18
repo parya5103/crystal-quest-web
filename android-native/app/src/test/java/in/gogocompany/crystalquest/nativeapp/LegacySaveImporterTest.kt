@@ -5,7 +5,7 @@ import org.junit.Test
 import java.util.Base64
 class LegacySaveImporterTest{
  @Test fun importsActualV2SaveProgressSettingsAndWorld(){
-  val result=requireNotNull(LegacySaveImporter.import("""{"v":2,"unlocked":19,"lastLevel":12,"best":{"3":12500,"28":999999},"stars":{"3":3,"19":2},"settings":{"sfx":false,"music":true,"motion":true,"symbols":false},"world":{"relics":["forest-key","moon-shard"],"forest":{"seen":["intro","guardian"]},"daily":{"date":"2026-11-18","streak":8,"best":12},"story":["chapter-1"]}}""")
+  val result=requireNotNull(LegacySaveImporter.import("""{"v":2,"unlocked":19,"lastLevel":12,"best":{"3":12500,"28":999999},"stars":{"3":3,"19":2},"settings":{"sfx":false,"music":true,"motion":true,"symbols":false},"world":{"relics":["forest-key","moon-shard"],"forest":{"seen":["intro","guardian"]},"daily":{"date":"2026-11-18","streak":8,"best":12},"story":["chapter-1"]}}"""))
   assertEquals("crystal-quest-save-v1",LegacySaveImporter.LEGACY_KEY);assertEquals(19,result.unlocked);assertEquals(12,result.lastLevel)
   assertEquals(12500,result.best[3]);assertEquals(3,result.stars[3]);assertFalse(result.best.containsKey(28))
   assertEquals(false,result.settings["sfx"]);assertEquals(setOf("forest-key","moon-shard"),result.relics)
