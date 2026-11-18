@@ -109,7 +109,7 @@ node tests/commercial-ui.test.js
 node tests/launch-readiness.test.js
 ```
 
-GitHub Actions runs both commands on every pull request to `main`. The Node suite also exercises `CQTest.run()` and the seeded bot; browser/device visual playtesting is a separate release check and is not implied by a passing headless suite.
+GitHub Actions runs all four commands on every pull request to `main`. The Node suite also exercises `CQTest.run()` and the seeded bot; browser/device visual playtesting is a separate release check and is not implied by a passing headless suite.
 
 ### Debug panel (dev only)
 
