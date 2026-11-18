@@ -13,7 +13,7 @@ val admobAppId = providers.gradleProperty("ADMOB_APP_ID").orElse("ca-app-pub-394
 
 android {
  namespace = "in.gogocompany.crystalquest.nativeapp"
- compileSdk = 36
+ compileSdk = 37
  defaultConfig {
   applicationId = "in.gogocompany.crystalquest"
   minSdk = 24
