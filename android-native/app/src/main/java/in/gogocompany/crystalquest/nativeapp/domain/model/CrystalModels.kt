@@ -20,6 +20,10 @@ data class CrystalGameState(
  val forestSeen:Set<String> = emptySet(),
  val storySeen:Set<String> = emptySet(),
  val dailyDate:String="",
+ val lastDailyDate:String="",
+ val dailyCompletedDate:String="",
+ val isDaily:Boolean=false,
+ val coins:Int=0,
  val dailyStreak:Int=0,
  val dailyBest:Int=0,
  val legacySaveJson:String?=null,
@@ -30,5 +34,5 @@ data class CrystalGameState(
 sealed interface CrystalUiEvent{
  data class TapCell(val cell:Cell):CrystalUiEvent
  data object Restart:CrystalUiEvent
- data object Continue:CrystalUiEvent
+ data object Continue:CrystalUiEvent;data object DailyChallenge:CrystalUiEvent
 }
