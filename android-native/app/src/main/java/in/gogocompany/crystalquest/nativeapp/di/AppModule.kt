@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.di
+package `in`.gogocompany.crystalquest.nativeapp.di
 import android.content.Context
 import androidx.room.Room
 import dagger.Module
@@ -7,8 +7,8 @@ import javax.inject.Qualifier
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import in.gogocompany.crystalquest.nativeapp.data.local.GameDatabase
-import in.gogocompany.crystalquest.nativeapp.data.local.GameProgressDao
+import `in`.gogocompany.crystalquest.nativeapp.data.local.GameDatabase
+import `in`.gogocompany.crystalquest.nativeapp.data.local.GameProgressDao
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
