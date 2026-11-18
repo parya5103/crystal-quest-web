@@ -30,13 +30,16 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
    Spacer(Modifier.height(8.dp));Text("CRYSTAL QUEST",style=MaterialTheme.typography.headlineMedium,color=Color.White)
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard("LEVEL",state.level.toString())}
-   Text(if(isRestoring)"Restoring your progress…" else state.message,color=Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
+   Text(if(isRestoring)"Restoring your progress…" else state.message,color=if(state.isWon)Color(0xFFFFD66B)else Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
+   LinearProgressIndicator(progress={(state.score.toFloat()/state.targetScore.coerceAtLeast(1)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth(),color=Color(0xFFFFD66B),trackColor=Color(0xFF34415E))
+   Text("Goal: ${state.targetScore} points",color=Color(0xFF9BAAC8),style=MaterialTheme.typography.labelMedium)
    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color(0xFF1B2740)).padding(7.dp),verticalArrangement=Arrangement.spacedBy(3.dp)){
     for(row in 0 until 8)Row(horizontalArrangement=Arrangement.spacedBy(3.dp)){for(col in 0 until 8){val gem=state.board[row*8+col];val selected=state.selected==Cell(col,row);val target=if(gem==null)Color.Transparent else gemColors.getValue(gem);val color by animateColorAsState(if(selected)Color.White else target,animationSpec=spring(),label="gem")
      Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(9.dp)).background(color).border(if(selected)3.dp else 1.dp,if(selected)Color(0xFFFFE28A)else Color(0x334B5E83),RoundedCornerShape(9.dp)).clickable(enabled=!isRestoring){haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove);onEvent(CrystalUiEvent.TapCell(Cell(col,row)))},contentAlignment=Alignment.Center){if(gem!=null)Text(listOf("◆","✦","●","✿","✧","✺")[gem.ordinal],color=Color(0xFF172039),style=MaterialTheme.typography.titleMedium)}
     }}
    }
-   Button(onClick={onEvent(CrystalUiEvent.Restart)},enabled=!isRestoring,modifier=Modifier.fillMaxWidth()){Text("Restart level")}
+   if(state.isWon)Button(onClick={onEvent(CrystalUiEvent.Continue)},enabled=!isRestoring&&state.level<27,modifier=Modifier.fillMaxWidth()){Text(if(state.level<27)"Continue to Level ${state.level+1}" else "Campaign complete")}
+   Button(onClick={onEvent(CrystalUiEvent.Restart)},enabled=!isRestoring,modifier=Modifier.fillMaxWidth()){Text(if(state.isComplete&&!state.isWon)"Retry level" else "Restart level")}
    if(privacyOptionsRequired)TextButton(onClick=onShowPrivacyOptions){Text("Privacy options",color=Color(0xFFB8C6E5))}
    Text("Swap adjacent crystals to make a match of three or more.",color=Color(0xFF8494B6),style=MaterialTheme.typography.bodySmall)
   }
