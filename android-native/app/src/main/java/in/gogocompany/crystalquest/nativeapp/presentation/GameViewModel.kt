@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
   if(_isRestoring.value)return
   when(event){
    is CrystalUiEvent.TapCell->_uiState.update{engine.tap(it,event.cell,it.score xor (it.movesRemaining*31))}
-   CrystalUiEvent.Restart->_uiState.update{engine.newLevel(it.level)}
+   CrystalUiEvent.Restart->_uiState.update{current->engine.newLevel(current.level).copy(unlockedLevel=current.unlockedLevel,bestStars=current.bestStars)}
    CrystalUiEvent.Continue->_uiState.update{current->
     if(!current.isWon)current
     else if(current.level>=27)current.copy(message="All 27 native levels completed!")
