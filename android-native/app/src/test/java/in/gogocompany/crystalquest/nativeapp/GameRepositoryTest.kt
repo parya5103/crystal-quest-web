@@ -49,6 +49,16 @@ class GameRepositoryTest{
   assertEquals(7,next.dailyBest)
   assertEquals("""{"v":2}""",next.legacySaveJson)
  }
+ @Test fun eachCampaignLevelGetsAStableButDistinctBoard()=runBlocking{
+  val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>(relaxed=true)
+  val repository=GameRepository(dao,catalog)
+  val first=repository.newLevel(1)
+  val second=repository.newLevel(2)
+  assertEquals(first.board,repository.newLevel(1).board)
+  assertNotEquals(first.board,second.board)
+  assertTrue(first.board.all{it!=null})
+  assertTrue(second.board.all{it!=null})
+ }
  @Test fun importsRealCqsave2CodeAndPreservesWorldProgress()=runBlocking{
   val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>()
   val json="""{"v":2,"unlocked":8,"lastLevel":3,"best":{"2":9000},"stars":{"2":3},"settings":{"sfx":false,"music":true},"world":{"relics":["forest-key"],"forest":{"seen":["intro"]},"daily":{"date":"2026-11-19","streak":4,"best":7},"story":["chapter-1"]}}"""
