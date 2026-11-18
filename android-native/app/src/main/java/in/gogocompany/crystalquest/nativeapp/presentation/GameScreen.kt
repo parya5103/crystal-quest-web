@@ -22,7 +22,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import in.gogocompany.crystalquest.nativeapp.domain.model.*
 import in.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
-private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xFF36D7E8),Gem.ROSE to Color(0xFFFF5C8A),Gem.VERDANT to Color(0xFF42D392),Gem.VIOLET to Color(0xFF9B72F2),Gem.SOLAR to Color(0xFFFFD34E))
+private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xFF36D7E8),Gem.ROSE to Color(0xFFFF5C8A),Gem.VERDANT to Color(0xFF42D392),Gem.VIOLET to Color(0xFF9B72F2),Gem.SOLAR to Color(0xFFFFD34E),Gem.LINE_H to Color(0xFF64D7FF),Gem.LINE_V to Color(0xFF64D7FF),Gem.BOMB to Color(0xFFFF7A59),Gem.PRISM to Color(0xFFFFF0A6))
 @Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){
  val state by viewModel.uiState.collectAsStateWithLifecycle()
  val restoring by viewModel.isRestoring.collectAsStateWithLifecycle()
@@ -45,7 +45,7 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
    Text("Goal: ${state.targetScore} points   ·   Best: ${state.bestStars[state.level]?:0} ★   ·   Earned: ${state.stars} ★",color=Color(0xFF9BAAC8),style=MaterialTheme.typography.labelMedium)
    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color(0xFF1B2740)).padding(7.dp),verticalArrangement=Arrangement.spacedBy(3.dp)){
     for(row in 0 until 8)Row(horizontalArrangement=Arrangement.spacedBy(3.dp)){for(col in 0 until 8){val gem=state.board[row*8+col];val selected=state.selected==Cell(col,row);val target=if(gem==null)Color.Transparent else gemColors.getValue(gem);val color by animateColorAsState(if(selected)Color.White else target,animationSpec=spring(),label="gem")
-     Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(9.dp)).background(color).border(if(selected)3.dp else 1.dp,if(selected)Color(0xFFFFE28A)else Color(0x334B5E83),RoundedCornerShape(9.dp)).clickable(enabled=!isRestoring&&!state.isComplete){haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove);onEvent(CrystalUiEvent.TapCell(Cell(col,row)))},contentAlignment=Alignment.Center){if(gem!=null)Text(listOf("◆","✦","●","✿","✧","✺")[gem.ordinal],color=Color(0xFF172039),style=MaterialTheme.typography.titleMedium)}
+     Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(9.dp)).background(color).border(if(selected)3.dp else 1.dp,if(selected)Color(0xFFFFE28A)else Color(0x334B5E83),RoundedCornerShape(9.dp)).clickable(enabled=!isRestoring&&!state.isComplete){haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove);onEvent(CrystalUiEvent.TapCell(Cell(col,row)))},contentAlignment=Alignment.Center){if(gem!=null)Text(when(gem){Gem.AMBER->"◆";Gem.AQUA->"✦";Gem.ROSE->"●";Gem.VERDANT->"✿";Gem.VIOLET->"✧";Gem.SOLAR->"✺";Gem.LINE_H->"↔";Gem.LINE_V->"↕";Gem.BOMB->"✹";Gem.PRISM->"✧"},color=Color(0xFF172039),style=MaterialTheme.typography.titleMedium)}
     }}
    }
    if(state.isWon)Button(onClick={onEvent(CrystalUiEvent.Continue)},enabled=!isRestoring&&(state.isDaily||state.level<27),modifier=Modifier.fillMaxWidth()){Text(if(state.isDaily)"Return to campaign" else if(state.level<27)"Continue to Level ${state.level+1}" else "Campaign complete")}
