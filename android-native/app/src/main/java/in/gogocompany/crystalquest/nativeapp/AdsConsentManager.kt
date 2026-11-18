@@ -1,5 +1,6 @@
 package in.gogocompany.crystalquest.nativeapp
 import android.app.Activity
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,7 +12,7 @@ import com.google.android.libraries.ads.mobile.sdk.initialization.Initialization
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AdsConsentManager(private val activity:Activity){
- companion object { private val initialized=AtomicBoolean(false) }
+ companion object { private val initialized=AtomicBoolean(false); private const val TAG="AdsConsentManager" }
  private var consentInformation:ConsentInformation?=null
  var privacyOptionsRequired by mutableStateOf(false)
   private set
@@ -32,8 +33,12 @@ class AdsConsentManager(private val activity:Activity){
  private fun initializeIfAllowed(){
   val info=consentInformation?:return
   if(!info.canRequestAds()||!initialized.compareAndSet(false,true)||activity.isFinishing||activity.isDestroyed)return
-  val appId=activity.getString(R.string.admob_app_id)
-  Thread({if(!activity.isFinishing&&!activity.isDestroyed)MobileAds.initialize(activity,InitializationConfig.Builder(appId).build()){}}, "crystal-ads-init").start()
+  val appContext=activity.applicationContext
+  val appId=appContext.getString(R.string.admob_app_id)
+  Thread({
+   try{MobileAds.initialize(appContext,InitializationConfig.Builder(appId).build()){}}
+   catch(error:Exception){initialized.set(false);Log.e(TAG,"Google Mobile Ads initialization failed",error)}
+  }, "crystal-ads-init").start()
  }
  fun showPrivacyOptions(){
   val info=consentInformation?:return
