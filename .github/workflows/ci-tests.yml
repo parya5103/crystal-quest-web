@@ -25,3 +25,5 @@ jobs:
         run: node tests/seo.test.js
       - name: Run commercial UI regression checks
         run: node tests/commercial-ui.test.js
+      - name: Run commercial launch readiness checks
+        run: node tests/launch-readiness.test.js
