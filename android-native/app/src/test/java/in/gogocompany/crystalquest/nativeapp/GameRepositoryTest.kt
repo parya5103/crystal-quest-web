@@ -1,11 +1,11 @@
-package in.gogocompany.crystalquest.nativeapp
+package `in`.gogocompany.crystalquest.nativeapp
 import com.google.gson.JsonSyntaxException
 import com.google.gson.JsonObject
-import in.gogocompany.crystalquest.nativeapp.data.GameRepository
-import in.gogocompany.crystalquest.nativeapp.data.CrystalLevelCatalog
-import in.gogocompany.crystalquest.nativeapp.data.CrystalLevelDto
-import in.gogocompany.crystalquest.nativeapp.data.local.GameProgress
-import in.gogocompany.crystalquest.nativeapp.data.local.GameProgressDao
+import `in`.gogocompany.crystalquest.nativeapp.data.GameRepository
+import `in`.gogocompany.crystalquest.nativeapp.data.CrystalLevelCatalog
+import `in`.gogocompany.crystalquest.nativeapp.data.CrystalLevelDto
+import `in`.gogocompany.crystalquest.nativeapp.data.local.GameProgress
+import `in`.gogocompany.crystalquest.nativeapp.data.local.GameProgressDao
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
