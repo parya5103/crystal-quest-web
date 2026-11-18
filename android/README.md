@@ -40,7 +40,7 @@ This is **not King's proprietary Fiction engine**, and it will not reproduce Kin
 
 The current live web game deliberately keeps ads disabled. Do not enable ads until a certified CMP, correct regional consent flow, verified publisher/slot IDs and policy review are complete.
 
-The native Android scaffold now includes UMP 4.0.0, Google Mobile Ads Next-Gen 1.6.0, a consent-gated initialization helper and a privacy-options entry point. It does not yet request or display ads because production AdMob app/ad-unit IDs and publisher privacy messages have not been configured. The default app ID is Google's test app ID; pass `-P.ADMOB_APP_ID=ca-app-pub-...~...` for a production build only after the AdMob app is registered and UMP messages are configured. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
+The native Android scaffold now includes UMP 4.0.0, Google Mobile Ads Next-Gen 1.6.0, a consent-gated initialization helper and a privacy-options entry point. It does not yet request or display ads because production AdMob app/ad-unit IDs and publisher privacy messages have not been configured. The default app ID is Google's test app ID; pass `-PADMOB_APP_ID=ca-app-pub-...~...` for a production build only after the AdMob app is registered and UMP messages are configured. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
 
 ## Privacy and store disclosures
 
