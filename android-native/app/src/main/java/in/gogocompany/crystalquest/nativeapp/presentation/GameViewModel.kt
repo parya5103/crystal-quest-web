@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 @HiltViewModel class GameViewModel @Inject constructor(private val repository:GameRepository,@IoDispatcher private val io:CoroutineDispatcher):ViewModel(){
  private val engine=Match3Engine()
  private val _uiState=MutableStateFlow(engine.newGame())
@@ -50,12 +53,22 @@ import kotlinx.coroutines.launch
   if(_isRestoring.value)return
   when(event){
    is CrystalUiEvent.TapCell->{_uiState.update{engine.tap(it,event.cell,it.score xor (it.movesRemaining*31))};saveQueue.trySend(_uiState.value)}
-   CrystalUiEvent.Restart->openLevel(_uiState.value.level)
+   CrystalUiEvent.Restart->{val current=_uiState.value;if(current.isDaily)startDaily(current.dailyDate)else openLevel(current.level)}
+   CrystalUiEvent.DailyChallenge->startDaily(SimpleDateFormat("yyyyMMdd",Locale.US).format(Date()))
    CrystalUiEvent.Continue->{
     val current=_uiState.value
-    if(current.isWon&&current.level>=27)_uiState.update{it.copy(message="All 27 native levels completed!")}
+    if(current.isWon&&current.isDaily)openLevel(current.level)
+    else if(current.isWon&&current.level>=27)_uiState.update{it.copy(message="All 27 native levels completed!")}
     else if(current.isWon)openLevel(current.level+1)
    }
+  }
+ }
+ private fun startDaily(dateKey:String){
+  val current=_uiState.value
+  viewModelScope.launch(io){
+   try{val daily=repository.newDaily(dateKey,current);_uiState.value=daily;saveQueue.trySend(daily)}
+   catch(cancelled:CancellationException){throw cancelled}
+   catch(error:Exception){_uiState.update{it.copy(message="Daily challenge unavailable: ${error.message?: "unknown error"}")}}
   }
  }
  private fun openLevel(level:Int){
