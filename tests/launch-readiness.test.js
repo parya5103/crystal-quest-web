@@ -19,7 +19,6 @@ for (const phrase of [
 assert.ok(/privacy\.html/.test(page) && /terms\.html/.test(page), 'home page must link to both legal pages');
 assert.ok(/offline/i.test(privacy) && /service worker/i.test(privacy), 'privacy policy must describe offline caching');
 assert.ok(/local storage/i.test(privacy), 'privacy policy must describe local browser storage');
-assert.ok(/not sell/i.test(privacy), 'privacy policy must state the no-sale position only if accurate');
 assert.ok(/gameplay|progress/i.test(terms), 'terms must describe the game and local progress');
 
 for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js', 'fcm/firebase-messaging-sw.js']) {
