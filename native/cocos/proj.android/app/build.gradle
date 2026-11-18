@@ -5,10 +5,11 @@ android {
  ndkVersion "27.2.12479018"
  defaultConfig {
   applicationId "in.gogocompany.crystalquest"
-  minSdk 23
+  minSdk 24
   targetSdk 36
   versionCode 1
   versionName "0.1.0"
+  resValue "string", "admob_app_id", (project.findProperty("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713")
   ndk { abiFilters "arm64-v8a","armeabi-v7a" }
   externalNativeBuild {
    cmake { targets "MyGame"; arguments "-DANDROID_STL=c++_static","-DANDROID_TOOLCHAIN=clang"; cppFlags "-frtti -fexceptions -std=c++17" }
@@ -18,4 +19,8 @@ android {
  sourceSets.main { java.srcDirs = ["src"]; manifest.srcFile "AndroidManifest.xml"; assets.srcDirs = ["../../Resources"] }
  buildTypes { debug { applicationIdSuffix ".debug"; debuggable true }; release { minifyEnabled false; debuggable false } }
 }
-dependencies { implementation project(":libcocos2dx") }
+dependencies {
+ implementation project(":libcocos2dx")
+ implementation "com.google.android.ump:user-messaging-platform:4.0.0"
+ implementation "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0"
+}
