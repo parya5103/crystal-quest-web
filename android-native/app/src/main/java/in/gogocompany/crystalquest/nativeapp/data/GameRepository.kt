@@ -9,6 +9,6 @@ import kotlinx.coroutines.flow.Flow
 @Singleton class GameRepository @Inject constructor(private val dao:GameProgressDao){
  private val gson=Gson()
  fun observe():Flow<GameProgress?> = dao.observe("crystal-quest")
- suspend fun load():CrystalGameState? = dao.get("crystal-quest")?.payload?.let{runCatching{gson.fromJson(it,CrystalGameState::class.java)}.getOrNull()}
+ suspend fun load():CrystalGameState? = dao.get("crystal-quest")?.payload?.let{gson.fromJson(it,CrystalGameState::class.java)}
  suspend fun save(state:CrystalGameState){dao.upsert(GameProgress("crystal-quest",gson.toJson(state),System.currentTimeMillis()))}
 }
