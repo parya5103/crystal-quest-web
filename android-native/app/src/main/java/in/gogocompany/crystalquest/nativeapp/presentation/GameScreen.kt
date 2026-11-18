@@ -29,6 +29,7 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
  Scaffold(modifier=modifier.fillMaxSize(),containerColor=Color(0xFF10172A)){padding->
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
    Spacer(Modifier.height(8.dp));Text("CRYSTAL QUEST",style=MaterialTheme.typography.headlineMedium,color=Color.White)
+   Text(state.levelName,style=MaterialTheme.typography.titleMedium,color=Color(0xFFFFD66B))
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard("LEVEL",state.level.toString())}
    Text(if(isRestoring)"Restoring your progress…" else state.message,color=if(state.isWon)Color(0xFFFFD66B)else Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
    LinearProgressIndicator(progress={(state.score.toFloat()/state.targetScore.coerceAtLeast(1)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth(),color=Color(0xFFFFD66B),trackColor=Color(0xFF34415E))
