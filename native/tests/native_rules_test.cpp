@@ -5,7 +5,7 @@
 #define REQUIRE(x) do { if(!(x)) { std::cerr << "FAIL line " << __LINE__ << ": " #x "\n"; return EXIT_FAILURE; } } while(0)
 int main() {
  using namespace gogo::crystal;
- Board b(5,5);
+ Board palette(3,3);\n palette.set(0,0,Gem::Amber); palette.set(1,0,Gem::Aqua);\n palette.set(2,0,Gem::Rose); palette.set(0,1,Gem::Verdant);\n palette.set(1,1,Gem::Violet); palette.set(2,1,Gem::Solar);\n REQUIRE(palette.at(2,1)==Gem::Solar);\n\n Board b(5,5);
  b.set(0,0,Gem::Red); b.set(1,0,Gem::Red); b.set(2,0,Gem::Red);
  REQUIRE(findMatches(b).size()==3);
  REQUIRE(clearMatches(b)==3);
