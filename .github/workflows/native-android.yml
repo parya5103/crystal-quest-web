@@ -30,14 +30,20 @@ jobs:
         run: |
           yes | sdkmanager --licenses >/dev/null
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
-      - name: Run native gameplay rules tests\n        run: |\n          cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release\n          cmake --build native/build --parallel 2\n          ctest --test-dir native/build --output-on-failure\n      - name: Add namespace to pinned legacy Cocos library module for AGP 8
+      - name: Run native gameplay rules tests
+        run: |
+          cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build native/build --parallel 2
+          ctest --test-dir native/build --output-on-failure
+      - name: Add namespace to pinned legacy Cocos library module for AGP 8
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('third_party/cocos2d-x/cocos/platform/android/libcocos2dx/build.gradle')
           s=p.read_text()
           if 'namespace ' not in s:
-              s=s.replace('android {', "android {\n    namespace 'org.cocos2dx.lib'", 1)
+              s=s.replace('android {', "android {
+    namespace 'org.cocos2dx.lib'", 1)
               p.write_text(s)
           PY
       - name: Build debug APK and unsigned release AAB
