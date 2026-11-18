@@ -30,7 +30,7 @@ jobs:
         run: |
           yes | sdkmanager --licenses >/dev/null
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
-      - name: Add namespace to pinned legacy Cocos library module for AGP 8
+      - name: Run native gameplay rules tests\n        run: |\n          cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release\n          cmake --build native/build --parallel 2\n          ctest --test-dir native/build --output-on-failure\n      - name: Add namespace to pinned legacy Cocos library module for AGP 8
         run: |
           python3 - <<'PY'
           from pathlib import Path
