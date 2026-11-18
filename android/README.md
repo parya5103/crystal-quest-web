@@ -18,7 +18,7 @@ A TWA can render web-page advertising when the website's provider, consent flow 
 1. Create or use a Google Play developer account and complete its identity/account verification.
 2. Choose and permanently confirm the Android application ID/package name.
 3. Install Node.js and Bubblewrap CLI in a trusted desktop or Termux environment.
-4. The manifest includes 192x192 and 512x512 PNG launcher icons (including a maskable 512 icon) for PWA install and Bubblewrap packaging. Bubblewrap requires a launcher icon of at least 512x512 pixels. Initialize it from the production manifest:
+4. The manifest includes 192x192 and 512x512 PNG launcher icons (including a dedicated safe-zone maskable 512 icon) for PWA install and Bubblewrap packaging. Bubblewrap requires a launcher icon of at least 512x512 pixels. Initialize it from the production manifest:
    `bubblewrap init --manifest https://gogocompany.in/crystalquest/manifest.json`
 5. Generate a signed Android App Bundle (AAB) and record the **Play App Signing** SHA-256 certificate fingerprint from Play Console.
 6. Replace the placeholders in `ASSETLINKS.template.json` and publish the final JSON at:
