@@ -22,13 +22,16 @@ assert.ok(/offline/i.test(privacy) && /service worker/i.test(privacy), 'privacy 
 assert.ok(/local storage/i.test(privacy), 'privacy policy must describe local browser storage');
 assert.ok(/gameplay|progress/i.test(terms), 'terms must describe the game and local progress');
 
-for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js']) {
+for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js', 'icon-192.png', 'icon-512.png']) {
   assert.ok(sw.includes("'" + asset + "'") || sw.includes('"'+asset+'"'), 'offline cache should include ' + asset);
 }
-assert.match(sw, /var CACHE = 'cq-v23';/, 'release shell cache must be bumped');
+assert.match(sw, /var CACHE = 'cq-v24';/, 'release shell cache must be bumped');
 assert.equal(manifest.start_url, './');
 assert.equal(manifest.scope, './');
-assert.ok(manifest.icons.some(i => i.src === 'icon.svg'), 'manifest must retain the shipped icon');
+assert.ok(manifest.icons.some(i => i.src === 'icon.svg'), 'manifest must retain the shipped vector icon');
+assert.ok(manifest.icons.some(i => i.src === 'icon-192.png' && i.sizes === '192x192'), 'manifest must ship a 192px PNG icon');
+assert.ok(manifest.icons.some(i => i.src === 'icon-512.png' && i.sizes === '512x512' && i.purpose === 'maskable'), 'manifest must ship a 512px maskable PNG icon');
+assert.ok(page.includes('apple-touch-icon') && page.includes('icon-192.png'), 'iOS install must have a raster touch icon');
 assert.match(android, /Trusted Web Activity/i);
 assert.match(android, /rewarded ads/i);
 assert.match(android, /assetlinks\.json/i);
