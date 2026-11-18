@@ -17,6 +17,7 @@ for (const phrase of [
   'GoGo Central', 'GoGo Company'
 ]) assert.ok(privacy.toLowerCase().includes(phrase.toLowerCase()), 'privacy policy must disclose: ' + phrase);
 assert.ok(/privacy\.html/.test(page) && /terms\.html/.test(page), 'home page must link to both legal pages');
+assert.ok(/Optional push notifications send a device token/i.test(page), 'in-game privacy disclosure must mention opt-in notification data');
 assert.ok(/offline/i.test(privacy) && /service worker/i.test(privacy), 'privacy policy must describe offline caching');
 assert.ok(/local storage/i.test(privacy), 'privacy policy must describe local browser storage');
 assert.ok(/gameplay|progress/i.test(terms), 'terms must describe the game and local progress');
