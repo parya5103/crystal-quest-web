@@ -243,3 +243,7 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible,canvas:focus-visib
   .screen.is-active .bg-layer { animation: none !important; }
   .board-wrap::before { filter: none; }
 }
+
+/* Legal links in the game home footer */
+.home-foot a{color:var(--teal);text-decoration:none;margin:0 4px}
+.home-foot a:hover{text-decoration:underline}

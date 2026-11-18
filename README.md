@@ -17,8 +17,9 @@ The campaign is wrapped by **The Guardian** — a shield-sequence encounter on
 level 27 — plus a **Relic Vault** of six once-only collectibles, a
 date-seeded **Daily Challenge** with streaks, and **save-code export/import**
 for moving progress between devices. The game installs as an offline PWA
-(Home-screen Install App button), its text contrast passes WCAG AA, and all
-planned development phases are complete.
+(Home-screen Install App button), its text contrast passes WCAG AA, and core gameplay development is feature-complete. Commercial release preparation
+is tracked separately; passing headless tests does not mean browser/device QA,
+advertising approval or Play Store publication is complete.
 
 The 2D evolution is live: a story mode with three regions (Crystal Forest,
 Emberfall Canyon, Starlit Summit), a small cast led by Mira, region board
@@ -104,9 +105,11 @@ special-combo, renderer/audio syntax and 27-level bot regression suite with Node
 ```bash
 node tests/game.test.js
 node tests/seo.test.js
+node tests/commercial-ui.test.js
+node tests/launch-readiness.test.js
 ```
 
-GitHub Actions runs both commands on every pull request to `main`. The Node suite also exercises `CQTest.run()` and the seeded bot; browser/device visual playtesting is a separate release check and is not implied by a passing headless suite.
+GitHub Actions runs all four commands on every pull request to `main`. The Node suite also exercises `CQTest.run()` and the seeded bot; browser/device visual playtesting is a separate release check and is not implied by a passing headless suite.
 
 ### Debug panel (dev only)
 
@@ -128,6 +131,26 @@ The Home screen also shows an in-game Install App button as soon as the browser 
 For a Play Store release, the `android/` folder holds the TWA packaging prep
 (assetlinks template + Bubblewrap guide); the required accounts, domain and
 signing are owner-side — see `android/README.md`.
+
+## Commercial launch status
+
+The intended release is both the Website/PWA at `https://gogocompany.in/crystalquest/`
+and a Google Play release packaged as a Trusted Web Activity (TWA). The Privacy
+Policy and Terms of Use are linked from the game home screen and included in the
+offline app shell. Optional push notifications require explicit opt-in and use
+Firebase/GoGo Central as described in the Privacy Policy.
+
+Advertising is deliberately disabled until a certified consent-management
+platform and approved provider are configured. The current rewarded-revive
+adapter has no provider. A TWA can display eligible web ads but does not provide
+a native AdMob rewarded SDK; native rewarded ads require a native/Capacitor
+wrapper and a separately tested bridge. See `android/README.md` for the release
+path and owner-side blockers.
+
+Before public launch, complete real-browser and Android-device QA, verify the
+production domain's root-level Digital Asset Links file, generate/sign the AAB,
+complete current Play Console declarations, and validate the live privacy/contact
+details. These steps are not covered by headless CI.
 
 ## License
 

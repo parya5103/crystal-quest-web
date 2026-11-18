@@ -3,19 +3,26 @@
    Only caches with THIS app's prefix (cq-*) are ever deleted, so other apps
    served from the same origin (e.g. arrow-out under the same domain) keep
    their own caches intact. */
-var CACHE = 'cq-v22';
+var CACHE = 'cq-v26';
 var CACHE_PREFIX = 'cq-';
 var PRECACHE = [
   './',
   'index.html',
+  'guide.html',
+  'privacy.html',
+  'terms.html',
   'styles.css',
   'manifest.json',
   'icon.svg',
+  'icon-192.png',
+  'icon-512.png',
+  'icon-512-maskable.png',
   'js/audio.js',
   'js/levels.js',
   'js/engine.js',
   'js/render.js',
   'js/ads.js',
+  'js/gogo-notifications.js',
   'js/story.js',
   'js/ui.js',
   'js/main.js',
@@ -44,10 +51,16 @@ self.addEventListener('fetch', function (e) {
   if (url.pathname.indexOf('/dev/') === 0) return;
   if (e.request.mode === 'navigate') {
     e.respondWith(fetch(e.request).then(function (res) {
-      var copy = res.clone();
-      caches.open(CACHE).then(function (cache) { cache.put('index.html', copy); });
+      if (res && res.ok) {
+        var copy = res.clone();
+        caches.open(CACHE).then(function (cache) { cache.put(e.request, copy); });
+      }
       return res;
-    }).catch(function () { return caches.match('index.html'); }));
+    }).catch(function () {
+      return caches.match(e.request, { ignoreSearch: true }).then(function (cached) {
+        return cached || caches.match('index.html');
+      });
+    }));
     return;
   }
   e.respondWith(caches.match(e.request).then(function (hit) {
