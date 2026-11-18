@@ -7,7 +7,7 @@ import java.util.Base64
 data class ImportedCrystalProgress(
  val unlocked:Int,val best:Map<Int,Int>,val stars:Map<Int,Int>,val lastLevel:Int,
  val settings:Map<String,Boolean>,val relics:Set<String>,val forestSeen:Set<String>,
- val storySeen:Set<String>,val dailyDate:String,val dailyStreak:Int,val dailyBest:Int
+ val storySeen:Set<String>,val dailyDate:String,val dailyStreak:Int,val dailyBest:Int,val rawSaveJson:String
 )
 object LegacySaveImporter{
  const val LEGACY_KEY="crystal-quest-save-v1"
@@ -44,7 +44,7 @@ object LegacySaveImporter{
    settings=settings,relics=strings(world?.get("relics")),forestSeen=strings(world?.getAsJsonObject("forest")?.get("seen")),
    storySeen=strings(world?.get("story")),dailyDate=daily?.get("date")?.takeIf{it.isJsonPrimitive}?.asString.orEmpty(),
    dailyStreak=(daily?.get("streak")?.takeIf{it.isJsonPrimitive}?.asInt?:0).coerceIn(0,3650),
-   dailyBest=(daily?.get("best")?.takeIf{it.isJsonPrimitive}?.asInt?:0).coerceAtLeast(0)
+   dailyBest=(daily?.get("best")?.takeIf{it.isJsonPrimitive}?.asInt?:0).coerceAtLeast(0),rawSaveJson=root.toString()
   )
  }
 }
