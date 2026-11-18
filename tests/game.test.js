@@ -1140,7 +1140,7 @@ test('phase 3: seeded bot sweeps all 27 levels without dead-board or illegal-mov
     assert.ok(row.wins>=1,'level '+row.level+' is solvable by the seeded bot');
     assert.equal(row.fails['dead-board']||0,0,'level '+row.level+' never deadlocks');
     assert.equal(row.fails['illegal-move']||0,0,'level '+row.level+' never emits an illegal bot move');
-    if(row.level<=10)assert.ok(row.winRate>=80,'intro level '+row.level+' remains approachable: '+row.winRate+'%');
+    assert.ok(row.winRate>=80,'campaign level '+row.level+' ('+row.name+') must meet the 80% seeded-bot approachability floor: '+row.winRate+'%');
   });
 });
 
