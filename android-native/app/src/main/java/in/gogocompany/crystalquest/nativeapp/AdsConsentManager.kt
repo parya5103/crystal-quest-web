@@ -32,7 +32,7 @@ class AdsConsentManager(private val activity:Activity){
  }
  private fun initializeIfAllowed(){
   val info=consentInformation?:return
-  if(!info.canRequestAds()||!initialized.compareAndSet(false,true)||activity.isFinishing||activity.isDestroyed)return
+  if(!info.canRequestAds()||!initialized.compareAndSet(false,true))return
   val appContext=activity.applicationContext
   val appId=appContext.getString(R.string.admob_app_id)
   Thread({
