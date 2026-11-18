@@ -56,6 +56,10 @@ import kotlinx.coroutines.flow.Flow
   if(!json.has("dailyDate"))json.addProperty("dailyDate","")
   if(!json.has("dailyStreak"))json.addProperty("dailyStreak",0)
   if(!json.has("dailyBest"))json.addProperty("dailyBest",0)
+  if(!json.has("lastDailyDate"))json.addProperty("lastDailyDate","")
+  if(!json.has("dailyCompletedDate"))json.addProperty("dailyCompletedDate","")
+  if(!json.has("isDaily"))json.addProperty("isDaily",false)
+  if(!json.has("coins"))json.addProperty("coins",0)
   val state=gson.fromJson(json,CrystalGameState::class.java)?:throw IllegalStateException("Saved Crystal Quest state is empty")
   require(state.board.size==64){"Saved Crystal Quest board must contain 64 cells"}
   require(state.level in 1..27&&state.movesRemaining in 0..40&&state.score>=0&&state.targetScore>0){"Saved Crystal Quest progress is outside valid ranges"}
@@ -66,12 +70,18 @@ import kotlinx.coroutines.flow.Flow
   val state=newLevel(imported.lastLevel).copy(
    unlockedLevel=imported.unlocked,bestStars=imported.stars,bestScores=imported.best,
    settings=imported.settings,relics=imported.relics,forestSeen=imported.forestSeen,
-   storySeen=imported.storySeen,dailyDate=imported.dailyDate,dailyStreak=imported.dailyStreak,
+   storySeen=imported.storySeen,dailyDate=imported.dailyDate.replace("-",""),lastDailyDate=imported.dailyDate.replace("-",""),dailyCompletedDate=if(imported.dailyStreak>0)imported.dailyDate.replace("-","")else "",dailyStreak=imported.dailyStreak,
    dailyBest=imported.dailyBest,legacySaveJson=imported.rawSaveJson,
    message="Browser progress imported — welcome back!"
   )
   save(state)
   return state
+ }
+ fun newDaily(dateKey:String,progress:CrystalGameState?=null):CrystalGameState{
+  val base=progress?:newLevel(1,dateKey.hashCode())
+  val daily=newLevel(1,dateKey.hashCode()).copy(isDaily=true,dailyDate=dateKey)
+  if(base.dailyCompletedDate==dateKey)return daily.copy(unlockedLevel=base.unlockedLevel,bestStars=base.bestStars,bestScores=base.bestScores,coins=base.coins,dailyStreak=base.dailyStreak,dailyBest=base.dailyBest,lastDailyDate=base.lastDailyDate,dailyCompletedDate=dateKey,isComplete=true,isWon=true,message="Today's daily challenge is already complete")
+  return daily.copy(unlockedLevel=base.unlockedLevel,bestStars=base.bestStars,bestScores=base.bestScores,coins=base.coins,dailyStreak=base.dailyStreak,dailyBest=base.dailyBest,lastDailyDate=base.lastDailyDate,dailyCompletedDate=base.dailyCompletedDate,settings=base.settings,relics=base.relics,forestSeen=base.forestSeen,storySeen=base.storySeen)
  }
  suspend fun save(state:CrystalGameState){dao.upsert(GameProgress("crystal-quest",gson.toJson(state),System.currentTimeMillis()))}
 }
