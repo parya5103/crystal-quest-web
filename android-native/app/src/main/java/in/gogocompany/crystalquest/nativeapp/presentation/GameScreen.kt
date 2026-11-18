@@ -23,8 +23,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import in.gogocompany.crystalquest.nativeapp.domain.model.*
 import in.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
 private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xFF36D7E8),Gem.ROSE to Color(0xFFFF5C8A),Gem.VERDANT to Color(0xFF42D392),Gem.VIOLET to Color(0xFF9B72F2),Gem.SOLAR to Color(0xFFFFD34E))
-@Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={},isRestoring:Boolean=false){val state by viewModel.uiState.collectAsStateWithLifecycle();val restoring by viewModel.isRestoring.collectAsStateWithLifecycle();GameScreen(state,viewModel::onEvent,privacyOptionsRequired=privacyOptionsRequired,onShowPrivacyOptions=onShowPrivacyOptions,isRestoring=restoring)}
-@Composable fun GameScreen(state:CrystalGameState,onEvent:(CrystalUiEvent)->Unit,modifier:Modifier=Modifier,privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){
+@Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){val state by viewModel.uiState.collectAsStateWithLifecycle();val restoring by viewModel.isRestoring.collectAsStateWithLifecycle();GameScreen(state,viewModel::onEvent,privacyOptionsRequired=privacyOptionsRequired,onShowPrivacyOptions=onShowPrivacyOptions,isRestoring=restoring)}
+@Composable fun GameScreen(state:CrystalGameState,onEvent:(CrystalUiEvent)->Unit,modifier:Modifier=Modifier,privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={},isRestoring:Boolean=false){
  val haptics=LocalHapticFeedback.current
  Scaffold(modifier=modifier.fillMaxSize(),containerColor=Color(0xFF10172A)){padding->
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
