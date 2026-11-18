@@ -10,9 +10,13 @@ public:
 private:
  bool onTouchBegan(cocos2d::Touch*,cocos2d::Event*);
  bool pointToCell(const cocos2d::Vec2&,gogo::crystal::Cell&) const;
+ bool loadLevel(int level);
  void redraw();
  void setStatus(const std::string&);
  gogo::crystal::Board board_{8,8};
+ int currentLevel_=1;
+ bool levelComplete_=false;
+ std::string levelName_;
  cocos2d::Vec2 boardOrigin_;
  float cellSize_=0;
  std::optional<gogo::crystal::Cell> selected_;
