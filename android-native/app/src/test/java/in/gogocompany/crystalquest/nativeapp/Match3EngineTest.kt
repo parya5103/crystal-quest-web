@@ -5,7 +5,7 @@ import org.junit.Assert.*
 import org.junit.Test
 class Match3EngineTest{
  private val engine=Match3Engine()
- @Test fun seededBoardHasNoStartingMatches(){assertTrue(engine.findMatches(engine.newGame(123).board).isEmpty())}
+ @Test fun seededBoardHasNoStartingMatches(){val board=engine.newGame(123).board;assertTrue(engine.findMatches(board).isEmpty());assertTrue(engine.hasValidMove(board))}
  @Test fun detectsHorizontalAndVerticalRuns(){val board=MutableList<Gem?>(64){null};board[0]=Gem.AMBER;board[1]=Gem.AMBER;board[2]=Gem.AMBER;board[8]=Gem.AQUA;board[16]=Gem.AQUA;board[24]=Gem.AQUA;assertEquals(setOf(0,1,2,8,16,24),engine.findMatches(board))}
  @Test fun invalidNonAdjacentMoveDoesNotConsumeMove(){val selected=engine.tap(engine.newGame(8),Cell(0,0),1);val next=engine.tap(selected,Cell(2,2),2);assertEquals(24,next.movesRemaining)}
  @Test fun deterministicSeedProducesSameBoard(){assertEquals(engine.newGame(5),engine.newGame(5))}
