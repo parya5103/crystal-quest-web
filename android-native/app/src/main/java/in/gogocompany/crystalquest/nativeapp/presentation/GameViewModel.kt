@@ -54,6 +54,7 @@ import java.util.Locale
   when(event){
    is CrystalUiEvent.TapCell->{_uiState.update{engine.tap(it,event.cell,it.score xor (it.movesRemaining*31))};saveQueue.trySend(_uiState.value)}
    CrystalUiEvent.Restart->{val current=_uiState.value;if(current.isDaily)startDaily(current.dailyDate)else openLevel(current.level)}
+   is CrystalUiEvent.SelectLevel->{if(event.level in 1.._uiState.value.unlockedLevel)openLevel(event.level)else _uiState.update{it.copy(message="Unlock level ${event.level} first")}}
    CrystalUiEvent.DailyChallenge->startDaily(SimpleDateFormat("yyyyMMdd",Locale.US).format(Date()))
    CrystalUiEvent.Continue->{
     val current=_uiState.value
