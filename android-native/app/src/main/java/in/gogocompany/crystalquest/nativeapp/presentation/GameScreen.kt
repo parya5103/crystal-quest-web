@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.presentation
+package `in`.gogocompany.crystalquest.nativeapp.presentation
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -22,8 +22,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import in.gogocompany.crystalquest.nativeapp.domain.model.*
-import in.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
+import `in`.gogocompany.crystalquest.nativeapp.domain.model.*
+import `in`.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
 private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xFF36D7E8),Gem.ROSE to Color(0xFFFF5C8A),Gem.VERDANT to Color(0xFF42D392),Gem.VIOLET to Color(0xFF9B72F2),Gem.SOLAR to Color(0xFFFFD34E),Gem.LINE_H to Color(0xFF64D7FF),Gem.LINE_V to Color(0xFF64D7FF),Gem.BOMB to Color(0xFFFF7A59),Gem.PRISM to Color(0xFFFFF0A6))
 @Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){
  val state by viewModel.uiState.collectAsStateWithLifecycle()
