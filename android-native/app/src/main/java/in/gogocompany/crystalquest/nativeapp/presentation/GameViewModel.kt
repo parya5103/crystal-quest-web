@@ -56,6 +56,7 @@ import java.util.Locale
    CrystalUiEvent.Restart->{val current=_uiState.value;if(current.isDaily)startDaily(current.dailyDate)else openLevel(current.level)}
    is CrystalUiEvent.SelectLevel->{if(event.level in 1.._uiState.value.unlockedLevel)openLevel(event.level)else _uiState.update{it.copy(message="Unlock level ${event.level} first")}}
    CrystalUiEvent.DailyChallenge->startDaily(SimpleDateFormat("yyyyMMdd",Locale.US).format(Date()))
+   CrystalUiEvent.ExitDaily->openLevel(_uiState.value.level)
    CrystalUiEvent.Continue->{
     val current=_uiState.value
     if(current.isWon&&current.isDaily)openLevel(current.level)
