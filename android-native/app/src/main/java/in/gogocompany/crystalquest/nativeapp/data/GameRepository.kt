@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
   val json=JsonParser.parseString(saved.payload).asJsonObject
   val level=(json.get("level")?.takeIf{it.isJsonPrimitive}?.asInt?:1).coerceIn(1,27)
   if(!json.has("targetScore"))json.addProperty("targetScore",engine.newLevel(level).targetScore)
+  if(!json.has("levelName"))json.addProperty("levelName",engine.newLevel(level).levelName)
   if(!json.has("isWon"))json.addProperty("isWon",false)
   val state=gson.fromJson(json,CrystalGameState::class.java)?:throw IllegalStateException("Saved Crystal Quest state is empty")
   require(state.board.size==64){"Saved Crystal Quest board must contain 64 cells"}
