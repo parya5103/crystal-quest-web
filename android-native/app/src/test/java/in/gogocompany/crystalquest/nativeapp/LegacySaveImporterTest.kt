@@ -15,7 +15,7 @@ class LegacySaveImporterTest{
  @Test fun importsBrowserExportCodeWithExactPrefix(){
   val json="""{"v":2,"unlocked":7,"lastLevel":6,"stars":{"6":3},"best":{"6":900}}"""
   val code=LegacySaveImporter.EXPORT_PREFIX+Base64.getEncoder().encodeToString(json.toByteArray(Charsets.US_ASCII))
-  val result=LegacySaveImporter.importCode(code)
+  val result=requireNotNull(LegacySaveImporter.importCode(code))
   assertEquals(7,result.unlocked);assertEquals(900,result.best[6]);assertEquals(3,result.stars[6])
  }
  @Test fun rejectsWrongPrefixAndUnsupportedSaveVersion(){
