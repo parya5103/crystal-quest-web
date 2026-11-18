@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  private val saveQueue=Channel<CrystalGameState>(Channel.CONFLATED)
  init{
   viewModelScope.launch(io){
-   try{repository.load()?.let{_uiState.value=it}}
+   try{_uiState.value=repository.load()}
    catch(cancelled:CancellationException){throw cancelled}
    catch(error:Exception){_uiState.update{it.copy(message="Could not restore saved game: ${error.message?: "unknown error"}")}}
    finally{_isRestoring.value=false}
@@ -39,15 +39,25 @@ import kotlinx.coroutines.launch
  fun onEvent(event:CrystalUiEvent){
   if(_isRestoring.value)return
   when(event){
-   is CrystalUiEvent.TapCell->_uiState.update{engine.tap(it,event.cell,it.score xor (it.movesRemaining*31))}
-   CrystalUiEvent.Restart->_uiState.update{current->engine.newLevel(current.level).copy(unlockedLevel=current.unlockedLevel,bestStars=current.bestStars)}
-   CrystalUiEvent.Continue->_uiState.update{current->
-    if(!current.isWon)current
-    else if(current.level>=27)current.copy(message="All 27 native levels completed!")
-    else engine.newLevel(current.level+1).copy(unlockedLevel=maxOf(current.unlockedLevel,current.level+1),bestStars=current.bestStars)
+   is CrystalUiEvent.TapCell->{_uiState.update{engine.tap(it,event.cell,it.score xor (it.movesRemaining*31))};saveQueue.trySend(_uiState.value)}
+   CrystalUiEvent.Restart->openLevel(_uiState.value.level)
+   CrystalUiEvent.Continue->{
+    val current=_uiState.value
+    if(current.isWon&&current.level>=27)_uiState.update{it.copy(message="All 27 native levels completed!")}
+    else if(current.isWon)openLevel(current.level+1)
    }
   }
-  saveQueue.trySend(_uiState.value)
+ }
+ private fun openLevel(level:Int){
+  val current=_uiState.value
+  viewModelScope.launch(io){
+   try{
+    val next=repository.newLevel(level).copy(unlockedLevel=current.unlockedLevel,bestStars=current.bestStars)
+    _uiState.value=next
+    saveQueue.trySend(next)
+   }catch(cancelled:CancellationException){throw cancelled}
+   catch(error:Exception){_uiState.update{it.copy(message="Could not open level: ${error.message?: "unknown error"}")}}
+  }
  }
  override fun onCleared(){saveQueue.close();super.onCleared()}
 }
