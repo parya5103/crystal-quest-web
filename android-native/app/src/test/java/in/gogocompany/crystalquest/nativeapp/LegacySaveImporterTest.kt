@@ -1,5 +1,5 @@
-package in.gogocompany.crystalquest.nativeapp
-import in.gogocompany.crystalquest.nativeapp.data.LegacySaveImporter
+package `in`.gogocompany.crystalquest.nativeapp
+import `in`.gogocompany.crystalquest.nativeapp.data.LegacySaveImporter
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.Base64
