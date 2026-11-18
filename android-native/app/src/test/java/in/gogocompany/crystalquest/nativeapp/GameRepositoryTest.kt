@@ -50,7 +50,9 @@ class GameRepositoryTest{
   assertEquals("""{"v":2}""",next.legacySaveJson)
  }
  @Test fun eachCampaignLevelGetsAStableButDistinctBoard()=runBlocking{
-  val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>(relaxed=true)
+  val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>()
+  every{catalog.get(1)} returns CrystalLevelDto(1,"Crystal Gate",13,List(8){"........"},emptyList(),listOf(4200,5400,6800),"hint")
+  every{catalog.get(2)} returns CrystalLevelDto(2,"Amber Hollow",22,List(8){"........"},emptyList(),listOf(2000,3200,4600),"hint")
   val repository=GameRepository(dao,catalog)
   val first=repository.newLevel(1)
   val second=repository.newLevel(2)
