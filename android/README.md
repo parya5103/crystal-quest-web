@@ -17,12 +17,11 @@ Candy Crush Saga is not a public open-source template. Public reporting describe
 - https://www.figma.com/customers/how-king-brings-game-design-together/
 - https://gamesbeat.com/steven-collins-interview/
 
-**Decision for GoGo:** use **Cocos Creator 3.8 LTS-compatible project architecture** as the practical, commercially usable cross-platform path. Cocos Creator uses a C++ native engine core on Android and a web runtime for H5, with TypeScript/JavaScript game scripting. It supports both Android and web publishing from a shared project:
-- https://docs.cocos.com/creator/3.8/manual/en/editor/publish/
-- https://docs.cocos.com/creator/3.8/manual/en/editor/publish/native-options
-- https://docs.cocos.com/creator/3.8/manual/en/scripting/language-support.html
+**Decision for GoGo:** use **Cocos2d-x with C++ for the Android game client**. This is the closest practical open-source direction to the C++ native-engine approach described publicly for Candy Crush Saga. Cocos2d-x is a cross-platform C++ 2D framework with native Android support, GPU-backed rendering, sprite sheets, particle systems, skeletal animation support, audio and touch input:
+- https://www.cocos.com/en/cocos2d-x
+- https://github.com/cocos2d/cocos2d-x
 
-This is **not King's proprietary engine**, and the TypeScript gameplay layer is not the same as King's private C++ codebase. It is a realistic route to native GPU-accelerated 2D rendering, sprite atlases, particles, skeletal animation, audio, touch input, and a shared Android + H5 game project without pretending the current Canvas app is already native.
+This is **not King's proprietary Fiction engine**, and it will not reproduce King's private source code or exact internals. The current Website/PWA remains live in its existing web implementation while the new Android client is developed in C++. Keep level definitions and compatibility fixtures in portable, versioned data so both clients can stay behaviorally aligned. This means the web and native clients will initially have separate runtime code; do not claim a single shared C++ codebase for browser and Android.
 
 ### Migration strategy (safe, staged)
 
@@ -41,7 +40,7 @@ The native Android build can integrate the Google Mobile Ads SDK / AdMob rewarde
 
 ## Android release requirements
 
-- [ ] Create the Cocos Creator project and prove the vertical slice on Android and H5.
+- [ ] Create a Cocos2d-x C++ Android project and prove the vertical slice on a physical Android device.
 - [ ] Port the complete game with compatibility tests for all 27 levels and existing saves.
 - [ ] Configure application ID `in.gogocompany.crystalquest` in the native Android build.
 - [ ] Configure Android target API 36 or the newer Play requirement applicable at submission.
