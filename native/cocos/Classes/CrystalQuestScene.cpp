@@ -1,6 +1,7 @@
 #include "CrystalQuestScene.h"
 #include <array>
-#include <cmath>
+#include <algorithm>
+#include <string>
 USING_NS_CC;
 using namespace gogo::crystal;
 Scene* CrystalQuestScene::createScene() {
@@ -13,13 +14,16 @@ bool CrystalQuestScene::init() {
  auto size=Director::getInstance()->getVisibleSize();
  auto origin=Director::getInstance()->getVisibleOrigin();
  auto title=Label::createWithSystemFont("CRYSTAL QUEST","Arial",34);
- title->setPosition(origin.x+size.width/2,origin.y+size.height-90); addChild(title);
- status_=Label::createWithSystemFont("Swap adjacent crystals to match 3","Arial",20);
- status_->setPosition(origin.x+size.width/2,origin.y+size.height-145); addChild(status_);
- moves_=Label::createWithSystemFont("Moves: 24","Arial",22);
- moves_->setPosition(origin.x+size.width/2,origin.y+95); addChild(moves_);
- cellSize_=std::min((size.width-44)/8.0f,(size.height-270)/8.0f);
- boardOrigin_=Vec2(origin.x+(size.width-cellSize_*8)/2,origin.y+(size.height-cellSize_*8)/2-15);
+ title->setPosition(origin.x+size.width/2,origin.y+size.height-82); addChild(title);
+ status_=Label::createWithSystemFont("Level 1 · Crystal Gate","Arial",19);
+ status_->setPosition(origin.x+size.width/2,origin.y+size.height-128); addChild(status_);
+ scoreLabel_=Label::createWithSystemFont("Score: 0 / 4200","Arial",20);
+ scoreLabel_->setPosition(origin.x+size.width/2,origin.y+size.height-166); addChild(scoreLabel_);
+ moves_=Label::createWithSystemFont("Moves: 13","Arial",22);
+ moves_->setPosition(origin.x+size.width/2,origin.y+82); addChild(moves_);
+ cellSize_=std::min((size.width-36)/8.0f,(size.height-290)/8.0f);
+ boardOrigin_=Vec2(origin.x+(size.width-cellSize_*8)/2,origin.y+(size.height-cellSize_*8)/2-10);
+ // Deterministic no-match starting board for the native vertical slice.
  for(int y=0;y<8;++y) for(int x=0;x<8;++x)
   board_.set(x,y,static_cast<Gem>(1+((x+2*y)%6)));
  redraw();
@@ -35,13 +39,25 @@ bool CrystalQuestScene::pointToCell(const Vec2& point,Cell& out) const {
  return true;
 }
 bool CrystalQuestScene::onTouchBegan(Touch* touch,Event*) {
+ if(finished_) return true;
  Cell cell{}; if(!pointToCell(touch->getLocation(),cell)) return false;
  if(!selected_) { selected_=cell; redraw(); return true; }
  const Cell first=*selected_; selected_.reset();
  if(adjacent(first,cell)&&swapIfMatch(board_,first,cell)) {
   const auto result=resolveCascades(board_,++turnSeed_);
-  --movesLeft_; moves_->setString("Moves: "+std::to_string(movesLeft_));
-  setStatus("Cleared "+std::to_string(result.cleared)+" crystals · "+std::to_string(result.cascades)+" cascade(s)");
+  --movesLeft_;
+  score_+=result.cleared*60+std::max(0,result.cascades-1)*120;
+  moves_->setString("Moves: "+std::to_string(movesLeft_));
+  scoreLabel_->setString("Score: "+std::to_string(score_)+" / "+std::to_string(scoreTarget_));
+  if(score_>=scoreTarget_) {
+   finished_=true;
+   UserDefault::getInstance()->setIntegerForKey("crystalquest.native.unlocked",2);
+   UserDefault::getInstance()->flush();
+   setStatus("Level 1 complete! Native progress saved");
+  } else if(movesLeft_<=0) {
+   finished_=true;
+   setStatus("Out of moves — restart the app to replay");
+  } else setStatus("Cleared "+std::to_string(result.cleared)+" crystals · "+std::to_string(result.cascades)+" cascade(s)");
  } else setStatus("No match — choose an adjacent pair");
  redraw(); return true;
 }
