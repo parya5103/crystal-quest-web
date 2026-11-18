@@ -48,5 +48,5 @@ For the website/PWA, web display ads can be integrated only after consent and pr
 ## Important notes
 
 - A GitHub Pages project path cannot host `/.well-known/assetlinks.json` at the domain root. The custom domain `gogocompany.in` is the intended verification host.
-- Do not hard-code a target API level from an old guide. Check the current Play Console requirement when creating the release.
+- As of 31 August 2026, new apps and app updates submitted to Google Play must target Android 16 (API level 36) or higher. Confirm the current requirement again in Play Console immediately before submission: https://support.google.com/googleplay/android-developer/answer/11926878.
 - Do not publish placeholder package IDs, certificate fingerprints, privacy contacts or unverified claims.
