@@ -49,12 +49,15 @@ class Match3EngineTest{
   assertTrue(result.board.contains(Gem.PRISM))
  }
  @Test fun swappingLineSpecialActivatesItsWholeRow(){
-  val board=MutableList<Gem?>(64){null};board[0]=Gem.LINE_H;board[1]=Gem.AMBER
+  val board=MutableList<Gem?>(64){null};board[0]=Gem.LINE_H
+  for(col in 1 until 8)board[col]=if(col%2==0)Gem.AQUA else Gem.AMBER
   val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
   assertFalse(result.board.contains(Gem.LINE_H));assertTrue(result.score>=480)
  }
  @Test fun swappingTwoLineSpecialsCreatesCrossClear(){
   val board=MutableList<Gem?>(64){null};board[0]=Gem.LINE_H;board[1]=Gem.LINE_V
+  for(col in 2 until 8)board[col]=if(col%2==0)Gem.AQUA else Gem.AMBER
+  for(row in 1 until 8)board[row*8+1]=if(row%2==0)Gem.AQUA else Gem.AMBER
   val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
   assertFalse(result.board.contains(Gem.LINE_H));assertFalse(result.board.contains(Gem.LINE_V));assertTrue(result.score>=840)
  }
