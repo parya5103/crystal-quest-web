@@ -1,0 +1,21 @@
+name: Native C++ rules
+on:
+  pull_request:
+    paths: ['native/**', '.github/workflows/native-rules.yml']
+  push:
+    branches: [main]
+    paths: ['native/**', '.github/workflows/native-rules.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure
+        run: cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build native/build --parallel 2
+      - name: Test
+        run: ctest --test-dir native/build --output-on-failure
