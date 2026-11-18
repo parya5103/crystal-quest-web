@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp
+package `in`.gogocompany.crystalquest.nativeapp
 import android.app.Activity
 import android.util.Log
 import androidx.compose.runtime.getValue
