@@ -13,7 +13,7 @@ ump = "4.0.0"
 mobileAdsNextGen = "1.6.0"
 gson = "2.13.2"
 junit = "4.13.2"
-mockk = "1.14.6"
+mockk = "1.14.12"
 turbine = "1.2.1"
 
 [libraries]
