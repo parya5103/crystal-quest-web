@@ -54,5 +54,20 @@ int main() {
  REQUIRE(resolvedA.cleared>=3 && resolvedA.cascades>=1 && resolvedA.stable);
  REQUIRE(cascadeA.cells==cascadeB.cells);
  REQUIRE(resolvedA.cleared==resolvedB.cleared && resolvedA.cascades==resolvedB.cascades);
+ Board blocked(5,5);
+ blocked.set(0,2,Gem::Red); blocked.set(1,2,Gem::Red); blocked.set(2,2,Gem::Red);
+ blocked.blockers[static_cast<std::size_t>(2*5+3)]=1;
+ blocked.blockerHp[static_cast<std::size_t>(2*5+3)]=2;
+ REQUIRE(findMatches(blocked).size()==3);
+ REQUIRE(clearMatches(blocked)==3);
+ REQUIRE(blocked.isBlocker(static_cast<std::size_t>(2*5+3)));
+ REQUIRE(blocked.blockerHp[static_cast<std::size_t>(2*5+3)]==1);
+
+ Board hole(5,5);
+ hole.active[static_cast<std::size_t>(2*5+2)]=0;
+ hole.set(1,2,Gem::Blue); hole.set(2,2,Gem::Blue); hole.set(3,2,Gem::Blue);
+ REQUIRE(findMatches(hole).empty());
+ REQUIRE(!swapIfMatch(hole,{1,2},{2,2}));
+
  return EXIT_SUCCESS;
 }
