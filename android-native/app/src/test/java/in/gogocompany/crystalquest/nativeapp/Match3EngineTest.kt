@@ -42,6 +42,13 @@ class Match3EngineTest{
   val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
   assertTrue(result.board.contains(Gem.LINE_H))
  }
+ @Test fun tShapedMatchCreatesBombSpecialAtTheIntersection(){
+  val board=MutableList<Gem?>(64){null}
+  board[16]=Gem.AQUA;board[17]=Gem.AQUA;board[18]=Gem.AMBER;board[19]=Gem.AQUA
+  board[10]=Gem.AQUA;board[26]=Gem.AQUA
+  val result=engine.tap(engine.tap(CrystalGameState(board),Cell(2,2),1),Cell(3,2),2)
+  assertTrue(result.board.contains(Gem.BOMB))
+ }
  @Test fun fiveMatchCreatesPrismSpecial(){
   val board=MutableList<Gem?>(64){null}
   board[0]=Gem.AQUA;board[1]=Gem.AMBER;board[2]=Gem.AQUA;board[3]=Gem.AQUA;board[4]=Gem.AQUA;board[5]=Gem.AQUA
