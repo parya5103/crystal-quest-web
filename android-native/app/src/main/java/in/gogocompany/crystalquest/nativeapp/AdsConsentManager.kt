@@ -24,7 +24,6 @@ class AdsConsentManager(private val activity:Activity){
   },{
    refreshPrivacyOptions();initializeIfAllowed()
   })
-  initializeIfAllowed()
  }
  private fun refreshPrivacyOptions(){
   val required=consentInformation?.privacyOptionsRequirementStatus==ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
