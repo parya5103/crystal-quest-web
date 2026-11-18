@@ -9,6 +9,11 @@ data class CrystalGameState(
  val level:Int=1,
  val levelName:String="Crystal Gate",
  val targetScore:Int=4200,
+ val star2Threshold:Int=5400,
+ val star3Threshold:Int=6800,
+ val stars:Int=0,
+ val unlockedLevel:Int=1,
+ val bestStars:Map<Int,Int> = emptyMap(),
  val message:String="Match three or more crystals",
  val isComplete:Boolean=false,
  val isWon:Boolean=false
