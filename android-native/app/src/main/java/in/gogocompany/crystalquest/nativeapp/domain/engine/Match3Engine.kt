@@ -9,7 +9,7 @@ class Match3Engine{
   private val NAMES=arrayOf("Crystal Gate","Amber Hollow","Twin Veins","Stonewatch","Frozen Shelf","Prism Descent","The Lattice","Cascade Falls","Hollow Crown","Glacier Vault","Ember Run","Shattered Span","Deep Current","Obsidian Ring","Starfall Basin","Frost Lattice","Verdant Maze","Solar Forge","Crystal Throne","Ember Warden","First Resonance","Vein Weaver","Chain Current","Resonance Array","Quiet Hollow","Harmonic Vault","The Guardian")
  }
  fun newGame(seed:Int=0xC0FFEE):CrystalGameState=newLevel(1,seed)
- fun newLevel(level:Int,seed:Int=0xC0FFEE):CrystalGameState{val safeLevel=level.coerceIn(1,27);val random=Random(seed);val cells=MutableList<Gem?>(64){null};for(row in 0 until HEIGHT)for(col in 0 until WIDTH){var gem:Gem;var attempts=0;do{gem=Gem.entries[random.nextInt(TYPES)];attempts++}while(attempts<32&&makesImmediateMatch(cells,col,row,gem));cells[index(col,row)]=gem};return CrystalGameState(cells,movesRemaining=MOVES[safeLevel-1],level=safeLevel,levelName=NAMES[safeLevel-1],targetScore=TARGETS[safeLevel-1])}
+ fun newLevel(level:Int,seed:Int=0xC0FFEE):CrystalGameState{val safeLevel=level.coerceIn(1,27);val random=Random(seed);val cells=MutableList<Gem?>(64){null};for(row in 0 until HEIGHT)for(col in 0 until WIDTH){var gem:Gem;var attempts=0;do{gem=Gem.entries[random.nextInt(TYPES)];attempts++}while(attempts<32&&makesImmediateMatch(cells,col,row,gem));cells[index(col,row)]=gem};ensurePlayable(cells,random);return CrystalGameState(cells,movesRemaining=MOVES[safeLevel-1],level=safeLevel,levelName=NAMES[safeLevel-1],targetScore=TARGETS[safeLevel-1])}
  fun tap(state:CrystalGameState,cell:Cell,seed:Int):CrystalGameState{
   if(state.isComplete||state.movesRemaining<=0||cell.column !in 0 until WIDTH||cell.row !in 0 until HEIGHT)return state
   val selected=state.selected;if(selected==null)return state.copy(selected=cell);if(selected==cell)return state.copy(selected=null)
@@ -20,6 +20,25 @@ class Match3Engine{
   while(matches.isNotEmpty()&&cascades<20){cascades++;cleared+=matches.size;matches.forEach{cells[it]=null};for(col in 0 until WIDTH){val remaining=(0 until HEIGHT).mapNotNull{row->cells[index(col,row)]};val empty=HEIGHT-remaining.size;for(row in 0 until HEIGHT)cells[index(col,row)]=if(row<empty)null else remaining[row-empty];for(row in 0 until empty)cells[index(col,row)]=Gem.entries[random.nextInt(TYPES)]};matches=findMatches(cells)}
   val moves=(state.movesRemaining-1).coerceAtLeast(0);val newScore=state.score+cleared*60;val won=newScore>=state.targetScore;val lost=!won&&moves==0
   return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won)
+ }
+ fun hasValidMove(cells:List<Gem?>):Boolean{
+  if(cells.size!=64)return false
+  for(row in 0 until HEIGHT)for(col in 0 until WIDTH){
+   val a=index(col,row)
+   if(col+1<WIDTH){val copy=cells.toMutableList();val b=index(col+1,row);val t=copy[a];copy[a]=copy[b];copy[b]=t;if(findMatches(copy).isNotEmpty())return true}
+   if(row+1<HEIGHT){val copy=cells.toMutableList();val b=index(col,row+1);val t=copy[a];copy[a]=copy[b];copy[b]=t;if(findMatches(copy).isNotEmpty())return true}
+  }
+  return false
+ }
+ private fun ensurePlayable(cells:MutableList<Gem?>,random:Random){
+  if(hasValidMove(cells))return
+  val original=cells.filterNotNull()
+  repeat(200){
+   val shuffled=original.shuffled(random)
+   for(i in cells.indices)cells[i]=shuffled.getOrNull(i)
+   if(findMatches(cells).isEmpty()&&hasValidMove(cells))return
+  }
+  for(row in 0 until HEIGHT)for(col in 0 until WIDTH)cells[index(col,row)]=Gem.entries[(col+row*2)%TYPES]
  }
  fun findMatches(cells:List<Gem?>):Set<Int>{require(cells.size==64);val found=linkedSetOf<Int>();for(row in 0 until HEIGHT){var col=0;while(col<WIDTH){val gem=cells[index(col,row)];if(gem==null){col++;continue};var end=col+1;while(end<WIDTH&&cells[index(end,row)]==gem)end++;if(end-col>=3)for(x in col until end)found+=index(x,row);col=end}};for(col in 0 until WIDTH){var row=0;while(row<HEIGHT){val gem=cells[index(col,row)];if(gem==null){row++;continue};var end=row+1;while(end<HEIGHT&&cells[index(col,end)]==gem)end++;if(end-row>=3)for(y in row until end)found+=index(col,y);row=end}};return found}
  private fun makesImmediateMatch(cells:List<Gem?>,col:Int,row:Int,gem:Gem)=(col>=2&&cells[index(col-1,row)]==gem&&cells[index(col-2,row)]==gem)||(row>=2&&cells[index(col,row-1)]==gem&&cells[index(col,row-2)]==gem)
