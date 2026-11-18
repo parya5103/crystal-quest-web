@@ -43,6 +43,7 @@ jobs:
           s=p.read_text()
           if 'namespace ' not in s:
               s=s.replace('android {', 'android {' + chr(10) + "    namespace 'org.cocos2dx.lib'", 1)
+          s=s.replace(' package="org.cocos2dx.lib"', '')
               p.write_text(s)
           PY
       - uses: actions/setup-node@v4
