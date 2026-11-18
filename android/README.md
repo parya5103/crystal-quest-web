@@ -22,7 +22,7 @@ This is a native Android application, not a Trusted Web Activity (TWA). Trusted 
 
 ## Ads and privacy
 
-Use Google's User Messaging Platform and consent-gated Google Mobile Ads SDK. Only request ads when `canRequestAds()` is true. Use test app/ad IDs during development. Production IDs, privacy disclosures, regional consent behavior, child-directed treatment and ad placements require verification before release. Never grant a reward unless the rewarded-ad callback confirms completion.
+Use Google's User Messaging Platform and consent-gated Google Mobile Ads SDK. Only request ads when `canRequestAds()` is true. Use test app/ad IDs during development. Production IDs, privacy disclosures, regional consent behavior, child-directed treatment and ad placements require verification before release. Never grant a reward unless the rewarded-ad callback confirms completion. Rewarded ads are not yet implemented; do not grant in-game rewards from ad callbacks until the rewarded-ad flow is implemented and tested.
 
 ## Build and release gates
 
