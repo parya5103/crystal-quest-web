@@ -96,6 +96,7 @@ bool CrystalQuestScene::onTouchBegan(Touch* touch,Event*) {
   --movesLeft_; score_+=result.cleared*60+std::max(0,result.cascades-1)*120;
   moves_->setString("Moves: "+std::to_string(movesLeft_));
   scoreLabel_->setString("Score: "+std::to_string(score_)+" / "+std::to_string(scoreTarget_));
+  scoreLabel_->runAction(Sequence::create(ScaleTo::create(.08f,1.07f),ScaleTo::create(.12f,1.0f),nullptr));
   if(scoreTarget_>0&&score_>=scoreTarget_) {
    levelComplete_=true;
    UserDefault::getInstance()->setIntegerForKey("crystalquest.native.level.v1",std::min(27,currentLevel_+1));
@@ -129,5 +130,6 @@ void CrystalQuestScene::redraw() {
   draw->drawSolidCircle(center,cellSize_*.34f,0,28,colours[gemIndex]);
   if(selected_&&selected_->x==x&&selected_->y==y) draw->drawCircle(center,cellSize_*.39f,0,32,true,Color4F::WHITE);
  }
- draw->setTag(900); addChild(draw,1);
+ draw->setTag(900); draw->setOpacity(0); addChild(draw,1);
+ draw->runAction(FadeTo::create(.12f,255));
 }
