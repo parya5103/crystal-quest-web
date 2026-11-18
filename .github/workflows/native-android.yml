@@ -42,8 +42,7 @@ jobs:
           p=Path('third_party/cocos2d-x/cocos/platform/android/libcocos2dx/build.gradle')
           s=p.read_text()
           if 'namespace ' not in s:
-              s=s.replace('android {', "android {
-    namespace 'org.cocos2dx.lib'", 1)
+              s=s.replace('android {', 'android {' + chr(10) + "    namespace 'org.cocos2dx.lib'", 1)
               p.write_text(s)
           PY
       - name: Build debug APK and unsigned release AAB
