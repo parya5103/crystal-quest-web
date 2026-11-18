@@ -623,6 +623,7 @@ test('PWA: manifest, service worker and guarded registration are structurally va
   assert.ok(manifest.icons.some((i) => i.src === 'icon.svg' && i.type === 'image/svg+xml' && i.sizes === 'any'), 'vector fallback icon is shipped');
   assert.ok(manifest.icons.some((i) => i.src === 'icon-192.png' && i.type === 'image/png' && i.sizes === '192x192'), '192px raster install icon is shipped');
   assert.ok(manifest.icons.some((i) => i.src === 'icon-512.png' && i.type === 'image/png' && i.sizes === '512x512'), '512px raster TWA icon is shipped');
+  assert.ok(manifest.icons.some((i) => i.src === 'icon-512-maskable.png' && i.type === 'image/png' && i.sizes === '512x512' && i.purpose === 'maskable'), 'safe-zone maskable icon is shipped');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   assert.ok(/^var CACHE = 'cq-v\d+';$/m.test(sw), 'cache name is versioned');
   assert.ok(sw.indexOf('caches.delete') >= 0, 'activate cleans old caches');
