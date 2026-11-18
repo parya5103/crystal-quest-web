@@ -9,20 +9,27 @@ import in.gogocompany.crystalquest.nativeapp.domain.model.CrystalGameState
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-@Singleton class GameRepository @Inject constructor(private val dao:GameProgressDao){
+@Singleton class GameRepository @Inject constructor(private val dao:GameProgressDao,private val catalog:CrystalLevelCatalog){
  private val gson=Gson()
  private val engine=Match3Engine()
  fun observe():Flow<GameProgress?> = dao.observe("crystal-quest")
- suspend fun load():CrystalGameState?{
-  val saved=dao.get("crystal-quest")?:return null
+ fun newLevel(level:Int,seed:Int=0xC0FFEE):CrystalGameState{
+  val spec=catalog.get(level)
+  return engine.newLevel(spec.id,seed).copy(
+   levelName=spec.name,movesRemaining=spec.moves,targetScore=spec.stars[0],
+   star2Threshold=spec.stars[1],star3Threshold=spec.stars[2]
+  )
+ }
+ suspend fun load():CrystalGameState{
+  val saved=dao.get("crystal-quest")?:return newLevel(1)
   val json=JsonParser.parseString(saved.payload).asJsonObject
   val level=(json.get("level")?.takeIf{it.isJsonPrimitive}?.asInt?:1).coerceIn(1,27)
-  if(!json.has("targetScore"))json.addProperty("targetScore",engine.newLevel(level).targetScore)
-  if(!json.has("levelName"))json.addProperty("levelName",engine.newLevel(level).levelName)
+  val levelDefaults=newLevel(level)
+  json.addProperty("targetScore",levelDefaults.targetScore)
+  json.addProperty("levelName",levelDefaults.levelName)
+  json.addProperty("star2Threshold",levelDefaults.star2Threshold)
+  json.addProperty("star3Threshold",levelDefaults.star3Threshold)
   if(!json.has("isWon"))json.addProperty("isWon",false)
-  val levelDefaults=engine.newLevel(level)
-  if(!json.has("star2Threshold"))json.addProperty("star2Threshold",levelDefaults.star2Threshold)
-  if(!json.has("star3Threshold"))json.addProperty("star3Threshold",levelDefaults.star3Threshold)
   if(!json.has("stars"))json.addProperty("stars",0)
   if(!json.has("unlockedLevel"))json.addProperty("unlockedLevel",level)
   if(!json.has("bestStars"))json.add("bestStars",JsonObject())
