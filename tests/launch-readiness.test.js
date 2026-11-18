@@ -22,10 +22,10 @@ assert.ok(/offline/i.test(privacy) && /service worker/i.test(privacy), 'privacy 
 assert.ok(/local storage/i.test(privacy), 'privacy policy must describe local browser storage');
 assert.ok(/gameplay|progress/i.test(terms), 'terms must describe the game and local progress');
 
-for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js', 'icon-192.png', 'icon-512.png']) {
+for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png']) {
   assert.ok(sw.includes("'" + asset + "'") || sw.includes('"'+asset+'"'), 'offline cache should include ' + asset);
 }
-assert.match(sw, /var CACHE = 'cq-v25';/, 'release shell cache must be bumped');
+assert.match(sw, /var CACHE = 'cq-v26';/, 'release shell cache must be bumped');
 assert.ok(sw.includes("cache.put(e.request, copy)"), 'navigation responses must be cached under their own URL');
 assert.ok(sw.includes("caches.match(e.request, { ignoreSearch: true })"), 'offline navigation must return the requested cached page before falling back to the game');
 assert.ok(!sw.includes("cache.put('index.html', copy)"), 'privacy/terms navigation must not overwrite the offline game shell');
@@ -33,8 +33,9 @@ assert.equal(manifest.start_url, './');
 assert.equal(manifest.scope, './');
 assert.ok(manifest.icons.some(i => i.src === 'icon.svg'), 'manifest must retain the shipped vector icon');
 assert.ok(manifest.icons.some(i => i.src === 'icon-192.png' && i.sizes === '192x192'), 'manifest must ship a 192px PNG icon');
-assert.ok(manifest.icons.some(i => i.src === 'icon-512.png' && i.sizes === '512x512' && i.purpose === 'maskable'), 'manifest must ship a 512px maskable PNG icon');
-for (const [file, size] of [['icon-192.png', 192], ['icon-512.png', 512]]) {
+assert.ok(manifest.icons.some(i => i.src === 'icon-512.png' && i.sizes === '512x512' && i.purpose === 'any'), 'manifest must ship a 512px PNG icon');
+assert.ok(manifest.icons.some(i => i.src === 'icon-512-maskable.png' && i.sizes === '512x512' && i.purpose === 'maskable'), 'manifest must ship a dedicated 512px maskable PNG icon');
+for (const [file, size] of [['icon-192.png', 192], ['icon-512.png', 512], ['icon-512-maskable.png', 512]]) {
   const png = fs.readFileSync(file);
   assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], file + ' must be a valid PNG');
   assert.equal(png.readUInt32BE(16), size, file + ' width must match manifest');
