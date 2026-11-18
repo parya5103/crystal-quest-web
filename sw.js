@@ -3,11 +3,14 @@
    Only caches with THIS app's prefix (cq-*) are ever deleted, so other apps
    served from the same origin (e.g. arrow-out under the same domain) keep
    their own caches intact. */
-var CACHE = 'cq-v22';
+var CACHE = 'cq-v23';
 var CACHE_PREFIX = 'cq-';
 var PRECACHE = [
   './',
   'index.html',
+  'guide.html',
+  'privacy.html',
+  'terms.html',
   'styles.css',
   'manifest.json',
   'icon.svg',
@@ -16,6 +19,7 @@ var PRECACHE = [
   'js/engine.js',
   'js/render.js',
   'js/ads.js',
+  'js/gogo-notifications.js',
   'js/story.js',
   'js/ui.js',
   'js/main.js',
