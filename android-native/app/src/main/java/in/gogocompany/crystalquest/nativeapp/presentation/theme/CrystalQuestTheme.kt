@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.presentation.theme
+package `in`.gogocompany.crystalquest.nativeapp.presentation.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
