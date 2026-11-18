@@ -43,6 +43,7 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard(if(state.isDaily)"DAILY" else "LEVEL",if(state.isDaily)state.dailyStreak.toString()+"🔥" else state.level.toString())}
    Text("COINS ${state.coins}   ·   DAILY STREAK ${state.dailyStreak}   ·   BEST ${state.dailyBest}",color=Color(0xFFFFD66B),style=MaterialTheme.typography.labelMedium)
    OutlinedButton(onClick={onEvent(CrystalUiEvent.DailyChallenge)},enabled=!isRestoring&&!state.isDaily,modifier=Modifier.fillMaxWidth()){Text("Daily Challenge")}
+   if(state.isDaily)TextButton(onClick={onEvent(CrystalUiEvent.ExitDaily)},enabled=!isRestoring,modifier=Modifier.fillMaxWidth()){Text("Back to campaign")}
    Text("Unlocked campaign levels: ${state.unlockedLevel} / 27",color=Color(0xFF9BAAC8),style=MaterialTheme.typography.labelSmall)
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically){
     OutlinedTextField(value=levelInput,onValueChange={levelInput=it.filter{ch->ch.isDigit()}.take(2)},modifier=Modifier.weight(1f),singleLine=true,label={Text("Open level")},keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
