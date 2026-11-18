@@ -11,7 +11,7 @@ The current approved implementation is **Kotlin + Jetpack Compose + Material 3**
 
 Package ID: `in.gogocompany.crystalquest`. Keep it stable after the first Play Console upload.
 
-This is a native Android application, not a Trusted Web Activity (TWA). The current Website/PWA remains separately published and must not be modified by native Android changes. Do not change any existing TWA manifest or signing identity used by other GoGo apps.
+This is a native Android application, not a Trusted Web Activity (TWA). Trusted Web Activity compatibility is intentionally kept separate: the current Website/PWA remains separately published and must not be modified by native Android changes. Do not change any existing TWA manifest or signing identity used by other GoGo apps.
 
 ## Game parity requirements
 
