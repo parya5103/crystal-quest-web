@@ -2,16 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-#define REQUIRE(x) do { if(!(x)) { std::cerr << "FAIL line " << __LINE__ << ": " #x "
-"; return EXIT_FAILURE; } } while(0)
+#define REQUIRE(x) do { if(!(x)) { std::cerr << "FAIL line " << __LINE__ << ": " #x "\\n"; return EXIT_FAILURE; } } while(0)
 int main() {
  using namespace gogo::crystal;
- Board palette(3,3);
- palette.set(0,0,Gem::Amber); palette.set(1,0,Gem::Aqua);
- palette.set(2,0,Gem::Rose); palette.set(0,1,Gem::Verdant);
- palette.set(1,1,Gem::Violet); palette.set(2,1,Gem::Solar);
- REQUIRE(palette.at(2,1)==Gem::Solar);
-
  Board palette(3,3);
  palette.set(0,0,Gem::Amber); palette.set(1,0,Gem::Aqua);
  palette.set(2,0,Gem::Rose); palette.set(0,1,Gem::Verdant);
