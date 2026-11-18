@@ -31,38 +31,38 @@ bool CrystalQuestScene::init() {
 bool CrystalQuestScene::loadLevel(int level) {
  if(level<1||level>27) { setStatus("All 27 campaign levels complete!"); return false; }
  const auto path="levels/level-"+std::to_string(level)+".json";
- const auto raw=FileUtils::getInstance()->getStringFromFile(path);
- if(raw.empty()) { setStatus("Cannot load "+path); return false; }
- rapidjson::Document doc; doc.Parse(raw.c_str());
- if(doc.HasParseError()||!doc.IsObject()||!doc.HasMember("grid")||!doc["grid"].IsArray()||
-    !doc.HasMember("moves")||!doc["moves"].IsInt()) { setStatus("Campaign level data is invalid"); return false; }
- const int height=static_cast<int>(doc["grid"].Size());
- if(height<3||height>20||!doc["grid"][0].IsArray()) { setStatus("Invalid campaign grid"); return false; }
- const int width=static_cast<int>(doc["grid"][0].Size());
+ const auto doc=FileUtils::getInstance()->getValueMapFromFile(path);
+ if(doc.empty()||!doc.count("grid")||!doc.count("moves")) { setStatus("Campaign level data is invalid"); return false; }
+ const auto grid=doc.at("grid").asValueVector();
+ if(grid.size()<3||grid.size()>20||grid[0].getType()!=Value::Type::VECTOR) { setStatus("Invalid campaign grid"); return false; }
+ const int height=static_cast<int>(grid.size()),width=static_cast<int>(grid[0].asValueVector().size());
+ if(width<3||width>20) { setStatus("Invalid campaign grid width"); return false; }
  Board next(width,height);
  for(int y=0;y<height;++y) {
-  const auto& row=doc["grid"][static_cast<rapidjson::SizeType>(y)];
-  if(!row.IsArray()||static_cast<int>(row.Size())!=width) { setStatus("Campaign grid dimensions mismatch"); return false; }
+  const auto row=grid[static_cast<std::size_t>(y)].asValueVector();
+  if(static_cast<int>(row.size())!=width) { setStatus("Campaign grid dimensions mismatch"); return false; }
   for(int x=0;x<width;++x) {
    const auto i=static_cast<std::size_t>(y*width+x);
-   const auto& cell=row[static_cast<rapidjson::SizeType>(x)];
-   if(cell.IsNull()) { next.active[i]=0; continue; }
-   if(!cell.IsObject()||!cell.HasMember("k")||!cell["k"].IsString()) { setStatus("Invalid campaign cell"); return false; }
-   const std::string kind=cell["k"].GetString();
-   if(kind=="g"&&cell.HasMember("g")&&cell["g"].IsInt()) {
-    const int gem=cell["g"].GetInt();
+   const auto& cell=row[static_cast<std::size_t>(x)];
+   if(cell.getType()==Value::Type::NONE) { next.active[i]=0; continue; }
+   if(cell.getType()!=Value::Type::MAP) { setStatus("Invalid campaign cell"); return false; }
+   const auto map=cell.asValueMap();
+   if(!map.count("k")) { setStatus("Missing campaign cell type"); return false; }
+   const auto kind=map.at("k").asString();
+   if(kind=="g"&&map.count("g")) {
+    const int gem=map.at("g").asInt();
     if(gem<0||gem>5) { setStatus("Invalid gem colour"); return false; }
     next.cells[i]=static_cast<Gem>(gem+1);
    } else if(kind=="b") {
     next.blockers[i]=1;
-    next.blockerHp[i]=cell.HasMember("hp")&&cell["hp"].IsInt()?static_cast<std::uint8_t>(std::max(1,cell["hp"].GetInt())):1;
+    next.blockerHp[i]=map.count("hp")?static_cast<std::uint8_t>(std::max(1,map.at("hp").asInt())):1;
    } else if(kind!="e") { setStatus("Unsupported campaign cell type"); return false; }
   }
  }
  board_=std::move(next); currentLevel_=level; levelComplete_=false; selected_.reset();
- movesLeft_=doc["moves"].GetInt(); score_=0;
- scoreTarget_=doc.HasMember("scoreTarget")&&doc["scoreTarget"].IsInt()?doc["scoreTarget"].GetInt():0;
- levelName_=doc.HasMember("name")&&doc["name"].IsString()?doc["name"].GetString():"Crystal Level";
+ movesLeft_=doc.at("moves").asInt(); score_=0;
+ scoreTarget_=doc.count("scoreTarget")?doc.at("scoreTarget").asInt():0;
+ levelName_=doc.count("name")?doc.at("name").asString():"Crystal Level";
  moves_->setString("Moves: "+std::to_string(movesLeft_));
  scoreLabel_->setString("Score: 0 / "+std::to_string(scoreTarget_));
  setStatus("Level "+std::to_string(level)+" · "+levelName_);
