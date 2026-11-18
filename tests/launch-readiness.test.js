@@ -25,7 +25,10 @@ assert.ok(/gameplay|progress/i.test(terms), 'terms must describe the game and lo
 for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js', 'icon-192.png', 'icon-512.png']) {
   assert.ok(sw.includes("'" + asset + "'") || sw.includes('"'+asset+'"'), 'offline cache should include ' + asset);
 }
-assert.match(sw, /var CACHE = 'cq-v24';/, 'release shell cache must be bumped');
+assert.match(sw, /var CACHE = 'cq-v25';/, 'release shell cache must be bumped');
+assert.ok(sw.includes("cache.put(e.request, copy)"), 'navigation responses must be cached under their own URL');
+assert.ok(sw.includes("caches.match(e.request, { ignoreSearch: true })"), 'offline navigation must return the requested cached page before falling back to the game');
+assert.ok(!sw.includes("cache.put('index.html', copy)"), 'privacy/terms navigation must not overwrite the offline game shell');
 assert.equal(manifest.start_url, './');
 assert.equal(manifest.scope, './');
 assert.ok(manifest.icons.some(i => i.src === 'icon.svg'), 'manifest must retain the shipped vector icon');
