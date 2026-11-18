@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.data.local
+package `in`.gogocompany.crystalquest.nativeapp.data.local
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 @Entity(tableName="game_progress") data class GameProgress(@PrimaryKey val gameId:String,val payload:String,val updatedAt:Long)
