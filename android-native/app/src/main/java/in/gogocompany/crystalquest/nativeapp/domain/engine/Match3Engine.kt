@@ -18,6 +18,7 @@ class Match3Engine{
   var matches=findMatches(cells);if(matches.isEmpty())return state.copy(selected=null,message="No match — try another pair")
   val random=Random(seed);var cleared=0;var cascades=0
   while(matches.isNotEmpty()&&cascades<20){cascades++;cleared+=matches.size;matches.forEach{cells[it]=null};for(col in 0 until WIDTH){val remaining=(0 until HEIGHT).mapNotNull{row->cells[index(col,row)]};val empty=HEIGHT-remaining.size;for(row in 0 until HEIGHT)cells[index(col,row)]=if(row<empty)null else remaining[row-empty];for(row in 0 until empty)cells[index(col,row)]=Gem.entries[random.nextInt(TYPES)]};matches=findMatches(cells)}
+  ensurePlayable(cells,random)
   val moves=(state.movesRemaining-1).coerceAtLeast(0);val newScore=state.score+cleared*60;val won=newScore>=state.targetScore;val lost=!won&&moves==0
   return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won)
  }
