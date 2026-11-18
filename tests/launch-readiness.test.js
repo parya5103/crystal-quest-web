@@ -21,7 +21,7 @@ assert.ok(/offline/i.test(privacy) && /service worker/i.test(privacy), 'privacy 
 assert.ok(/local storage/i.test(privacy), 'privacy policy must describe local browser storage');
 assert.ok(/gameplay|progress/i.test(terms), 'terms must describe the game and local progress');
 
-for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js', 'js/gogo-notifications.js']) {
+for (const asset of ['guide.html', 'privacy.html', 'terms.html', 'js/gogo-notifications.js']) {
   assert.ok(sw.includes("'" + asset + "'") || sw.includes('"'+asset+'"'), 'offline cache should include ' + asset);
 }
 assert.match(sw, /var CACHE = 'cq-v23';/, 'release shell cache must be bumped');
