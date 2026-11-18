@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
  private val _uiState=MutableStateFlow(engine.newGame())
  val uiState=_uiState.asStateFlow()
  private val _isRestoring=MutableStateFlow(true)
+ private val _importMessage=MutableStateFlow("")
+ val importMessage=_importMessage.asStateFlow()
  val isRestoring=_isRestoring.asStateFlow()
  private val saveQueue=Channel<CrystalGameState>(Channel.CONFLATED)
  init{
@@ -34,6 +36,14 @@ import kotlinx.coroutines.launch
     catch(cancelled:CancellationException){throw cancelled}
     catch(error:Exception){_uiState.update{it.copy(message="Progress save failed: ${error.message?: "unknown error"}")}}
    }
+  }
+ }
+ fun importLegacy(code:String){
+  if(_isRestoring.value)return
+  viewModelScope.launch(io){
+   try{val imported=repository.importLegacy(code);_uiState.value=imported;saveQueue.trySend(imported);_importMessage.value="Browser progress imported successfully"}
+   catch(cancelled:CancellationException){throw cancelled}
+   catch(error:Exception){_importMessage.value="Import failed: ${error.message?: "invalid save code"}"}
   }
  }
  fun onEvent(event:CrystalUiEvent){
