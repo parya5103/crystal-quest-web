@@ -12,11 +12,11 @@ val hasReleaseSigning = listOf(releaseStorePath, releaseStorePassword, releaseKe
 
 android {
  namespace = "in.gogocompany.crystalquest.nativeapp"
- compileSdk = 37
+ compileSdk = 36
  defaultConfig {
   applicationId = "in.gogocompany.crystalquest"
   minSdk = 24
-  targetSdk = 37
+  targetSdk = 36
   versionCode = 2
   versionName = "1.1.0"
   resValue("string", "admob_app_id", (project.findProperty("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"))
