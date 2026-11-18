@@ -1,6 +1,9 @@
 package in.gogocompany.crystalquest.nativeapp.domain.engine
 import in.gogocompany.crystalquest.nativeapp.domain.model.*
 import kotlin.random.Random
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 class Match3Engine{
  companion object{
   const val WIDTH=8;const val HEIGHT=8;private const val TYPES=6
@@ -23,9 +26,20 @@ class Match3Engine{
   ensurePlayable(cells,random)
   val moves=(state.movesRemaining-1).coerceAtLeast(0);val newScore=state.score+cleared*60;val won=newScore>=state.targetScore;val lost=!won&&moves==0
   val earnedStars=if(won)when{newScore>=state.star3Threshold->3;newScore>=state.star2Threshold->2;else->1}else state.stars
-  val best=if(won)state.bestStars.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,earnedStars)}else state.bestStars
-  val bestScores=if(won)state.bestScores.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,newScore)}else state.bestScores
-  return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won,stars=earnedStars,unlockedLevel=if(won)maxOf(state.unlockedLevel,(state.level+1).coerceAtMost(27))else state.unlockedLevel,bestStars=best,bestScores=bestScores)
+  val best=if(won&&!state.isDaily)state.bestStars.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,earnedStars)}else state.bestStars
+  val bestScores=if(won&&!state.isDaily)state.bestScores.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,newScore)}else state.bestScores
+  val dailyStreak=if(won&&state.isDaily)nextDailyStreak(state.lastDailyDate,state.dailyDate,state.dailyStreak)else state.dailyStreak
+  val dailyCompleted=if(won&&state.isDaily)state.dailyDate else state.dailyCompletedDate
+  return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won&&state.isDaily->"Daily challenge complete! +25 coins";won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won,stars=earnedStars,unlockedLevel=if(won&&!state.isDaily)maxOf(state.unlockedLevel,(state.level+1).coerceAtMost(27))else state.unlockedLevel,bestStars=best,bestScores=bestScores,coins=if(won)state.coins+(if(state.isDaily)25 else 10)else state.coins,dailyStreak=dailyStreak,dailyBest=if(won&&state.isDaily)maxOf(state.dailyBest,dailyStreak)else state.dailyBest,lastDailyDate=if(won&&state.isDaily)state.dailyDate else state.lastDailyDate,dailyCompletedDate=dailyCompleted)
+ }
+ private fun nextDailyStreak(lastDate:String,currentDate:String,currentStreak:Int):Int{
+  if(lastDate==currentDate)return currentStreak
+  return runCatching{
+   val format=SimpleDateFormat("yyyyMMdd",Locale.US)
+   val last=format.parse(lastDate)?:return@runCatching 1
+   val calendar=Calendar.getInstance().apply{time=last;add(Calendar.DAY_OF_YEAR,1)}
+   if(format.format(calendar.time)==currentDate)currentStreak+1 else 1
+  }.getOrDefault(1)
  }
  fun hasValidMove(cells:List<Gem?>):Boolean{
   if(cells.size!=64)return false
