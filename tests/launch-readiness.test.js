@@ -49,4 +49,14 @@ assert.match(android, /privacy policy/i);
 assert.ok(!/API 34\+ at time of writing/i.test(android), 'Play target API guidance must not be stale');
 assert.ok(!page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'), 'do not load ads before certified consent is configured');
 assert.ok(page.includes('Advertisements are currently disabled'), 'current ad status must be honest');
+const renderer = read('js/render.js');
+const ui = read('js/ui.js');
+assert.match(renderer, /this\.dpr=Math\.min\(global\.devicePixelRatio\|\|1,2\)/, 'Canvas DPR must be bounded on high-density devices');
+assert.match(renderer, /this\.canvas\.width=Math\.round\(this\.cssW\*this\.dpr\)/, 'Canvas backing width must follow CSS size × DPR');
+assert.match(renderer, /this\.canvas\.height=Math\.round\(this\.cssH\*this\.dpr\)/, 'Canvas backing height must follow CSS size × DPR');
+assert.match(renderer, /this\.ctx\.setTransform\(this\.dpr,0,0,this\.dpr,0,0\)/, 'Canvas drawing coordinates must use the DPR transform');
+assert.match(renderer, /requestAnimationFrame\(this\._loop\)/, 'Renderer must use requestAnimationFrame');
+for (const event of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+  assert.ok(ui.includes('addEventListener("' + event + '"'), 'board input must handle ' + event);
+}
 console.log('Commercial launch legal and PWA readiness checks passed.');
