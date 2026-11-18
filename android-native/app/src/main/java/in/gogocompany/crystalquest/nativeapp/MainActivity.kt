@@ -1,10 +1,10 @@
-package in.gogocompany.crystalquest.nativeapp
+package `in`.gogocompany.crystalquest.nativeapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
-import in.gogocompany.crystalquest.nativeapp.presentation.GameRoute
-import in.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
+import `in`.gogocompany.crystalquest.nativeapp.presentation.GameRoute
+import `in`.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
 @AndroidEntryPoint class MainActivity:ComponentActivity(){
  private lateinit var adsConsentManager:AdsConsentManager
  override fun onCreate(savedInstanceState:Bundle?){
