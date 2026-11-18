@@ -39,7 +39,7 @@ class Match3Engine{
    for(i in cells.indices)cells[i]=shuffled.getOrNull(i)
    if(findMatches(cells).isEmpty()&&hasValidMove(cells))return
   }
-  for(row in 0 until HEIGHT)for(col in 0 until WIDTH)cells[index(col,row)]=Gem.entries[(col+row*2)%TYPES]
+  for(row in 0 until HEIGHT)for(col in 0 until WIDTH)cells[index(col,row)]=Gem.entries[(col+row*2)%TYPES]\n  cells[index(1,1)]=Gem.entries[0];cells[index(1,2)]=Gem.entries[0]
  }
  fun findMatches(cells:List<Gem?>):Set<Int>{require(cells.size==64);val found=linkedSetOf<Int>();for(row in 0 until HEIGHT){var col=0;while(col<WIDTH){val gem=cells[index(col,row)];if(gem==null){col++;continue};var end=col+1;while(end<WIDTH&&cells[index(end,row)]==gem)end++;if(end-col>=3)for(x in col until end)found+=index(x,row);col=end}};for(col in 0 until WIDTH){var row=0;while(row<HEIGHT){val gem=cells[index(col,row)];if(gem==null){row++;continue};var end=row+1;while(end<HEIGHT&&cells[index(col,end)]==gem)end++;if(end-row>=3)for(y in row until end)found+=index(col,y);row=end}};return found}
  private fun makesImmediateMatch(cells:List<Gem?>,col:Int,row:Int,gem:Gem)=(col>=2&&cells[index(col-1,row)]==gem&&cells[index(col-2,row)]==gem)||(row>=2&&cells[index(col,row-1)]==gem&&cells[index(col,row-2)]==gem)
