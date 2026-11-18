@@ -16,7 +16,7 @@ Package ID: `in.gogocompany.crystalquest`. Keep stable after first Play Console 
 - Room save/restore, including migration defaults for newly added level metadata.
 - Native **Import existing PWA progress** accepts the existing `CQSAVE2-` export code from the web game's Settings, restores campaign/best scores/stars/settings/relics/story/daily progress, and retains the original JSON snapshot. The web save remains untouched.
 - Deterministic daily score challenge, +25 coin completion reward and consecutive-day streak tracking.
-- UMP consent request, privacy-options entry point and consent-gated Google Mobile Ads Next-Gen initialization. Uses Google's test app ID; no production ad units or live ads configured.
+- UMP consent request, privacy-options entry point and consent-gated Google Mobile Ads Next-Gen initialization. Uses Google's test app ID; no production ad units or live ads configured. Rewarded ads are not yet implemented; do not grant in-game rewards from ad callbacks until the rewarded-ad flow is implemented and tested.
 
 ## Important parity gap
 The 27-level native progression is not yet a full port of the browser game. Blockers (stone/ice/obsidian/cages), special gem types and combinations, collect/clear/resonance objectives, Guardian sequences, Relics, story triggers, daily challenge, booster economy, guardian encounters, resonance mechanics, and complete browser import/export UX still need implementation and compatibility tests against `js/levels.js` and `js/engine.js`. Do not mark campaign parity complete until these are implemented and tested.
