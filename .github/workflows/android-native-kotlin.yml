@@ -27,7 +27,7 @@ jobs:
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           test -x "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses || true
-          "$SDKMANAGER" --install "platforms;android-37" "build-tools;37.0.0"
+          "$SDKMANAGER" --install "platforms;android-37.0" "build-tools;37.0.0"
       - name: Test and build
         working-directory: android-native
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:bundleRelease
