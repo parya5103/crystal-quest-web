@@ -36,8 +36,10 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
  Scaffold(modifier=modifier.fillMaxSize(),containerColor=Color(0xFF10172A)){padding->
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
    Spacer(Modifier.height(8.dp));Text("CRYSTAL QUEST",style=MaterialTheme.typography.headlineMedium,color=Color.White)
-   Text(state.levelName,style=MaterialTheme.typography.titleMedium,color=Color(0xFFFFD66B))
-   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard("LEVEL",state.level.toString())}
+   Text(if(state.isDaily)"DAILY CHALLENGE" else state.levelName,style=MaterialTheme.typography.titleMedium,color=Color(0xFFFFD66B))
+   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard(if(state.isDaily)"DAILY" else "LEVEL",if(state.isDaily)state.dailyStreak.toString()+"🔥" else state.level.toString())}
+   Text("COINS ${state.coins}   ·   DAILY STREAK ${state.dailyStreak}   ·   BEST ${state.dailyBest}",color=Color(0xFFFFD66B),style=MaterialTheme.typography.labelMedium)
+   OutlinedButton(onClick={onEvent(CrystalUiEvent.DailyChallenge)},enabled=!isRestoring&&!state.isDaily,modifier=Modifier.fillMaxWidth()){Text("Daily Challenge")}
    Text(if(isRestoring)"Restoring your progress…" else state.message,color=if(state.isWon)Color(0xFFFFD66B)else Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
    LinearProgressIndicator(progress={(state.score.toFloat()/state.targetScore.coerceAtLeast(1)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth(),color=Color(0xFFFFD66B),trackColor=Color(0xFF34415E))
    Text("Goal: ${state.targetScore} points   ·   Best: ${state.bestStars[state.level]?:0} ★   ·   Earned: ${state.stars} ★",color=Color(0xFF9BAAC8),style=MaterialTheme.typography.labelMedium)
@@ -46,7 +48,7 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
      Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(9.dp)).background(color).border(if(selected)3.dp else 1.dp,if(selected)Color(0xFFFFE28A)else Color(0x334B5E83),RoundedCornerShape(9.dp)).clickable(enabled=!isRestoring&&!state.isComplete){haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove);onEvent(CrystalUiEvent.TapCell(Cell(col,row)))},contentAlignment=Alignment.Center){if(gem!=null)Text(listOf("◆","✦","●","✿","✧","✺")[gem.ordinal],color=Color(0xFF172039),style=MaterialTheme.typography.titleMedium)}
     }}
    }
-   if(state.isWon)Button(onClick={onEvent(CrystalUiEvent.Continue)},enabled=!isRestoring&&state.level<27,modifier=Modifier.fillMaxWidth()){Text(if(state.level<27)"Continue to Level ${state.level+1}" else "Campaign complete")}
+   if(state.isWon)Button(onClick={onEvent(CrystalUiEvent.Continue)},enabled=!isRestoring&&(state.isDaily||state.level<27),modifier=Modifier.fillMaxWidth()){Text(if(state.isDaily)"Return to campaign" else if(state.level<27)"Continue to Level ${state.level+1}" else "Campaign complete")}
    Button(onClick={onEvent(CrystalUiEvent.Restart)},enabled=!isRestoring,modifier=Modifier.fillMaxWidth()){Text(if(state.isComplete&&!state.isWon)"Retry level" else "Restart level")}
    TextButton(onClick={showImport=!showImport},enabled=!isRestoring){Text(if(showImport)"Close progress import" else "Import existing PWA progress")}
    if(showImport){
