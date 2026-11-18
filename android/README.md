@@ -40,6 +40,10 @@ The current live web game deliberately keeps ads disabled. Do not enable ads unt
 
 The planned native Android build can integrate the Google Mobile Ads SDK / AdMob rewarded ads through a supported native integration after consent, privacy disclosures and test-ad verification. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
 
+## Privacy and store disclosures
+
+Before release, publish and link the game's Privacy Policy and support contact. Keep the Play Store Data safety form, content rating, ads declaration and in-app disclosures consistent with the actual SDKs and data collected. No ad SDK may initialize before the required consent flow.
+
 ## Android release requirements
 
 - [ ] Create a Cocos2d-x C++ Android project and prove the vertical slice on a physical Android device.
