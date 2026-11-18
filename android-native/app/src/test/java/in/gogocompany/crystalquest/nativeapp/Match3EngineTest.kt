@@ -1,6 +1,6 @@
-package in.gogocompany.crystalquest.nativeapp
-import in.gogocompany.crystalquest.nativeapp.domain.engine.Match3Engine
-import in.gogocompany.crystalquest.nativeapp.domain.model.*
+package `in`.gogocompany.crystalquest.nativeapp
+import `in`.gogocompany.crystalquest.nativeapp.domain.engine.Match3Engine
+import `in`.gogocompany.crystalquest.nativeapp.domain.model.*
 import org.junit.Assert.*
 import org.junit.Test
 class Match3EngineTest{
