@@ -7,6 +7,7 @@ data class CrystalGameState(
  val score:Int=0,
  val movesRemaining:Int=13,
  val level:Int=1,
+ val levelName:String="Crystal Gate",
  val targetScore:Int=4200,
  val message:String="Match three or more crystals",
  val isComplete:Boolean=false,
