@@ -31,6 +31,12 @@ assert.equal(manifest.scope, './');
 assert.ok(manifest.icons.some(i => i.src === 'icon.svg'), 'manifest must retain the shipped vector icon');
 assert.ok(manifest.icons.some(i => i.src === 'icon-192.png' && i.sizes === '192x192'), 'manifest must ship a 192px PNG icon');
 assert.ok(manifest.icons.some(i => i.src === 'icon-512.png' && i.sizes === '512x512' && i.purpose === 'maskable'), 'manifest must ship a 512px maskable PNG icon');
+for (const [file, size] of [['icon-192.png', 192], ['icon-512.png', 512]]) {
+  const png = fs.readFileSync(file);
+  assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10], file + ' must be a valid PNG');
+  assert.equal(png.readUInt32BE(16), size, file + ' width must match manifest');
+  assert.equal(png.readUInt32BE(20), size, file + ' height must match manifest');
+}
 assert.ok(page.includes('apple-touch-icon') && page.includes('icon-192.png'), 'iOS install must have a raster touch icon');
 assert.match(android, /Trusted Web Activity/i);
 assert.match(android, /rewarded ads/i);
