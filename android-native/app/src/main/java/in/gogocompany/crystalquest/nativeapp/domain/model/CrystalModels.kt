@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.domain.model
+package `in`.gogocompany.crystalquest.nativeapp.domain.model
 enum class Gem(val isSpecial:Boolean=false){AMBER,AQUA,ROSE,VERDANT,VIOLET,SOLAR,LINE_H(true),LINE_V(true),BOMB(true),PRISM(true)}
 data class Cell(val column:Int,val row:Int)
 data class CrystalGameState(
