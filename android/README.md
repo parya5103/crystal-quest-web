@@ -3,25 +3,25 @@
 Crystal Quest has two intended release targets:
 
 1. **Website + PWA:** keep the currently published browser game at https://gogocompany.in/crystalquest/ available throughout the native-engine transition.
-2. **Google Play:** build a true native 2D game client, not a website-only TWA wrapper.
+2. **Google Play:** develop a true native 2D Android game client; do not replace the browser game with a website-only TWA wrapper.
 
 ## Approved permanent Android application ID
 
 `in.gogocompany.crystalquest`
 
-This ID is the intended permanent Play Store application ID. Do not change it after the first Play Console upload. The Play App Signing certificate fingerprint and root Digital Asset Links file must be added only after the actual signing setup is created.
+This is the intended permanent Play Store application ID. Do not change it after the first Play Console upload. The Play App Signing certificate fingerprint and root Digital Asset Links file must be added only after the actual signing setup is created.
 
-## Technology direction: Candy Crush-class 2D architecture
+## Proposed technology direction: Candy Crush-class 2D architecture
 
 Candy Crush Saga is not a public open-source template. Public reporting describes King's long-running game technology as its proprietary Fiction / Fiction Factory cross-platform C++ engine. Some historical development workflows also used Unity and other internal tools; there is no public basis to claim one exact engine for every Candy Crush release. References:
 - https://www.figma.com/customers/how-king-brings-game-design-together/
 - https://gamesbeat.com/steven-collins-interview/
 
-**Decision for GoGo:** use **Cocos2d-x with C++ for the Android game client**. This is the closest practical open-source direction to the C++ native-engine approach described publicly for Candy Crush Saga. Cocos2d-x is a cross-platform C++ 2D framework with native Android support, GPU-backed rendering, sprite sheets, particle systems, skeletal animation support, audio and touch input:
+**GoGo's approved direction:** use **Cocos2d-x with C++ for the planned Android game client**. This is a practical open-source direction for a native C++ 2D game. Cocos2d-x is a cross-platform C++ 2D framework with native Android support, GPU-backed rendering, sprite sheets, particle systems, skeletal animation support, audio and touch input:
 - https://www.cocos.com/en/cocos2d-x
 - https://github.com/cocos2d/cocos2d-x
 
-This is **not King's proprietary Fiction engine**, and it will not reproduce King's private source code or exact internals. The current Website/PWA remains live in its existing web implementation while the new Android client is developed in C++. Keep level definitions and compatibility fixtures in portable, versioned data so both clients can stay behaviorally aligned. This means the web and native clients will initially have separate runtime code; do not claim a single shared C++ codebase for browser and Android.
+This is **not King's proprietary Fiction engine**, and it will not reproduce King's private source code or exact internals. The current Website/PWA remains live in its existing web implementation while the proposed Android client is developed separately in C++. Keep level definitions and compatibility fixtures in portable, versioned data so both clients can stay behaviorally aligned. The web and planned native clients will initially have separate runtime code; do not claim a single shared C++ codebase for browser and Android.
 
 ### Migration strategy (safe, staged)
 
@@ -36,7 +36,7 @@ This is **not King's proprietary Fiction engine**, and it will not reproduce Kin
 
 The current live web game deliberately keeps ads disabled. Do not enable ads until a certified CMP, correct regional consent flow, verified publisher/slot IDs and policy review are complete.
 
-The native Android build can integrate the Google Mobile Ads SDK / AdMob rewarded ads through a supported native integration after consent, privacy disclosures and test-ad verification. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
+The planned native Android build can integrate the Google Mobile Ads SDK / AdMob rewarded ads through a supported native integration after consent, privacy disclosures and test-ad verification. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
 
 ## Android release requirements
 
@@ -51,4 +51,4 @@ The native Android build can integrate the Google Mobile Ads SDK / AdMob rewarde
 
 ## Current status
 
-This document records the approved package ID and native-engine direction. It does **not** claim that a Cocos project, Android Studio project, signed AAB, AdMob integration, Play Console listing or device QA has already been completed. Those are implementation and release gates.
+This document records the approved package ID and proposed native-engine direction. It does **not** claim that a Cocos project, Android Studio project, signed AAB, AdMob integration, Play Console listing or device QA has already been completed. Those are implementation and release gates. The repository currently contains a dependency-light C++ gameplay-logic test foundation only.
