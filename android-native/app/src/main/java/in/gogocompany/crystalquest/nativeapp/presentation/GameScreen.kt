@@ -19,8 +19,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import in.gogocompany.crystalquest.nativeapp.domain.model.*
 import in.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
 private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xFF36D7E8),Gem.ROSE to Color(0xFFFF5C8A),Gem.VERDANT to Color(0xFF42D392),Gem.VIOLET to Color(0xFF9B72F2),Gem.SOLAR to Color(0xFFFFD34E))
-@Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel()){val state by viewModel.uiState.collectAsStateWithLifecycle();GameScreen(state,viewModel::onEvent)}
-@Composable fun GameScreen(state:CrystalGameState,onEvent:(CrystalUiEvent)->Unit,modifier:Modifier=Modifier){
+@Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){val state by viewModel.uiState.collectAsStateWithLifecycle();GameScreen(state,viewModel::onEvent,privacyOptionsRequired=privacyOptionsRequired,onShowPrivacyOptions=onShowPrivacyOptions)}
+@Composable fun GameScreen(state:CrystalGameState,onEvent:(CrystalUiEvent)->Unit,modifier:Modifier=Modifier,privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){
  Scaffold(modifier=modifier.fillMaxSize(),containerColor=Color(0xFF10172A)){padding->
   Column(Modifier.fillMaxSize().padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
    Spacer(Modifier.height(8.dp));Text("CRYSTAL QUEST",style=MaterialTheme.typography.headlineMedium,color=Color.White)
@@ -32,6 +32,7 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
     }}
    }
    Button(onClick={onEvent(CrystalUiEvent.Restart)},modifier=Modifier.fillMaxWidth()){Text("Restart level")}
+   if(privacyOptionsRequired)TextButton(onClick=onShowPrivacyOptions){Text("Privacy options",color=Color(0xFFB8C6E5))}
    Text("Swap adjacent crystals to make a match of three or more.",color=Color(0xFF8494B6),style=MaterialTheme.typography.bodySmall)
   }
  }
