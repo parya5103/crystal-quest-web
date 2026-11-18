@@ -17,6 +17,7 @@ mockk = "1.14.12"
 turbine = "1.2.1"
 
 [libraries]
+androidx-compose-animation = { module = "androidx.compose.animation:animation" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }
