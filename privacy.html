@@ -31,7 +31,7 @@
   <p>The optional save-code feature lets you export progress. The code remains under your control unless you choose to share it. Anyone who obtains a valid save code may be able to import that progress into another copy of the game.</p>
 
   <h2>2. Optional push notifications</h2>
-  <p>Push notifications are optional and are not enabled by default. If you choose Enable in the game's notification settings and grant your browser permission, the game may load Firebase web messaging components and use Firebase Anonymous Authentication and Firebase Cloud Messaging.</p>
+  <p>Push notifications are optional and are not enabled by default. You must explicitly enable notifications in the game's notification settings and grant your browser permission before the game may load Firebase web messaging components and use Firebase Anonymous Authentication and Firebase Cloud Messaging.</p>
   <p>To register and manage an opted-in device, the game sends GoGo Central the app identifier, Firebase messaging device token, platform, browser user agent and notification preferences. The backend endpoint is <code>https://gogo-central-backend.onrender.com</code>. The user agent can contain browser and device information. Firebase and the backend infrastructure process the information needed to authenticate the anonymous installation, deliver notifications and manage the device registration.</p>
   <p>You can turn notifications off in the game's notification settings or revoke notification permission in your browser or device settings. Uninstalling the PWA or clearing site data may remove local preferences; it may not by itself revoke a server-side device registration.</p>
 
