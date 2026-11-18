@@ -36,7 +36,7 @@ For the website/PWA, web display ads can be integrated only after consent and pr
 
 ## Release blockers to close
 
-- [ ] Confirm legal publisher/controller name and a real privacy contact channel.
+- [ ] Confirm the legal publisher/controller name and verify that officialgogocompany@gmail.com is monitored for privacy requests.
 - [ ] Publish and review the Privacy Policy and Terms pages.
 - [ ] Confirm final package name and Play App Signing certificate.
 - [ ] Publish and verify root-level Digital Asset Links.
