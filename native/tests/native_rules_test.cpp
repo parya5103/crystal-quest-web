@@ -68,6 +68,7 @@ int main() {
  hole.set(1,2,Gem::Blue); hole.set(2,2,Gem::Blue); hole.set(3,2,Gem::Blue);
  REQUIRE(findMatches(hole).empty());
  REQUIRE(!swapIfMatch(hole,{1,2},{2,2}));
+ REQUIRE(!swapIfMatch(hole,{0,0},{1,0}));
 
  return EXIT_SUCCESS;
 }
