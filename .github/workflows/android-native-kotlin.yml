@@ -25,9 +25,11 @@ jobs:
         run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
       - name: Test and build
         working-directory: android-native
-        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:bundleRelease
       - uses: actions/upload-artifact@v4
         with:
-          name: crystal-quest-native-debug-apk
-          path: android-native/app/build/outputs/apk/debug/*.apk
+          name: crystal-quest-native-apk-aab
+          path: |
+            android-native/app/build/outputs/apk/debug/*.apk
+            android-native/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
