@@ -1144,5 +1144,17 @@ test('phase 3: seeded bot sweeps all 27 levels without dead-board or illegal-mov
   });
 });
 
+test('ad consent gate: no ad network request or false live-ad disclosure before CMP integration', () => {
+  const page = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(!page.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'),
+    'AdSense loader must not run before a certified consent integration exists');
+  assert.ok(!page.includes('class="ad-slot"'),
+    'no empty or undisclosed ad slot is presented while ads are disabled');
+  assert.ok(page.includes('Advertisements are currently disabled'),
+    'privacy disclosure must accurately state the current ad status');
+  assert.ok(!page.includes('A labelled advertisement appears on the main menu'),
+    'do not claim an ad is live when the CMP gate is closed');
+});
+ 
 console.log(`\n${passed.length} regression groups passed.`);
 
