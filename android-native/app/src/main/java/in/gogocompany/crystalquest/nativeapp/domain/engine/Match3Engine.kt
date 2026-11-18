@@ -24,7 +24,8 @@ class Match3Engine{
   val moves=(state.movesRemaining-1).coerceAtLeast(0);val newScore=state.score+cleared*60;val won=newScore>=state.targetScore;val lost=!won&&moves==0
   val earnedStars=if(won)when{newScore>=state.star3Threshold->3;newScore>=state.star2Threshold->2;else->1}else state.stars
   val best=if(won)state.bestStars.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,earnedStars)}else state.bestStars
-  return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won,stars=earnedStars,unlockedLevel=if(won)maxOf(state.unlockedLevel,(state.level+1).coerceAtMost(27))else state.unlockedLevel,bestStars=best)
+  val bestScores=if(won)state.bestScores.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,newScore)}else state.bestScores
+  return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won,stars=earnedStars,unlockedLevel=if(won)maxOf(state.unlockedLevel,(state.level+1).coerceAtMost(27))else state.unlockedLevel,bestStars=best,bestScores=bestScores)
  }
  fun hasValidMove(cells:List<Gem?>):Boolean{
   if(cells.size!=64)return false
