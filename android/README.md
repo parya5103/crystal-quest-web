@@ -1,52 +1,55 @@
-# Android packaging and Google Play release
+# Android packaging and native-engine release
 
-Crystal Quest has two release targets:
+Crystal Quest has two intended release targets:
 
-1. **Website + PWA:** the static web game at https://gogocompany.in/crystalquest/ with installability and offline caching.
-2. **Google Play:** package the same hosted experience as an Android Trusted Web Activity (TWA) using Bubblewrap.
+1. **Website + PWA:** keep the currently published browser game at https://gogocompany.in/crystalquest/ available throughout the native-engine transition.
+2. **Google Play:** build a true native 2D game client, not a website-only TWA wrapper.
 
-The repository contains packaging preparation only. It is not yet a signed Android project or a Play Store submission.
+## Approved permanent Android application ID
 
-## TWA approach
+`in.gogocompany.crystalquest`
 
-A TWA keeps the game running as the hosted website inside a verified Android browser experience. It avoids maintaining a separate native gameplay implementation and keeps the web and Android releases on the same codebase.
+This ID is the intended permanent Play Store application ID. Do not change it after the first Play Console upload. The Play App Signing certificate fingerprint and root Digital Asset Links file must be added only after the actual signing setup is created.
 
-A TWA can render web-page advertising when the website's provider, consent flow and policies allow it. It does **not** expose the native Google Mobile Ads SDK to page JavaScript. The existing `CQAds` rewarded-revive adapter therefore remains unavailable in a TWA unless a compatible web rewarded provider is integrated. If native AdMob rewarded ads are a launch requirement, use a Capacitor/native Android wrapper and implement/test the native bridge instead of pretending the current adapter is live.
+## Technology direction: Candy Crush-class 2D architecture
 
-## Required owner-side setup
+Candy Crush Saga is not a public open-source template. Public reporting describes King's long-running game technology as its proprietary Fiction / Fiction Factory cross-platform C++ engine. Some historical development workflows also used Unity and other internal tools; there is no public basis to claim one exact engine for every Candy Crush release. References:
+- https://www.figma.com/customers/how-king-brings-game-design-together/
+- https://gamesbeat.com/steven-collins-interview/
 
-1. Create or use a Google Play developer account and complete its identity/account verification.
-2. Choose and permanently confirm the Android application ID/package name.
-3. Install Node.js and Bubblewrap CLI in a trusted desktop or Termux environment.
-4. The manifest includes 192x192 and 512x512 PNG launcher icons (including a dedicated safe-zone maskable 512 icon) for PWA install and Bubblewrap packaging. Bubblewrap requires a launcher icon of at least 512x512 pixels. Initialize it from the production manifest:
-   `bubblewrap init --manifest https://gogocompany.in/crystalquest/manifest.json`
-5. Generate a signed Android App Bundle (AAB) and record the **Play App Signing** SHA-256 certificate fingerprint from Play Console.
-6. Replace the placeholders in `ASSETLINKS.template.json` and publish the final JSON at:
-   `https://gogocompany.in/.well-known/assetlinks.json`
-   This must be served from the domain root, not from `/crystalquest/`.
-7. Verify Digital Asset Links and launch the TWA on a physical Android device.
-8. Prepare Play Store listing assets, screenshots, app description, content rating and Data safety declarations.
-9. Upload to internal testing first; test install, launch, offline behavior, navigation, back button, status/navigation bars, notifications and updates before any production rollout.
+**Decision for GoGo:** use **Cocos Creator 3.8 LTS-compatible project architecture** as the practical, commercially usable cross-platform path. Cocos Creator uses a C++ native engine core on Android and a web runtime for H5, with TypeScript/JavaScript game scripting. It supports both Android and web publishing from a shared project:
+- https://docs.cocos.com/creator/3.8/manual/en/editor/publish/
+- https://docs.cocos.com/creator/3.8/manual/en/editor/publish/native-options
+- https://docs.cocos.com/creator/3.8/manual/en/scripting/language-support.html
 
-## Website/PWA monetization vs Play Store
+This is **not King's proprietary engine**, and the TypeScript gameplay layer is not the same as King's private C++ codebase. It is a realistic route to native GPU-accelerated 2D rendering, sprite atlases, particles, skeletal animation, audio, touch input, and a shared Android + H5 game project without pretending the current Canvas app is already native.
 
-The current game deliberately keeps all ads disabled. The AdSense loader is not present in the page, the consent-management platform is not configured, and no rewarded provider is registered. Do not remove this fail-closed behavior until a certified CMP, correct region-specific consent configuration, verified publisher/slot IDs and policy review are complete.
+### Migration strategy (safe, staged)
 
-For the website/PWA, web display ads can be integrated only after consent and provider approval. For a TWA, web ads remain subject to the same website policy and consent requirements. Native AdMob rewarded ads require a native wrapper such as Capacitor plus a tested native bridge; they are not supplied by the current TWA.
+- Keep the current live web/PWA build working while the new engine project is developed separately.
+- First port a single playable vertical slice: board rendering, touch swap, match detection, cascades, scoring, move count, win/loss, audio and save/load.
+- Preserve the current 27-level data, level IDs, game rules, progression, relics, Guardian encounters, daily challenge and existing player save/export compatibility. Add explicit migration tests before replacing any production save path.
+- Create a visual asset pipeline for original Crystal Quest art: high-resolution gem sprites, atlas packing, particle effects, polished UI, transitions, sound and haptics. Do not copy Candy Crush artwork, sounds, branding, level layouts or other copyrighted assets.
+- Compare the native Android build and H5 build on real devices and browsers before switching the live PWA.
+- Only promote the Cocos build to production after parity, performance, accessibility, save migration and offline tests pass.
 
-## Release blockers to close
+## Ads and monetization
 
-- [ ] Confirm the legal publisher/controller name and verify that officialgogocompany@gmail.com is monitored for privacy requests.
-- [ ] Publish and review the Privacy Policy and Terms pages.
-- [ ] Confirm final package name and Play App Signing certificate.
-- [ ] Publish and verify root-level Digital Asset Links.
-- [ ] Generate and sign the AAB; verify the bundle on real devices.
-- [ ] Complete Play Console declarations and testing requirements using the rules current at submission time.
-- [ ] Decide whether Android release is a TWA (web ads only) or a native/Capacitor app (native AdMob possible).
-- [ ] Perform physical-device QA on supported Android versions and screen sizes.
+The current live web game deliberately keeps ads disabled. Do not enable ads until a certified CMP, correct regional consent flow, verified publisher/slot IDs and policy review are complete.
 
-## Important notes
+The native Android build can integrate the Google Mobile Ads SDK / AdMob rewarded ads through a supported native integration after consent, privacy disclosures and test-ad verification. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
 
-- A GitHub Pages project path cannot host `/.well-known/assetlinks.json` at the domain root. The custom domain `gogocompany.in` is the intended verification host.
-- As of 31 August 2026, new apps and app updates submitted to Google Play must target Android 16 (API level 36) or higher. Confirm the current requirement again in Play Console immediately before submission: https://support.google.com/googleplay/android-developer/answer/11926878.
-- Do not publish placeholder package IDs, certificate fingerprints, privacy contacts or unverified claims.
+## Android release requirements
+
+- [ ] Create the Cocos Creator project and prove the vertical slice on Android and H5.
+- [ ] Port the complete game with compatibility tests for all 27 levels and existing saves.
+- [ ] Configure application ID `in.gogocompany.crystalquest` in the native Android build.
+- [ ] Configure Android target API 36 or the newer Play requirement applicable at submission.
+- [ ] Generate a signed AAB and record the Play App Signing SHA-256 certificate fingerprint.
+- [ ] Publish and verify Digital Asset Links at `https://gogocompany.in/.well-known/assetlinks.json` only if a TWA is retained for any separate web-shell use. A native Cocos app does not need TWA verification to launch its game.
+- [ ] Integrate and test native AdMob only after consent and policy setup.
+- [ ] Complete Play Store listing, content rating, Data safety, internal testing and physical-device QA.
+
+## Current status
+
+This document records the approved package ID and native-engine direction. It does **not** claim that a Cocos project, Android Studio project, signed AAB, AdMob integration, Play Console listing or device QA has already been completed. Those are implementation and release gates.
