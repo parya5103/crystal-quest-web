@@ -13,7 +13,7 @@ const android = read('android/README.md');
 
 for (const phrase of [
   'crystal-quest-save-v1', 'Firebase Cloud Messaging', 'Firebase Anonymous Authentication',
-  'device token', 'user agent', 'explicitly enables', 'Advertisements are currently disabled',
+  'device token', 'user agent', 'explicitly enable', 'Advertisements are currently disabled',
   'GoGo Central', 'GoGo Company'
 ]) assert.ok(privacy.toLowerCase().includes(phrase.toLowerCase()), 'privacy policy must disclose: ' + phrase);
 assert.ok(/privacy\.html/.test(page) && /terms\.html/.test(page), 'home page must link to both legal pages');
