@@ -25,7 +25,7 @@ class Match3EngineTest{
   val start=CrystalGameState(board,movesRemaining=1,targetScore=180,star2Threshold=180,star3Threshold=180)
   val selected=engine.tap(start,Cell(0,0),11)
   val result=engine.tap(selected,Cell(1,0),1234)
-  assertEquals(3,result.stars);assertEquals(2,result.unlockedLevel);assertEquals(3,result.bestStars[1])
+  assertEquals(3,result.stars);assertEquals(2,result.unlockedLevel);assertEquals(3,result.bestStars[1]);assertEquals(result.score,result.bestScores[1])
  }
  @Test fun exhaustingMovesWithoutMeetingGoalIsALoss(){
   val board=MutableList<Gem?>(64){null}
