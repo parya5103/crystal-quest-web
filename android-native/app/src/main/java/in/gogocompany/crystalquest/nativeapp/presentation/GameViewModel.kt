@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
    CrystalUiEvent.Continue->_uiState.update{current->
     if(!current.isWon)current
     else if(current.level>=27)current.copy(message="All 27 native levels completed!")
-    else engine.newLevel(current.level+1)
+    else engine.newLevel(current.level+1).copy(unlockedLevel=maxOf(current.unlockedLevel,current.level+1),bestStars=current.bestStars)
    }
   }
   saveQueue.trySend(_uiState.value)
