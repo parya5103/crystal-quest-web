@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.Flow
  fun observe():Flow<GameProgress?> = dao.observe("crystal-quest")
  fun newLevel(level:Int,seed:Int=0xC0FFEE,progress:CrystalGameState?=null):CrystalGameState{
   val spec=catalog.get(level)
-  val fresh=engine.newLevel(spec.id,seed).copy(
+  val levelSeed=seed+spec.id*104729
+  val fresh=engine.newLevel(spec.id,levelSeed).copy(
    levelName=spec.name,movesRemaining=spec.moves,targetScore=spec.stars[0],
    star2Threshold=spec.stars[1],star3Threshold=spec.stars[2]
   )
