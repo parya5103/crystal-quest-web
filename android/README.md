@@ -24,6 +24,10 @@ This is a native Android application, not a Trusted Web Activity (TWA). Trusted 
 
 Use Google's User Messaging Platform and consent-gated Google Mobile Ads SDK. Only request ads when `canRequestAds()` is true. Use test app/ad IDs during development. Production IDs, privacy disclosures, regional consent behavior, child-directed treatment and ad placements require verification before release. Never grant a reward unless the rewarded-ad callback confirms completion. Rewarded ads are not yet implemented; do not grant in-game rewards from ad callbacks until the rewarded-ad flow is implemented and tested.
 
+## Privacy policy
+
+Publish and link a public Privacy Policy before production release. It must accurately disclose Google Mobile Ads and UMP usage, consent choices, data collection/sharing, retention, contact details and applicable regional rights; do not claim a policy is live until the public URL is verified.
+
 ## Build and release gates
 
 - [ ] All 27 official levels and objectives pass deterministic compatibility tests.
