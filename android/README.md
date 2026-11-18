@@ -5,6 +5,8 @@ Crystal Quest has two intended release targets:
 1. **Website + PWA:** keep the currently published browser game at https://gogocompany.in/crystalquest/ available throughout the native-engine transition.
 2. **Google Play:** develop a true native 2D Android game client; do not replace the browser game with a website-only TWA wrapper.
 
+The current public browser app is not a **Trusted Web Activity (TWA)** migration target. This is a separate native Cocos2d-x Android game project. Keep the web/PWA delivery unchanged during native development.
+
 ## Approved permanent Android application ID
 
 `in.gogocompany.crystalquest`
@@ -21,7 +23,7 @@ Candy Crush Saga is not a public open-source template. Public reporting describe
 - https://www.cocos.com/en/cocos2d-x
 - https://github.com/cocos2d/cocos2d-x
 
-This is **not King's proprietary Fiction engine**, and it will not reproduce King's private source code or exact internals. The current Website/PWA remains live in its existing web implementation while the proposed Android client is developed separately in C++. Keep level definitions and compatibility fixtures in portable, versioned data so both clients can stay behaviorally aligned. The web and planned native clients will initially have separate runtime code; do not claim a single shared C++ codebase for browser and Android.
+This is **not King's proprietary Fiction engine**, and it will not reproduce King's private source code or exact internals. The current Website/PWA remains live in its existing web implementation while the proposed native Android client is developed separately in C++. Keep level definitions and compatibility fixtures in portable, versioned data so both clients can stay behaviorally aligned. The web and planned native clients will initially have separate runtime code; do not claim a single shared C++ codebase for browser and Android.
 
 ### Migration strategy (safe, staged)
 
