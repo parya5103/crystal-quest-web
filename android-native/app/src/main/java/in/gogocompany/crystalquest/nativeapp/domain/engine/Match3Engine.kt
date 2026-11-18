@@ -6,10 +6,12 @@ class Match3Engine{
   const val WIDTH=8;const val HEIGHT=8;private const val TYPES=6
   private val MOVES=intArrayOf(13,22,24,24,34,26,30,22,26,36,26,30,34,34,24,30,34,36,30,20,24,26,13,28,24,14,16)
   private val TARGETS=intArrayOf(4200,2000,2200,3000,3400,3600,4600,8000,7000,4800,6000,8000,7000,7000,10000,8000,9000,10000,11000,5000,2500,3200,8500,5000,3000,12000,5000)
+  private val STAR2=intArrayOf(5400,3200,3400,4400,5000,5200,6400,10500,8800,6800,8200,10500,9500,9400,13500,10500,11800,13000,14500,7500,3800,4600,11000,6800,4200,15500,7500)
+  private val STAR3=intArrayOf(6800,4600,4800,6000,6800,7000,8600,13600,11400,9000,10500,13600,12200,12400,17500,13200,15000,16500,18800,10000,5200,6200,14000,8800,5600,19500,10000)
   private val NAMES=arrayOf("Crystal Gate","Amber Hollow","Twin Veins","Stonewatch","Frozen Shelf","Prism Descent","The Lattice","Cascade Falls","Hollow Crown","Glacier Vault","Ember Run","Shattered Span","Deep Current","Obsidian Ring","Starfall Basin","Frost Lattice","Verdant Maze","Solar Forge","Crystal Throne","Ember Warden","First Resonance","Vein Weaver","Chain Current","Resonance Array","Quiet Hollow","Harmonic Vault","The Guardian")
  }
  fun newGame(seed:Int=0xC0FFEE):CrystalGameState=newLevel(1,seed)
- fun newLevel(level:Int,seed:Int=0xC0FFEE):CrystalGameState{val safeLevel=level.coerceIn(1,27);val random=Random(seed);val cells=MutableList<Gem?>(64){null};for(row in 0 until HEIGHT)for(col in 0 until WIDTH){var gem:Gem;var attempts=0;do{gem=Gem.entries[random.nextInt(TYPES)];attempts++}while(attempts<32&&makesImmediateMatch(cells,col,row,gem));cells[index(col,row)]=gem};ensurePlayable(cells,random);return CrystalGameState(cells,movesRemaining=MOVES[safeLevel-1],level=safeLevel,levelName=NAMES[safeLevel-1],targetScore=TARGETS[safeLevel-1])}
+ fun newLevel(level:Int,seed:Int=0xC0FFEE):CrystalGameState{val safeLevel=level.coerceIn(1,27);val random=Random(seed);val cells=MutableList<Gem?>(64){null};for(row in 0 until HEIGHT)for(col in 0 until WIDTH){var gem:Gem;var attempts=0;do{gem=Gem.entries[random.nextInt(TYPES)];attempts++}while(attempts<32&&makesImmediateMatch(cells,col,row,gem));cells[index(col,row)]=gem};ensurePlayable(cells,random);return CrystalGameState(cells,movesRemaining=MOVES[safeLevel-1],level=safeLevel,levelName=NAMES[safeLevel-1],targetScore=TARGETS[safeLevel-1],star2Threshold=STAR2[safeLevel-1],star3Threshold=STAR3[safeLevel-1])}
  fun tap(state:CrystalGameState,cell:Cell,seed:Int):CrystalGameState{
   if(state.isComplete||state.movesRemaining<=0||cell.column !in 0 until WIDTH||cell.row !in 0 until HEIGHT)return state
   val selected=state.selected;if(selected==null)return state.copy(selected=cell);if(selected==cell)return state.copy(selected=null)
