@@ -66,7 +66,7 @@ inline bool adjacent(Cell a,Cell b) { return std::abs(a.x-b.x)+std::abs(a.y-b.y)
 inline bool swapIfMatch(Board& b,Cell a,Cell c) {
  if(!b.valid()||!adjacent(a,c)||a.x<0||a.y<0||c.x<0||c.y<0||a.x>=b.width||c.x>=b.width||a.y>=b.height||c.y>=b.height) return false;
  const auto ia=static_cast<std::size_t>(a.y*b.width+a.x),ib=static_cast<std::size_t>(c.y*b.width+c.x);
- if(!b.isActive(ia)||!b.isActive(ib)||b.isBlocker(ia)||b.isBlocker(ib)) return false;
+ if(!b.isActive(ia)||!b.isActive(ib)||b.isBlocker(ia)||b.isBlocker(ib)||b.cells[ia]==Gem::Empty||b.cells[ib]==Gem::Empty) return false;
  std::swap(b.cells[ia],b.cells[ib]);
  if(findMatches(b).empty()) { std::swap(b.cells[ia],b.cells[ib]); return false; }
  return true;
