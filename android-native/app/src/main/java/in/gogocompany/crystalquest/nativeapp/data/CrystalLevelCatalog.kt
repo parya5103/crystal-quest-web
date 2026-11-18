@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.data
+package `in`.gogocompany.crystalquest.nativeapp.data
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.JsonObject
