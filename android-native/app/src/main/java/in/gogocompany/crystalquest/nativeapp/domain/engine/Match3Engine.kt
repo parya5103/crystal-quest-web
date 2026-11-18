@@ -102,8 +102,8 @@ class Match3Engine{
   val vertical=runs(cells,false).filter{it.size>=3&&it.any{cell->cell in matches}}
   val five=(horizontal+vertical).filter{it.size>=5}.maxByOrNull{it.size}
   if(five!=null)return SpecialMatch(five.choose(preferred),Gem.PRISM)
-  val cross=horizontal.firstOrNull{h->vertical.any{v->h.any{it in v}}}
-  if(cross!=null)return SpecialMatch(cross.choose(preferred),Gem.BOMB)
+  val crossPoint=horizontal.asSequence().flatMap{h->vertical.asSequence().flatMap{v->h.intersect(v).asSequence()}}.firstOrNull()
+  if(crossPoint!=null)return SpecialMatch(crossPoint,Gem.BOMB)
   val fourH=horizontal.firstOrNull{it.size==4}
   if(fourH!=null)return SpecialMatch(fourH.choose(preferred),Gem.LINE_H)
   val fourV=vertical.firstOrNull{it.size==4}
