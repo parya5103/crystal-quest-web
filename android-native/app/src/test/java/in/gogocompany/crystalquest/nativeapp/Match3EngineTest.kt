@@ -36,6 +36,28 @@ class Match3EngineTest{
   assertTrue(result.isWon);assertEquals(3,result.dailyStreak);assertEquals(3,result.dailyBest)
   assertEquals(25,result.coins);assertEquals("20261119",result.dailyCompletedDate);assertEquals(1,result.unlockedLevel);assertTrue(result.bestStars.isEmpty())
  }
+ @Test fun fourMatchCreatesHorizontalLineSpecial(){
+  val board=MutableList<Gem?>(64){null}
+  board[0]=Gem.AQUA;board[1]=Gem.AMBER;board[2]=Gem.AQUA;board[3]=Gem.AQUA;board[4]=Gem.AQUA
+  val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
+  assertTrue(result.board.contains(Gem.LINE_H))
+ }
+ @Test fun fiveMatchCreatesPrismSpecial(){
+  val board=MutableList<Gem?>(64){null}
+  board[0]=Gem.AQUA;board[1]=Gem.AMBER;board[2]=Gem.AQUA;board[3]=Gem.AQUA;board[4]=Gem.AQUA;board[5]=Gem.AQUA
+  val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
+  assertTrue(result.board.contains(Gem.PRISM))
+ }
+ @Test fun swappingLineSpecialActivatesItsWholeRow(){
+  val board=MutableList<Gem?>(64){null};board[0]=Gem.LINE_H;board[1]=Gem.AMBER
+  val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
+  assertFalse(result.board.contains(Gem.LINE_H));assertTrue(result.score>=480)
+ }
+ @Test fun swappingTwoLineSpecialsCreatesCrossClear(){
+  val board=MutableList<Gem?>(64){null};board[0]=Gem.LINE_H;board[1]=Gem.LINE_V
+  val result=engine.tap(engine.tap(CrystalGameState(board),Cell(0,0),1),Cell(1,0),2)
+  assertFalse(result.board.contains(Gem.LINE_H));assertFalse(result.board.contains(Gem.LINE_V));assertTrue(result.score>=840)
+ }
  @Test fun exhaustingMovesWithoutMeetingGoalIsALoss(){
   val board=MutableList<Gem?>(64){null}
   board[0]=Gem.AQUA;board[1]=Gem.AMBER;board[2]=Gem.AQUA;board[3]=Gem.AQUA
