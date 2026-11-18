@@ -28,7 +28,9 @@ This is **not King's proprietary Fiction engine**, and it will not reproduce Kin
 ### Migration strategy (safe, staged)
 
 - Keep the current live web/PWA build working while the new engine project is developed separately.
-- First port a single playable vertical slice: board rendering, touch swap, match detection, cascades, scoring, move count, win/loss, audio and save/load.
+- Native scaffold now uses a pinned Cocos2d-x v4 source revision, C++17, Gradle/AGP, Android NDK and CMake. CI builds the Android app and separately runs the native gameplay-rule tests.
+- The native scene now loads the original 27 level definitions and deterministic initial boards exported from `js/levels.js` + `js/engine.js`; it supports six gem colours, match detection, cascades, score/move objectives, blockers, irregular board cells and native-only progress persistence.
+- The first vertical slice is still a foundation: special-gem combos, Guardian/Relic/Resonance mechanics, exact RNG parity, sound assets, richer sprite animation and cross-client save import remain to be ported and tested.
 - Preserve the current 27-level data, level IDs, game rules, progression, relics, Guardian encounters, daily challenge and existing player save/export compatibility. Add explicit migration tests before replacing any production save path.
 - Create a visual asset pipeline for original Crystal Quest art: high-resolution gem sprites, atlas packing, particle effects, polished UI, transitions, sound and haptics. Do not copy Candy Crush artwork, sounds, branding, level layouts or other copyrighted assets.
 - Compare the native Android build and H5 build on real devices and browsers before switching the live PWA.
@@ -46,8 +48,9 @@ Before release, publish and link the game's Privacy Policy and support contact. 
 
 ## Android release requirements
 
-- [ ] Create a Cocos2d-x C++ Android project and prove the vertical slice on a physical Android device.
-- [ ] Port the complete game with compatibility tests for all 27 levels and existing saves.
+- [x] Add a Cocos2d-x v4 / C++17 Android project scaffold and a reproducible CI build workflow.
+- [ ] Confirm the CI-produced APK/AAB build is green and install the APK on physical Android devices.
+- [ ] Port the complete game with parity tests for all 27 levels, special combos, Guardians, Relics, Resonance and web-save import/export.
 - [ ] Configure application ID `in.gogocompany.crystalquest` in the native Android build.
 - [ ] Configure Android target API 36 or the newer Play requirement applicable at submission.
 - [ ] Generate a signed AAB and record the Play App Signing SHA-256 certificate fingerprint.
@@ -57,4 +60,4 @@ Before release, publish and link the game's Privacy Policy and support contact. 
 
 ## Current status
 
-This document records the approved package ID and proposed native-engine direction. It does **not** claim that a Cocos project, Android Studio project, signed AAB, AdMob integration, Play Console listing or device QA has already been completed. Those are implementation and release gates. The repository currently contains a dependency-light C++ gameplay-logic test foundation only.
+This document records the approved package ID and native-engine implementation direction. The repository now contains the Cocos2d-x Android project scaffold, native match-3 scene, C++ gameplay rules, campaign export script and Android CI workflow. CI and device validation remain release gates; no signed AAB, AdMob integration, Play Console listing or physical-device QA is claimed complete.
