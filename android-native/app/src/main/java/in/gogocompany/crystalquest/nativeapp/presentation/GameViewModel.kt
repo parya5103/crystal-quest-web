@@ -62,7 +62,7 @@ import kotlinx.coroutines.launch
   val current=_uiState.value
   viewModelScope.launch(io){
    try{
-    val next=repository.newLevel(level).copy(unlockedLevel=current.unlockedLevel,bestStars=current.bestStars)
+    val next=repository.newLevel(level,progress=current)
     _uiState.value=next
     saveQueue.trySend(next)
    }catch(cancelled:CancellationException){throw cancelled}
