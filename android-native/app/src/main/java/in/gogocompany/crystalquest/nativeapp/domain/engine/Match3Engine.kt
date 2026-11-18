@@ -41,7 +41,7 @@ class Match3Engine{
   var firstMove=true;var preferred=b
   while((matches.isNotEmpty()||(firstMove&&swappedSpecials.isNotEmpty()))&&cascades<20){
    cascades++
-   val created=if(firstMove&&swappedSpecials.isEmpty())createSpecial(cells,matches,preferred)else null
+   val created=if(swappedSpecials.isEmpty())createSpecial(cells,matches,preferred)else null
    if(created!=null){cells[created.index]=created.gem;specialBonus+=120}
    val clear=matches.toMutableSet()
    val triggered=linkedSetOf<Int>()
