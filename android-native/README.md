@@ -5,5 +5,5 @@ First playable slice: 8x8 six-gem board, adjacent swap validation, match detecti
 Legacy save adapter recognizes the exact crystal-quest-save-v1 key and maps the existing v2 campaign/world fields. Import/export file-picker flow and full live campaign restoration still need end-to-end validation.
 UMP consent request, privacy-options entry point and consent-gated Google Mobile Ads Next-Gen initialization are wired. The app ID defaults to Google's test app ID; no production ad unit is configured and no live ads are requested.
 Build on JDK 17 with Android SDK Platform 37 and Build Tools 36.0.0: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:bundleRelease
-CI pins Gradle 9.6.0 and publishes a debug APK plus unsigned release AAB. A signed Play upload bundle requires a protected upload keystore.
+CI pins Gradle 9.5.0 and publishes a debug APK plus unsigned release AAB. A signed Play upload bundle requires a protected upload keystore.
 Remaining gates: all 27 levels, Guardian/Relic/story mechanics, special combos, final audio assets, import/export UX, physical-device profiling, crash testing and Play release checks.
