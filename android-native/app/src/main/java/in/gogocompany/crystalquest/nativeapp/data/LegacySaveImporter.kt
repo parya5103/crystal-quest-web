@@ -1,4 +1,4 @@
-package in.gogocompany.crystalquest.nativeapp.data
+package `in`.gogocompany.crystalquest.nativeapp.data
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import java.nio.charset.StandardCharsets
