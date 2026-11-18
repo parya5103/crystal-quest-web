@@ -150,7 +150,9 @@ class Match3Engine{
   val first=cells[a]?:return emptySet();val second=cells[b]?:return emptySet()
   if(first==Gem.PRISM&&second==Gem.PRISM)return cells.indices.toSet()
   if((first==Gem.LINE_H&&second==Gem.LINE_V)||(first==Gem.LINE_V&&second==Gem.LINE_H)){
-   val row=a/WIDTH;val col=b%WIDTH
+   val lineH=if(first==Gem.LINE_H)a else b
+   val lineV=if(first==Gem.LINE_V)a else b
+   val row=lineH/WIDTH;val col=lineV%WIDTH
    return ((0 until WIDTH).map{index(it,row)}+(0 until HEIGHT).map{index(col,it)}).toSet()
   }
   if(first==Gem.BOMB&&second==Gem.BOMB){
