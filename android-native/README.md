@@ -10,17 +10,21 @@ Package ID: `in.gogocompany.crystalquest`. Keep stable after first Play Console 
 ## Current native gameplay
 - 8×8 six-gem board with deterministic generation, adjacent swap validation, match detection, gravity/refill cascades and scoring.
 - Valid-match move consumption, score goal, explicit win/loss, continue/retry and no-valid-move reshuffle.
-- Official 27-level names, move limits and score thresholds are mapped from the current browser campaign.
+- The canonical 27-level campaign catalog is generated from `js/levels.js` during CI and includes layouts, objective metadata, guardian sequence data, hints and all three official score thresholds.
+- Score-based star awards, best stars per level, unlocked-level progression and Room persistence are wired.
 - Room save/restore, including migration defaults for newly added level metadata.
 - UMP consent request, privacy-options entry point and consent-gated Google Mobile Ads Next-Gen initialization. Uses Google's test app ID; no production ad units or live ads configured.
 
 ## Important parity gap
-The 27-level native progression is not yet a full port of the browser game. Blockers (stone/ice/obsidian/cages), special gem types and combinations, collect/clear/resonance objectives, Guardian sequences, Relics, story triggers, daily challenge, booster economy, full star scoring and complete browser import/export UX still need implementation and compatibility tests against `js/levels.js` and `js/engine.js`. Do not mark campaign parity complete until these are implemented and tested.
+The 27-level native progression is not yet a full port of the browser game. Blockers (stone/ice/obsidian/cages), special gem types and combinations, collect/clear/resonance objectives, Guardian sequences, Relics, story triggers, daily challenge, booster economy, guardian encounters, resonance mechanics, and complete browser import/export UX still need implementation and compatibility tests against `js/levels.js` and `js/engine.js`. Do not mark campaign parity complete until these are implemented and tested.
 
 ## Build
 JDK 17, Gradle 9.5.0, AGP 9.3.1, Kotlin 2.4.21, KSP 2.3.12, Android SDK Platform 36 and Build Tools 36.0.0.
 
-From `android-native/` run:
+From the repository root, generate the campaign asset first:
+`node scripts/generate-native-levels.cjs`
+
+Then from `android-native/` run:
 `gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:bundleRelease`.
 
 CI publishes a debug APK and unsigned release AAB after tests. A signed Play upload bundle requires protected `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` properties; never commit keystores or passwords.
