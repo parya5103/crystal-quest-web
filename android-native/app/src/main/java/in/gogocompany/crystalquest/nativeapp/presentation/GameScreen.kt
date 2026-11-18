@@ -23,20 +23,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import in.gogocompany.crystalquest.nativeapp.domain.model.*
 import in.gogocompany.crystalquest.nativeapp.presentation.theme.CrystalQuestTheme
 private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xFF36D7E8),Gem.ROSE to Color(0xFFFF5C8A),Gem.VERDANT to Color(0xFF42D392),Gem.VIOLET to Color(0xFF9B72F2),Gem.SOLAR to Color(0xFFFFD34E))
-@Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){val state by viewModel.uiState.collectAsStateWithLifecycle();GameScreen(state,viewModel::onEvent,privacyOptionsRequired=privacyOptionsRequired,onShowPrivacyOptions=onShowPrivacyOptions)}
+@Composable fun GameRoute(viewModel:GameViewModel=hiltViewModel(),privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={},isRestoring:Boolean=false){val state by viewModel.uiState.collectAsStateWithLifecycle();val restoring by viewModel.isRestoring.collectAsStateWithLifecycle();GameScreen(state,viewModel::onEvent,privacyOptionsRequired=privacyOptionsRequired,onShowPrivacyOptions=onShowPrivacyOptions,isRestoring=restoring)}
 @Composable fun GameScreen(state:CrystalGameState,onEvent:(CrystalUiEvent)->Unit,modifier:Modifier=Modifier,privacyOptionsRequired:Boolean=false,onShowPrivacyOptions:()->Unit={}){
  val haptics=LocalHapticFeedback.current
  Scaffold(modifier=modifier.fillMaxSize(),containerColor=Color(0xFF10172A)){padding->
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
    Spacer(Modifier.height(8.dp));Text("CRYSTAL QUEST",style=MaterialTheme.typography.headlineMedium,color=Color.White)
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard("LEVEL",state.level.toString())}
-   Text(state.message,color=Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
+   Text(if(isRestoring)"Restoring your progress…" else state.message,color=Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color(0xFF1B2740)).padding(7.dp),verticalArrangement=Arrangement.spacedBy(3.dp)){
     for(row in 0 until 8)Row(horizontalArrangement=Arrangement.spacedBy(3.dp)){for(col in 0 until 8){val gem=state.board[row*8+col];val selected=state.selected==Cell(col,row);val target=if(gem==null)Color.Transparent else gemColors.getValue(gem);val color by animateColorAsState(if(selected)Color.White else target,animationSpec=spring(),label="gem")
-     Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(9.dp)).background(color).border(if(selected)3.dp else 1.dp,if(selected)Color(0xFFFFE28A)else Color(0x334B5E83),RoundedCornerShape(9.dp)).clickable{haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove);onEvent(CrystalUiEvent.TapCell(Cell(col,row)))},contentAlignment=Alignment.Center){if(gem!=null)Text(listOf("◆","✦","●","✿","✧","✺")[gem.ordinal],color=Color(0xFF172039),style=MaterialTheme.typography.titleMedium)}
+     Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(9.dp)).background(color).border(if(selected)3.dp else 1.dp,if(selected)Color(0xFFFFE28A)else Color(0x334B5E83),RoundedCornerShape(9.dp)).clickable(enabled=!isRestoring){haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove);onEvent(CrystalUiEvent.TapCell(Cell(col,row)))},contentAlignment=Alignment.Center){if(gem!=null)Text(listOf("◆","✦","●","✿","✧","✺")[gem.ordinal],color=Color(0xFF172039),style=MaterialTheme.typography.titleMedium)}
     }}
    }
-   Button(onClick={onEvent(CrystalUiEvent.Restart)},modifier=Modifier.fillMaxWidth()){Text("Restart level")}
+   Button(onClick={onEvent(CrystalUiEvent.Restart)},enabled=!isRestoring,modifier=Modifier.fillMaxWidth()){Text("Restart level")}
    if(privacyOptionsRequired)TextButton(onClick=onShowPrivacyOptions){Text("Privacy options",color=Color(0xFFB8C6E5))}
    Text("Swap adjacent crystals to make a match of three or more.",color=Color(0xFF8494B6),style=MaterialTheme.typography.bodySmall)
   }
