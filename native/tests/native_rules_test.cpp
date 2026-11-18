@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-#define REQUIRE(x) do { if(!(x)) { std::cerr << "FAIL line " << __LINE__ << ": " #x "\\n"; return EXIT_FAILURE; } } while(0)
+#define REQUIRE(x) do { if(!(x)) return __LINE__; } while(false)
 int main() {
  using namespace gogo::crystal;
  Board palette(3,3);
