@@ -1,0 +1,53 @@
+name: Native Android
+on:
+  pull_request:
+    paths: ['native/**','scripts/bootstrap-native-engine.sh','.github/workflows/native-android.yml']
+  push:
+    branches: [main]
+    paths: ['native/**','scripts/bootstrap-native-engine.sh','.github/workflows/native-android.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: cocos2d/cocos2d-x
+          ref: 7a5282a301a13e467bdcc3466d3cd3883862aadf
+          path: third_party/cocos2d-x
+          submodules: recursive
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+      - name: Install Android SDK components
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+      - name: Add namespace to pinned legacy Cocos library module for AGP 8
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('third_party/cocos2d-x/cocos/platform/android/libcocos2dx/build.gradle')
+          s=p.read_text()
+          if 'namespace ' not in s:
+              s=s.replace('android {', "android {\n    namespace 'org.cocos2dx.lib'", 1)
+              p.write_text(s)
+          PY
+      - name: Build debug APK and unsigned release AAB
+        working-directory: native/cocos/proj.android
+        run: gradle --no-daemon :app:assembleDebug :app:bundleRelease
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: crystal-quest-android-${{ github.sha }}
+          path: |
+            native/cocos/proj.android/app/build/outputs/apk/debug/*.apk
+            native/cocos/proj.android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
