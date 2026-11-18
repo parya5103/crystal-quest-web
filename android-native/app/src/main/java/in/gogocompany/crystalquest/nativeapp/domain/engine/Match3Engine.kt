@@ -22,7 +22,9 @@ class Match3Engine{
   while(matches.isNotEmpty()&&cascades<20){cascades++;cleared+=matches.size;matches.forEach{cells[it]=null};for(col in 0 until WIDTH){val remaining=(0 until HEIGHT).mapNotNull{row->cells[index(col,row)]};val empty=HEIGHT-remaining.size;for(row in 0 until HEIGHT)cells[index(col,row)]=if(row<empty)null else remaining[row-empty];for(row in 0 until empty)cells[index(col,row)]=Gem.entries[random.nextInt(TYPES)]};matches=findMatches(cells)}
   ensurePlayable(cells,random)
   val moves=(state.movesRemaining-1).coerceAtLeast(0);val newScore=state.score+cleared*60;val won=newScore>=state.targetScore;val lost=!won&&moves==0
-  return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won)
+  val earnedStars=if(won)when{newScore>=state.star3Threshold->3;newScore>=state.star2Threshold->2;else->1}else state.stars
+  val best=if(won)state.bestStars.toMutableMap().apply{this[state.level]=maxOf(this[state.level]?:0,earnedStars)}else state.bestStars
+  return state.copy(board=cells,selected=null,score=newScore,movesRemaining=moves,message=when{won->"Level ${state.level} complete!";lost->"Out of moves — retry this level";else->"$cleared crystals cleared · $cascades cascade(s)"},isComplete=won||lost,isWon=won,stars=earnedStars,unlockedLevel=if(won)maxOf(state.unlockedLevel,(state.level+1).coerceAtMost(27))else state.unlockedLevel,bestStars=best)
  }
  fun hasValidMove(cells:List<Gem?>):Boolean{
   if(cells.size!=64)return false
