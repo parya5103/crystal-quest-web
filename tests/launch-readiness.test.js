@@ -14,7 +14,7 @@ const android = read('android/README.md');
 for (const phrase of [
   'crystal-quest-save-v1', 'Firebase Cloud Messaging', 'Firebase Anonymous Authentication',
   'device token', 'user agent', 'explicitly enable', 'Advertisements are currently disabled',
-  'GoGo Central', 'GoGo Company'
+  'GoGo Central', 'GoGo Company', 'officialgogocompany@gmail.com'
 ]) assert.ok(privacy.toLowerCase().includes(phrase.toLowerCase()), 'privacy policy must disclose: ' + phrase);
 assert.ok(/privacy\.html/.test(page) && /terms\.html/.test(page), 'home page must link to both legal pages');
 assert.ok(/Optional push notifications send a device token/i.test(page), 'in-game privacy disclosure must mention opt-in notification data');
