@@ -40,7 +40,7 @@ This is **not King's proprietary Fiction engine**, and it will not reproduce Kin
 
 The current live web game deliberately keeps ads disabled. Do not enable ads until a certified CMP, correct regional consent flow, verified publisher/slot IDs and policy review are complete.
 
-The planned native Android build can integrate the Google Mobile Ads SDK / AdMob rewarded ads through a supported native integration after consent, privacy disclosures and test-ad verification. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
+The native Android scaffold now includes UMP 4.0.0, Google Mobile Ads Next-Gen 1.6.0, a consent-gated initialization helper and a privacy-options entry point. It does not yet request or display ads because production AdMob app/ad-unit IDs and publisher privacy messages have not been configured. The default app ID is Google's test app ID; pass `-P.ADMOB_APP_ID=ca-app-pub-...~...` for a production build only after the AdMob app is registered and UMP messages are configured. Website/PWA ads remain a separate web-provider integration. Never show live ads or grant rewards based on an unverified ad callback.
 
 ## Privacy and store disclosures
 
@@ -55,7 +55,8 @@ Before release, publish and link the game's Privacy Policy and support contact. 
 - [ ] Configure Android target API 36 or the newer Play requirement applicable at submission.
 - [ ] Generate a signed AAB and record the Play App Signing SHA-256 certificate fingerprint.
 - [ ] Publish and verify Digital Asset Links at `https://gogocompany.in/.well-known/assetlinks.json` only if a TWA is retained for any separate web-shell use. A native Cocos app does not need TWA verification to launch its game.
-- [ ] Integrate and test native AdMob only after consent and policy setup.
+- [x] Add UMP consent flow, privacy-options UI and GMA Next-Gen initialization gate (test app ID only; no ad requests yet).
+- [ ] Add production AdMob app/ad-unit IDs, privacy messages and age/audience treatment; then test rewarded/banner formats using test ads.
 - [ ] Complete Play Store listing, content rating, Data safety, internal testing and physical-device QA.
 
 ## Current status
