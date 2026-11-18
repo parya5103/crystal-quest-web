@@ -7,7 +7,7 @@
 #include <cstddef>
 
 namespace gogo::crystal {
-enum class Gem : std::uint8_t { Empty, Red, Blue, Green, Yellow, Purple };
+// Preserve the original test-facing names while exposing the six campaign colours.\nenum class Gem : std::uint8_t { Empty, Red, Blue, Green, Yellow, Purple, Orange, Amber=Red, Aqua=Blue, Rose=Green, Verdant=Yellow, Violet=Purple, Solar=Orange };
 struct Cell { int x; int y; };
 
 struct Board {
