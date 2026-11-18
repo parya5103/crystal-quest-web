@@ -27,6 +27,15 @@ class Match3EngineTest{
   val result=engine.tap(selected,Cell(1,0),1234)
   assertEquals(3,result.stars);assertEquals(2,result.unlockedLevel);assertEquals(3,result.bestStars[1]);assertEquals(result.score,result.bestScores[1])
  }
+ @Test fun dailyChallengeAwardsCoinsAndContinuesStreakWithoutUnlockingCampaign(){
+  val board=MutableList<Gem?>(64){null}
+  board[0]=Gem.AQUA;board[1]=Gem.AMBER;board[2]=Gem.AQUA;board[3]=Gem.AQUA
+  val start=CrystalGameState(board,movesRemaining=1,targetScore=180,star2Threshold=180,star3Threshold=180,isDaily=true,dailyDate="20261119",lastDailyDate="20261118",dailyStreak=2)
+  val selected=engine.tap(start,Cell(0,0),11)
+  val result=engine.tap(selected,Cell(1,0),1234)
+  assertTrue(result.isWon);assertEquals(3,result.dailyStreak);assertEquals(3,result.dailyBest)
+  assertEquals(25,result.coins);assertEquals("20261119",result.dailyCompletedDate);assertEquals(1,result.unlockedLevel);assertTrue(result.bestStars.isEmpty())
+ }
  @Test fun exhaustingMovesWithoutMeetingGoalIsALoss(){
   val board=MutableList<Gem?>(64){null}
   board[0]=Gem.AQUA;board[1]=Gem.AMBER;board[2]=Gem.AQUA;board[3]=Gem.AQUA
