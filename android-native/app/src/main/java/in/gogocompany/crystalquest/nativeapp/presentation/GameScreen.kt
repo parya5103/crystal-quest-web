@@ -18,6 +18,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import in.gogocompany.crystalquest.nativeapp.domain.model.*
@@ -33,6 +35,7 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
  val haptics=LocalHapticFeedback.current
  var showImport by remember{mutableStateOf(false)}
  var importText by remember{mutableStateOf("")}
+ var levelInput by remember(state.level){mutableStateOf(state.level.toString())}
  Scaffold(modifier=modifier.fillMaxSize(),containerColor=Color(0xFF10172A)){padding->
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(horizontal=16.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(14.dp)){
    Spacer(Modifier.height(8.dp));Text("CRYSTAL QUEST",style=MaterialTheme.typography.headlineMedium,color=Color.White)
@@ -40,6 +43,12 @@ private val gemColors=mapOf(Gem.AMBER to Color(0xFFFFA62B),Gem.AQUA to Color(0xF
    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){StatCard("SCORE",state.score.toString());StatCard("MOVES",state.movesRemaining.toString());StatCard(if(state.isDaily)"DAILY" else "LEVEL",if(state.isDaily)state.dailyStreak.toString()+"🔥" else state.level.toString())}
    Text("COINS ${state.coins}   ·   DAILY STREAK ${state.dailyStreak}   ·   BEST ${state.dailyBest}",color=Color(0xFFFFD66B),style=MaterialTheme.typography.labelMedium)
    OutlinedButton(onClick={onEvent(CrystalUiEvent.DailyChallenge)},enabled=!isRestoring&&!state.isDaily,modifier=Modifier.fillMaxWidth()){Text("Daily Challenge")}
+   Text("Unlocked campaign levels: ${state.unlockedLevel} / 27",color=Color(0xFF9BAAC8),style=MaterialTheme.typography.labelSmall)
+   Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically){
+    OutlinedTextField(value=levelInput,onValueChange={levelInput=it.filter{ch->ch.isDigit()}.take(2)},modifier=Modifier.weight(1f),singleLine=true,label={Text("Open level")},keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
+    val selectedLevel=levelInput.toIntOrNull()
+    Button(onClick={selectedLevel?.let{onEvent(CrystalUiEvent.SelectLevel(it))}},enabled=!isRestoring&&!state.isDaily&&selectedLevel!=null&&selectedLevel in 1..state.unlockedLevel){Text("Play")}
+   }
    Text(if(isRestoring)"Restoring your progress…" else state.message,color=if(state.isWon)Color(0xFFFFD66B)else Color(0xFFB8C6E5),style=MaterialTheme.typography.bodyMedium)
    LinearProgressIndicator(progress={(state.score.toFloat()/state.targetScore.coerceAtLeast(1)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth(),color=Color(0xFFFFD66B),trackColor=Color(0xFF34415E))
    Text("Goal: ${state.targetScore} points   ·   Best: ${state.bestStars[state.level]?:0} ★   ·   Earned: ${state.stars} ★",color=Color(0xFF9BAAC8),style=MaterialTheme.typography.labelMedium)
