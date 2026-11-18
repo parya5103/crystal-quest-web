@@ -9,6 +9,7 @@ Package ID: `in.gogocompany.crystalquest`. Keep stable after first Play Console 
 
 ## Current native gameplay
 - 8×8 six-gem board with deterministic generation, adjacent swap validation, match detection, gravity/refill cascades and scoring.
+- Original match-4 line crystals, match-5 prism crystals, T/L bomb crystals, special activation and line/bomb/prism swap combos.
 - Valid-match move consumption, score goal, explicit win/loss, continue/retry and no-valid-move reshuffle.
 - The canonical 27-level campaign catalog is generated from `js/levels.js` during CI and includes layouts, objective metadata, guardian sequence data, hints and all three official score thresholds.
 - Score-based star awards, best stars per level, unlocked-level progression and Room persistence are wired.
