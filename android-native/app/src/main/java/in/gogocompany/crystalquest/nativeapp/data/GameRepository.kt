@@ -70,7 +70,7 @@ import kotlinx.coroutines.flow.Flow
   val state=newLevel(imported.lastLevel).copy(
    unlockedLevel=imported.unlocked,bestStars=imported.stars,bestScores=imported.best,
    settings=imported.settings,relics=imported.relics,forestSeen=imported.forestSeen,
-   storySeen=imported.storySeen,dailyDate=imported.dailyDate.replace("-",""),lastDailyDate=imported.dailyDate.replace("-",""),dailyCompletedDate=if(imported.dailyStreak>0)imported.dailyDate.replace("-","")else "",dailyStreak=imported.dailyStreak,
+   storySeen=imported.storySeen,dailyDate=imported.dailyDate.replace("-",""),lastDailyDate=if(imported.dailyStreak>0)imported.dailyDate.replace("-","")else "",dailyCompletedDate=if(imported.dailyStreak>0)imported.dailyDate.replace("-","")else "",dailyStreak=imported.dailyStreak,
    dailyBest=imported.dailyBest,legacySaveJson=imported.rawSaveJson,
    message="Browser progress imported — welcome back!"
   )
