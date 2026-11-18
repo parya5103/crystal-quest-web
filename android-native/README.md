@@ -14,6 +14,7 @@ Package ID: `in.gogocompany.crystalquest`. Keep stable after first Play Console 
 - Score-based star awards, best stars per level, unlocked-level progression and Room persistence are wired.
 - Room save/restore, including migration defaults for newly added level metadata.
 - Native **Import existing PWA progress** accepts the existing `CQSAVE2-` export code from the web game's Settings, restores campaign/best scores/stars/settings/relics/story/daily progress, and retains the original JSON snapshot. The web save remains untouched.
+- Deterministic daily score challenge, +25 coin completion reward and consecutive-day streak tracking.
 - UMP consent request, privacy-options entry point and consent-gated Google Mobile Ads Next-Gen initialization. Uses Google's test app ID; no production ad units or live ads configured.
 
 ## Important parity gap
