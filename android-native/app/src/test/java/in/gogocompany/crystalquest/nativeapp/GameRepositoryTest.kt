@@ -26,7 +26,7 @@ class GameRepositoryTest{
  @Test fun rejectsSavedSelectionOutsideTheBoardInsteadOfAllowingAnEngineCrash()=runBlocking{
   val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>()
   every{catalog.get(1)} returns CrystalLevelDto(1,"Crystal Gate",13,List(8){"........"},emptyList(),listOf(4200,5400,6800),"hint")
-  val invalid=CrystalGameState(board=List(64){com.google.gson.JsonNull.INSTANCE}.map{null as Gem?},selected=Cell(-1,0))
+  val invalid=CrystalGameState(board=List<Gem?>(64){null},selected=Cell(-1,0))
   coEvery{dao.get("crystal-quest")} returns GameProgress("crystal-quest",Gson().toJson(invalid),1L)
   val repository=GameRepository(dao,catalog)
   assertThrows(IllegalArgumentException::class.java){runBlocking{repository.load()}}
