@@ -14,11 +14,13 @@ import org.junit.Assert.*
 import org.junit.Test
 import java.util.Base64
 class GameRepositoryTest{
- @Test fun malformedStoredGameIsReportedInsteadOfSilentlyStartingFresh()=runBlocking{
-  val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>(relaxed=true)
-  coEvery{dao.get("crystal-quest")} returns GameProgress("crystal-quest","{broken",1L)
-  val repository=GameRepository(dao,catalog)
-  assertThrows(JsonSyntaxException::class.java){runBlocking{repository.load()}}
+ @Test fun malformedStoredGameIsReportedInsteadOfSilentlyStartingFresh() {
+  runBlocking {
+   val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>(relaxed=true)
+   coEvery{dao.get("crystal-quest")} returns GameProgress("crystal-quest","{broken",1L)
+   val repository=GameRepository(dao,catalog)
+   assertThrows(JsonSyntaxException::class.java){runBlocking{repository.load()}}
+  }
  }
  @Test fun newCampaignUsesCanonicalLevelDefinition()=runBlocking{
   val dao=mockk<GameProgressDao>();val catalog=mockk<CrystalLevelCatalog>()
