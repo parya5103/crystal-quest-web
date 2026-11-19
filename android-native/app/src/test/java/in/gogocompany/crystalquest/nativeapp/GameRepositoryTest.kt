@@ -7,6 +7,9 @@ import `in`.gogocompany.crystalquest.nativeapp.data.CrystalLevelCatalog
 import `in`.gogocompany.crystalquest.nativeapp.data.CrystalLevelDto
 import `in`.gogocompany.crystalquest.nativeapp.data.local.GameProgress
 import `in`.gogocompany.crystalquest.nativeapp.data.local.GameProgressDao
+import `in`.gogocompany.crystalquest.nativeapp.domain.model.Cell
+import `in`.gogocompany.crystalquest.nativeapp.domain.model.CrystalGameState
+import `in`.gogocompany.crystalquest.nativeapp.domain.model.Gem
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
