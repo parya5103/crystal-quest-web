@@ -62,6 +62,7 @@ import kotlinx.coroutines.flow.Flow
   if(!json.has("coins"))json.addProperty("coins",0)
   val state=gson.fromJson(json,CrystalGameState::class.java)?:throw IllegalStateException("Saved Crystal Quest state is empty")
   require(state.board.size==64){"Saved Crystal Quest board must contain 64 cells"}
+  require(state.selected==null||(state.selected.column in 0 until Match3Engine.WIDTH&&state.selected.row in 0 until Match3Engine.HEIGHT)){"Saved Crystal Quest selection is outside the board"}
   require(state.level in 1..27&&state.movesRemaining in 0..40&&state.score>=0&&state.targetScore>0){"Saved Crystal Quest progress is outside valid ranges"}
   return state
  }
