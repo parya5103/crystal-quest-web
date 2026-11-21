@@ -35,3 +35,5 @@ assert.equal([...guide.matchAll(/<h1\b/gi)].length, 1);
 assert.match(guide, /Crystal Resonance/);
 assert.match(guide, /The Guardian/);
 assert.match(page, /href="guide.html"/);
+
+assert.ok(page.includes('GTM-TH4NX8MH'), 'game page should load the shared GoGo analytics container');
