@@ -28,9 +28,10 @@ assert.ok(game && game.publisher && game.publisher.logo === 'https://gogocompany
   'VideoGame publisher should include the GoGo Company logo');
 assert.match(page, /twitter:title/);
 
-const guide = fs.readFileSync(path.join(root, 'guide.html'), 'utf8');
-assert.ok(guide.includes('<title>Crystal Quest Guide: Match-3 Tips, Gems &amp; Levels</title>'));
-assert.ok(guide.includes('href="https://gogocompany.in/crystalquest/guide.html"'));
+const guide = fs.readFileSync(path.join(root, 'guide/index.html'), 'utf8');
+assert.ok(guide.includes('<title>Crystal Quest Guide: Free Match-3 Browser Game Tips</title>'));
+assert.ok(guide.includes('href="https://gogocompany.in/crystalquest/guide/"'));
+assert.match(fs.readFileSync(path.join(root, "guide.html"), "utf8"), /noindex, follow/);
 assert.equal([...guide.matchAll(/<h1\b/gi)].length, 1);
 assert.match(guide, /Crystal Resonance/);
 assert.match(guide, /The Guardian/);
