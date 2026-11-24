@@ -247,3 +247,16 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 - `android/README.md` now distinguishes web ads from native AdMob rewarded ads, explains TWA/assetlinks root requirements, and lists owner-side Play Console/AAB blockers. Current Google Play requirement recorded in android/README.md: Android 16 / API 36 for new apps and updates as of 31 Aug 2026; re-check in Play Console at submission.
 - Added `tests/launch-readiness.test.js` to CI. It is expected to pass after the legal pages, links, offline cache and Android documentation are present.
 - Still not verified: live browser visual/runtime QA, real Android install/offline/update QA, final Digital Asset Links package/fingerprint, signed AAB, Play Console account/declarations, certified CMP, AdSense provider approval/slot activation, and any native AdMob bridge. Ads remain fail-closed/disabled.
+
+## Documentation-sync audit - 2026-11-24
+
+Source-inspected at main 2eadd604 (post PR #46). Changes recorded from merge history and repository listing:
+
+- PR #45 (2026-11-21): game page-view tracking added (analytics; web build).
+- PR #46 (2026-11-22): SEO guide landing page guide.html added (canonical guide content; standalone site link).
+- Dependabot merged action bumps: actions/upload-artifact v4 -> 7, actions/setup-java 5.0.0 ->
+  6.3.0, gradle/actions v4 -> 6 (2026-11-21).
+- AGENTS.md (agent operating rules) was missing and is added by this same documentation PR.
+- Still controlled by the sections above: architecture, save format, ads (fail-closed,
+  disabled until CMP), notifications module, PWA (cq-v26) and the unverified release checks
+  (real-device QA, signed AAB, Play Console, CMP/AdSense approval).
