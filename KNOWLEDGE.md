@@ -253,8 +253,7 @@ Known base-game issues (verified in README, present on main; fixed on fix branch
 Source-inspected at main 2eadd604 (post PR #46). Changes recorded from merge history and repository listing:
 
 - PR #45 (2026-11-21): game page-view tracking added (analytics; web build).
-- PR #46 (2026-11-22): SEO guide landing page guide.html added (canonical guide content;/
-standalone site link).
+- PR #46 (2026-11-22): SEO guide landing page guide.html added (canonical guide content; standalone site link).
 - Dependabot merged action bumps: actions/upload-artifact v4 -> 7, actions/setup-java 5.0.0 ->
   6.3.0, gradle/actions v4 -> 6 (2026-11-21).
 - AGENTS.md (agent operating rules) was missing and is added by this same documentation PR.
